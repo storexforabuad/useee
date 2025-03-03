@@ -133,13 +133,22 @@ export async function deleteCategory(id: string): Promise<void> {
   }
 }
 
-export async function getPopularProducts(limitCount: number): Promise<Product[]> {
-  const productsRef = collection(db, 'products');
-  const q = query(productsRef, orderBy('views', 'desc'), limit(limitCount));
-  const querySnapshot = await getDocs(q);
+export async function getPopularProducts(limitCount: number = 6): Promise<Product[]> {
+  try {
+    const productsRef = collection(db, 'products');
+    const q = query(
+      productsRef,
+      orderBy('views', 'desc'),
+      limit(limitCount)
+    );
+    const querySnapshot = await getDocs(q);
 
-  return querySnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Product[];
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Product[];
+  } catch (error) {
+    console.error('Error fetching popular products:', error);
+    return [];
+  }
 }

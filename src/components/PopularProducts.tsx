@@ -11,7 +11,8 @@ export default function PopularProducts() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const popularProducts = await getPopularProducts();
+        // Fetch 6 popular products by default
+        const popularProducts = await getPopularProducts(6);
         setProducts(popularProducts);
       } catch (error) {
         console.error('Error fetching popular products:', error);
@@ -23,11 +24,16 @@ export default function PopularProducts() {
   }, []);
 
   if (loading) {
-    return <div className="animate-pulse space-y-4">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-card-hover h-24 rounded-lg"></div>
-      ))}
-    </div>;
+    return (
+      <div className="animate-pulse space-y-4">
+        {[...Array(6)].map((_, i) => (
+          <div 
+            key={i} 
+            className="bg-card-hover h-64 rounded-lg transition-colors"
+          />
+        ))}
+      </div>
+    );
   }
 
   return (
@@ -36,31 +42,49 @@ export default function PopularProducts() {
         <Link 
           key={product.id} 
           href={`/products/${product.id}`}
-          className="bg-card-background rounded-lg shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] 
-            p-4 transition-all hover:-translate-y-1"
+          className="group bg-card-background rounded-lg shadow-[var(--shadow-md)] 
+            hover:shadow-[var(--shadow-lg)] p-4 transition-all duration-300 
+            hover:-translate-y-1 relative overflow-hidden"
         >
           <div className="aspect-square relative mb-3 overflow-hidden rounded-lg bg-card-hover">
-            <Image
-              src={product.images[0]}
-              alt={product.name}
-              fill
-              className="object-cover"
-            />
+            {product.images[0] ? (
+              <Image
+                src={product.images[0]}
+                alt={product.name}
+                fill
+                className="object-cover transition-transform group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
+            ) : (
+              <div className="h-full w-full bg-card-hover flex items-center justify-center text-text-secondary">
+                <span>No Image</span>
+              </div>
+            )}
           </div>
-          <h3 className="text-text-primary font-semibold truncate">{product.name}</h3>
-          <div className="mt-1 flex items-center justify-between">
-            <p className="text-text-secondary">
+
+          <h3 className="text-text-primary font-semibold truncate">
+            {product.name}
+          </h3>
+
+          <div className="mt-2 flex items-center justify-between">
+            <p className="text-text-primary font-medium">
               {new Intl.NumberFormat('en-NG', {
                 style: 'currency',
                 currency: 'NGN'
               }).format(product.price)}
             </p>
-            <div className="text-xs px-2 py-1 rounded-full bg-card-hover text-text-secondary">
+            <div className="text-xs px-2 py-1 rounded-full bg-[var(--badge-blue-bg)] text-[var(--badge-blue-text)]">
               Popular
             </div>
           </div>
+
+          {product.limitedStock && (
+            <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-[var(--badge-red-bg)] text-[var(--badge-red-text)] text-xs font-medium">
+              Limited Stock
+            </div>
+          )}
         </Link>
       ))}
     </div>
   );
-}1
+}
