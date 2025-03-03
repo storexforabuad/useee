@@ -1,62 +1,66 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { getPopularProducts } from '../lib/db';
-import { Product } from '../types/product';
 import Image from 'next/image';
 import Link from 'next/link';
-import SkeletonLoader from './SkeletonLoader';
+import { useEffect, useState } from 'react';
+import { getPopularProducts } from '../lib/db';
+import { Product } from '../types/product';
 
-const PopularProducts = () => {
-  const [popularProducts, setPopularProducts] = useState<Product[]>([]);
+export default function PopularProducts() {
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPopularProducts = async () => {
-      const products = await getPopularProducts(5); // Get top 5 popular products
-      setPopularProducts(products);
-      setLoading(false);
-    };
-    fetchPopularProducts();
+    async function fetchProducts() {
+      try {
+        const popularProducts = await getPopularProducts();
+        setProducts(popularProducts);
+      } catch (error) {
+        console.error('Error fetching popular products:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
   }, []);
 
   if (loading) {
-    return (
-      <div>
-        <h2 className="text-xl font-semibold">Popular Products</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          {[...Array(5)].map((_, index) => (
-            <SkeletonLoader key={index} />
-          ))}
-        </div>
-      </div>
-    );
+    return <div className="animate-pulse space-y-4">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="bg-card-hover h-24 rounded-lg"></div>
+      ))}
+    </div>;
   }
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold">Popular Products</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-        {popularProducts.map((product) => (
-          <Link key={product.id} href={`/products/${product.id}`} className="border p-4 rounded-lg hover:shadow-lg transition-shadow">
-            {product.images[0] && (
-              <Image
-                src={product.images[0]}
-                alt={product.name}
-                width={300}
-                height={300}
-                className="object-cover rounded-lg"
-                loading="lazy" // Add lazy loading
-              />
-            )}
-            <h3 className="mt-2 text-lg font-bold">{product.name}</h3>
-            <p className="mt-1 text-text-secondary">{product.description}</p>
-            <p className="mt-1 text-text-primary font-semibold">{product.price}</p>
-          </Link>
-        ))}
-      </div>
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {products.map((product) => (
+        <Link 
+          key={product.id} 
+          href={`/products/${product.id}`}
+          className="bg-card-background rounded-lg shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] 
+            p-4 transition-all hover:-translate-y-1"
+        >
+          <div className="aspect-square relative mb-3 overflow-hidden rounded-lg bg-card-hover">
+            <Image
+              src={product.images[0]}
+              alt={product.name}
+              fill
+              className="object-cover"
+            />
+          </div>
+          <h3 className="text-text-primary font-semibold truncate">{product.name}</h3>
+          <div className="mt-1 flex items-center justify-between">
+            <p className="text-text-secondary">
+              {new Intl.NumberFormat('en-NG', {
+                style: 'currency',
+                currency: 'NGN'
+              }).format(product.price)}
+            </p>
+            <div className="text-xs px-2 py-1 rounded-full bg-card-hover text-text-secondary">
+              Popular
+            </div>
+          </div>
+        </Link>
+      ))}
     </div>
   );
-};
-
-export default PopularProducts;
+}1

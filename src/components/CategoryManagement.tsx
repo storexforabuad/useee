@@ -52,7 +52,7 @@ const CategoryManagement = () => {
             onChange={(e) => setNewCategory(e.target.value)}
             className="flex-grow border p-2 rounded"
           />
-          <button onClick={handleAddCategory} className="p-2 bg-blue-500 text-white rounded">
+          <button onClick={handleAddCategory} className="p-2 bg-[var(--button-primary)] text-[var(--foreground)] rounded transition-colors hover:bg-[var(--button-primary-hover)]">
             Add
           </button>
         </div>
@@ -71,15 +71,15 @@ const CategoryManagement = () => {
               )}
               <div className="flex space-x-2">
                 {editingCategory && editingCategory.id === category.id ? (
-                  <button onClick={handleUpdateCategory} className="p-2 bg-green-500 text-white rounded">
+                  <button onClick={handleUpdateCategory} className="p-2 bg-[var(--button-success)] text-[var(--foreground)] rounded transition-colors hover:bg-[var(--button-success-hover)]">
                     Save
                   </button>
                 ) : (
-                  <button onClick={() => setEditingCategory(category)} className="p-2 bg-yellow-500 text-white rounded">
+                  <button onClick={() => setEditingCategory(category)} className="p-2 bg-[var(--button-primary)] text-[var(--foreground)] rounded transition-colors hover:bg-[var(--button-primary-hover)]">
                     Edit
                   </button>
                 )}
-                <button onClick={() => handleDeleteCategory(category.id)} className="p-2 bg-red-500 text-white rounded">
+                <button onClick={() => handleDeleteCategory(category.id)} className="p-2 bg-[var(--button-danger)] text-[var(--foreground)] rounded transition-colors hover:bg-[var(--button-danger-hover)]">
                   Delete
                 </button>
               </div>

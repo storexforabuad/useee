@@ -127,7 +127,7 @@ const AdminDashboard = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50 pb-16 md:pb-0">
+      <div className="min-h-screen bg-background pb-16 md:pb-0 transition-colors">
         <AdminHeader onLogout={handleLogout} isRefreshing={isRefreshing} />
         
         <main className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">

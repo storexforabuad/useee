@@ -1,15 +1,14 @@
-import Image from 'next/image';
 import { Minus, Plus, Trash2 } from 'lucide-react';
-import { useCart } from '../../lib/cartContext';
-import { Product } from '../../types/product';
+import Image from 'next/image';
+import { CartItem as CartItemType } from '../types/cart';
 
 interface CartItemProps {
-  item: Product & { quantity: number };
+  item: CartItemType;
+  onUpdateQuantity: (id: string, quantity: number) => void;
+  onRemove: (id: string) => void;
 }
 
-export default function CartItem({ item }: CartItemProps) {
-  const { dispatch } = useCart();
-  
+export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
@@ -18,55 +17,47 @@ export default function CartItem({ item }: CartItemProps) {
   };
 
   return (
-    <div className="flex items-center gap-4 border-b border-border-color py-4">
-      <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md">
+    <div className="flex items-center space-x-4 p-4 hover:bg-card-hover transition-colors rounded-lg">
+      <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md bg-card-background">
         <Image
           src={item.images[0]}
           alt={item.name}
-          width={80}
-          height={80}
-          className="h-full w-full object-cover"
+          fill
+          className="object-cover object-center"
         />
       </div>
-
+      
       <div className="flex flex-1 flex-col">
-        <h3 className="text-sm font-medium text-text-primary">{item.name}</h3>
-        <p className="mt-1 text-sm text-gray-500">{formatPrice(item.price)}</p>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => 
-            dispatch({
-              type: 'UPDATE_QUANTITY',
-              payload: { id: item.id, quantity: item.quantity - 1 }
-            })
-          }
-          className="rounded-md p-1 text-text-secondary hover:bg-gray-100"
-        >
-          <Minus size={16} />
-        </button>
+        <div className="flex justify-between">
+          <h3 className="text-base font-medium text-text-primary">{item.name}</h3>
+          <p className="ml-4 text-text-primary">{formatPrice(item.price * item.quantity)}</p>
+        </div>
         
-        <span className="w-8 text-center">{item.quantity}</span>
-        
-        <button
-          onClick={() =>
-            dispatch({
-              type: 'UPDATE_QUANTITY',
-              payload: { id: item.id, quantity: item.quantity + 1 }
-            })
-          }
-          className="rounded-md p-1 text-text-secondary hover:bg-gray-100"
-        >
-          <Plus size={16} />
-        </button>
-
-        <button
-          onClick={() => dispatch({ type: 'REMOVE_ITEM', payload: item.id })}
-          className="ml-2 rounded-md p-1 text-red-600 hover:bg-red-50"
-        >
-          <Trash2 size={16} />
-        </button>
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+              disabled={item.quantity <= 1}
+              className="p-1 rounded-md hover:bg-card-hover disabled:opacity-50 disabled:cursor-not-allowed text-text-primary"
+            >
+              <Minus size={16} />
+            </button>
+            <span className="text-text-secondary min-w-[24px] text-center">{item.quantity}</span>
+            <button
+              onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+              className="p-1 rounded-md hover:bg-card-hover text-text-primary"
+            >
+              <Plus size={16} />
+            </button>
+          </div>
+          
+          <button
+            onClick={() => onRemove(item.id)}
+            className="text-[var(--button-danger)] hover:text-[var(--button-danger-hover)] transition-colors"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
       </div>
     </div>
   );

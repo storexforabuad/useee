@@ -61,26 +61,26 @@ export default function CategoryBar({ onCategorySelect }: { onCategorySelect: (c
 
   const getCategoryColor = (categoryName: string): string => {
     const colorMap: { [key: string]: string } = {
-      'Electronics': 'bg-orange-500',
-      'Men': 'bg-red-500',
-      'Baby': 'bg-yellow-500',
-      'Watches': 'bg-blue-500',
-      'Home': 'bg-green-500',
+      'Electronics': 'bg-[var(--badge-blue-bg)] text-[var(--badge-blue-text)]',
+      'Men': 'bg-[var(--badge-red-bg)] text-[var(--badge-red-text)]',
+      'Baby': 'bg-[var(--badge-yellow-bg)] text-[var(--badge-yellow-text)]',
+      'Watches': 'bg-[var(--badge-blue-bg)] text-[var(--badge-blue-text)]',
+      'Home': 'bg-[var(--badge-green-bg)] text-[var(--badge-green-text)]',
     };
-    return colorMap[categoryName] || 'bg-gray-500';
+    return colorMap[categoryName] || 'bg-card-hover text-text-primary';
   };
 
   return (
     <div 
       className={`category-bar-container ${
         isSticky 
-          ? 'is-sticky fixed top-16 left-0 right-0 z-40 bg-card-background/95 backdrop-blur-sm shadow-md' 
+          ? 'is-sticky fixed top-16 left-0 right-0 z-40 bg-card-background/95 backdrop-blur-sm shadow-[var(--shadow-md)]' 
           : 'relative'
       }`}
     >
       {/* Gradient Fade Effect */}
-      <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10" />
-      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10" />
+      <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[var(--background)] to-transparent z-10" />
+      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[var(--background)] to-transparent z-10" />
       
       {/* Scrollable Container */}
       <div className="overflow-x-auto scrollbar-hide mx-4">
@@ -95,8 +95,8 @@ export default function CategoryBar({ onCategorySelect }: { onCategorySelect: (c
                 className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-1 sm:mb-2
                   ${getCategoryColor(category.name)}
                   ${activeCategory === category.name 
-                    ? 'ring-4 ring-black/20 ring-offset-2 scale-110 shadow-lg' 
-                    : 'hover:ring-2 hover:ring-black/10 hover:ring-offset-1 hover:scale-105'
+                    ? 'ring-4 ring-[var(--text-primary)]/20 ring-offset-2 ring-offset-[var(--background)] scale-110 shadow-[var(--shadow-lg)]' 
+                    : 'hover:ring-2 hover:ring-[var(--text-primary)]/10 hover:ring-offset-1 hover:ring-offset-[var(--background)] hover:scale-105'
                   }
                   transform transition-all duration-200 ease-in-out`}
               >
@@ -107,7 +107,7 @@ export default function CategoryBar({ onCategorySelect }: { onCategorySelect: (c
               <span 
                 className={`text-[10px] sm:text-xs font-medium
                   ${activeCategory === category.name 
-                    ? 'text-black font-semibold scale-105' 
+                    ? 'text-text-primary font-semibold scale-105' 
                     : 'text-text-secondary group-hover:text-text-primary'
                   }
                   transform transition-all duration-200`}
