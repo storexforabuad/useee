@@ -8,7 +8,7 @@ export default function InstallPrompt() {
   const { showPrompt, setShowPrompt, deferredPrompt } = useInstallPrompt();
 
   useEffect(() => {
-    console.log('InstallPrompt mounted, showPrompt:', showPrompt); // Debug log
+    console.log('InstallPrompt mounted, showPrompt:', showPrompt);
   }, [showPrompt]);
 
   const handleInstall = async () => {
@@ -16,7 +16,7 @@ export default function InstallPrompt() {
       try {
         await deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
-        console.log('Install prompt outcome:', outcome); // Debug log
+        console.log('Install prompt outcome:', outcome);
         if (outcome === 'accepted') {
           setShowPrompt(false);
         }
@@ -24,7 +24,7 @@ export default function InstallPrompt() {
         console.error('Error showing install prompt:', error);
       }
     } else {
-      console.log('No deferred prompt available'); // Debug log
+      console.log('No deferred prompt available');
     }
   };
 
@@ -36,28 +36,39 @@ export default function InstallPrompt() {
   if (!showPrompt) return null;
 
   return (
-    <div className="fixed bottom-16 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-card-background rounded-lg shadow-xl p-4 z-50">
+    <div className="fixed bottom-16 left-4 right-4 md:left-auto md:right-4 md:w-96 
+      bg-card-background rounded-lg shadow-[var(--shadow-lg)] p-4 z-50 
+      border border-border-color">
       <button 
         onClick={handleDismiss}
-        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+        className="absolute top-2 right-2 text-text-secondary hover:text-text-primary 
+          transition-colors"
       >
         <XMarkIcon className="w-5 h-5" />
       </button>
       <div className="flex flex-col items-start">
-        <h3 className="text-lg font-semibold text-text-primary">📱 Install LaDevida App</h3>
-        <p className="mt-1 text-sm text-gray-700 leading-relaxed">
-          ⚡ Instant access to flash sales<br/>
-          🎁 Special discounts for app users<br/>
-          💨 Faster shopping experience<br/>
-          📴 Shop even when offline
+        <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+          <span className="text-xl">📱</span> Install LaDevida App
+        </h3>
+        <p className="mt-2 text-sm text-text-secondary space-y-1 leading-relaxed">
+          <span className="flex items-center gap-2">
+            <span>⚡</span> Instant access to flash sales
+          </span>
+          <span className="flex items-center gap-2">
+            <span>🎁</span> Special discounts for app users
+          </span>
+          <span className="flex items-center gap-2">
+            <span>💨</span> Faster shopping experience
+          </span>
         </p>
         <button
           onClick={handleInstall}
-          className="mt-4 w-full bg-blue-800 text-white px-4 py-3 rounded-lg hover:bg-blue-900 transition-colors font-medium text-base flex items-center justify-center gap-2"
+          className="mt-4 w-full bg-[var(--button-primary)] text-white px-4 py-3 
+            rounded-lg hover:bg-[var(--button-primary-hover)] transition-colors 
+            font-medium text-base flex items-center justify-center gap-2"
         >
           <span>Tap To Install</span>
           <ArrowDownTrayIcon className="w-5 h-5" />
-          
         </button>
       </div>
     </div>
