@@ -1,19 +1,29 @@
 'use client';
 
-import { useState, useEffect, Suspense, lazy } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { getProducts, getProductsByCategory } from '../lib/db';
 import Navbar from '../components/layout/navbar';
 import CategoryBar from '../components/layout/CategoryBar';
 import SkeletonLoader from '../components/SkeletonLoader';
-import { Product } from '../types/product';
+import type { Product } from '../types/product';
 
-// Lazy load ProductGrid
-const ProductGrid = lazy(() => import('../components/products/ProductGrid'));
+// Use dynamic import with ssr: false for ProductGrid
+const ProductGrid = dynamic(
+  () => import('../components/products/ProductGrid'),
+  { ssr: false }
+);
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const [prevCategory, setPrevCategory] = useState<string>('');
+
+  // Add mounted state to prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleCategorySelect = async (category: string) => {
     if (prevCategory === category) return;
@@ -33,28 +43,19 @@ export default function Home() {
     }
   };
 
-  // Initial data fetch with cleanup
   useEffect(() => {
-    let mounted = true;
-
     const fetchProducts = async () => {
       try {
         const fetchedProducts = await getProducts();
-        if (mounted) {
-          setProducts(fetchedProducts);
-          setLoading(false);
-        }
+        setProducts(fetchedProducts);
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching products:', error);
-        if (mounted) setLoading(false);
+        setLoading(false);
       }
     };
 
     fetchProducts();
-
-    return () => {
-      mounted = false;
-    };
   }, []);
 
   const LoadingGrid = () => (
@@ -64,6 +65,11 @@ export default function Home() {
       ))}
     </div>
   );
+
+  // Don't render until client-side hydration is complete
+  if (!mounted) {
+    return <LoadingGrid />;
+  }
 
   return (
     <div className="min-h-screen bg-background">

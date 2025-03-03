@@ -21,14 +21,14 @@ export default function CartPage() {
   
     const paymentDetails = `
   Payment Details:
-  Account Name: Maryam Gambo Lawal
+  Account Name: LaDevida
   Account Number: 1234567890
   Bank: GTBank
     `;
   
     const message = `Hello! I would like to order the following items:\n\n${itemsList}\n\n*Total: ${formatPrice(state.totalAmount)}*\n\n${paymentDetails}\n\nThank you!`;
     const encodedMessage = encodeURIComponent(message);
-    const whatsappLink = `https://wa.me/+2348061316002?text=${encodedMessage}`;
+    const whatsappLink = `https://wa.me/+2348164981183?text=${encodedMessage}`;
     window.open(whatsappLink, '_blank');
   };
 

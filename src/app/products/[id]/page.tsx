@@ -60,7 +60,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
   const createWhatsAppMessage = () => {
     const message = `Hello! I'm interested in buying:\n\n*${product.name}*\nPrice: ${formatPrice(product.price)}\n\nCan you help me with this order?\n\nProduct Link: ${window.location.href}`;
     const encodedMessage = encodeURIComponent(message);
-    const whatsappLink = `https://wa.me/+2348061316002?text=${encodedMessage}`;
+    const whatsappLink = `https://wa.me/+2348164981183?text=${encodedMessage}`;
     window.open(whatsappLink, '_blank');
   };
 
