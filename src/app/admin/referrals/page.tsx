@@ -36,11 +36,11 @@ export default function ReferralsPage() {
         <AdminHeader onLogout={handleLogout} isRefreshing={false} />
         
         <main className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+          <div className="bg-card-background rounded-lg shadow-sm p-6">
+            <h1 className="text-2xl font-semibold text-text-primary mb-6">
               Referrals Dashboard
             </h1>
-            <p className="text-gray-600">
+            <p className="text-text-secondary">
               Referral system coming soon...
             </p>
           </div>

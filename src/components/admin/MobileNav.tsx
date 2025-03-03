@@ -14,7 +14,7 @@ const MobileNav = ({ activeSection, setActiveSection }: MobileNavProps) => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg md:hidden z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card-background border-t shadow-lg md:hidden z-50">
       <div className="grid grid-cols-4 gap-1 p-2">
         {navItems.map(({ id, icon: Icon, label }) => (
           <button
@@ -23,7 +23,7 @@ const MobileNav = ({ activeSection, setActiveSection }: MobileNavProps) => {
             className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
               activeSection === id 
                 ? 'text-blue-900 bg-blue-50' 
-                : 'text-gray-600 hover:bg-gray-50'
+                : 'text-text-secondary hover:bg-gray-50'
             }`}
           >
             <Icon className="h-6 w-6" />

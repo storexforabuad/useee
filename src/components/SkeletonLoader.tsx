@@ -2,7 +2,7 @@ import React from 'react';
 
 const SkeletonLoader = () => {
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-card-background rounded-xl shadow-sm overflow-hidden">
       {/* Image placeholder */}
       <div className="h-48 animate-preload w-full"/>
       

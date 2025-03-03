@@ -74,7 +74,7 @@ export default function CategoryBar({ onCategorySelect }: { onCategorySelect: (c
     <div 
       className={`category-bar-container ${
         isSticky 
-          ? 'is-sticky fixed top-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm shadow-md' 
+          ? 'is-sticky fixed top-16 left-0 right-0 z-40 bg-card-background/95 backdrop-blur-sm shadow-md' 
           : 'relative'
       }`}
     >
@@ -108,7 +108,7 @@ export default function CategoryBar({ onCategorySelect }: { onCategorySelect: (c
                 className={`text-[10px] sm:text-xs font-medium
                   ${activeCategory === category.name 
                     ? 'text-black font-semibold scale-105' 
-                    : 'text-gray-600 group-hover:text-gray-900'
+                    : 'text-text-secondary group-hover:text-text-primary'
                   }
                   transform transition-all duration-200`}
               >

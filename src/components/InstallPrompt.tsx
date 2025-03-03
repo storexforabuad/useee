@@ -36,7 +36,7 @@ export default function InstallPrompt() {
   if (!showPrompt) return null;
 
   return (
-    <div className="fixed bottom-16 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white rounded-lg shadow-xl p-4 z-50">
+    <div className="fixed bottom-16 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-card-background rounded-lg shadow-xl p-4 z-50">
       <button 
         onClick={handleDismiss}
         className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
@@ -44,7 +44,7 @@ export default function InstallPrompt() {
         <XMarkIcon className="w-5 h-5" />
       </button>
       <div className="flex flex-col items-start">
-        <h3 className="text-lg font-semibold text-gray-900">📱 Install LaDevida App</h3>
+        <h3 className="text-lg font-semibold text-text-primary">📱 Install LaDevida App</h3>
         <p className="mt-1 text-sm text-gray-700 leading-relaxed">
           ⚡ Instant access to flash sales<br/>
           🎁 Special discounts for app users<br/>

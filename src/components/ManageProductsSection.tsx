@@ -54,19 +54,19 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({
   };
 
   return (
-    <section className="mb-8 bg-white p-4 sm:p-6 rounded-xl shadow-sm">
+    <section className="mb-8 bg-card-background p-4 sm:p-6 rounded-xl shadow-sm">
       <div className="flex justify-between items-center cursor-pointer bg-gray-100 p-4 rounded-lg hover:bg-gray-200 transition-colors" 
            onClick={() => setIsManageProductsOpen(!isManageProductsOpen)}>
         <div className="flex items-center gap-2">
-          <CubeIcon className="w-5 h-5 text-gray-900" />
-          <h2 className="text-xl font-semibold text-gray-900">Manage Products</h2>
+          <CubeIcon className="w-5 h-5 text-text-primary" />
+          <h2 className="text-xl font-semibold text-text-primary">Manage Products</h2>
         </div>
         {isManageProductsOpen ? <ChevronUpIcon className="w-5 h-5" /> : <ChevronDownIcon className="w-5 h-5" />}
       </div>
       {isManageProductsOpen && (
         <div className="space-y-4 mt-4">
           {products.map((product) => (
-            <div key={product.id} className="bg-white p-4 sm:p-6 rounded-lg shadow-sm flex flex-col sm:flex-row gap-4">
+            <div key={product.id} className="bg-card-background p-4 sm:p-6 rounded-lg shadow-sm flex flex-col sm:flex-row gap-4">
               {product.images[0] && (
                 <div className="w-32 h-32 flex-shrink-0 relative">
                   <Image
@@ -129,8 +129,8 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({
                 ) : (
                   // View Mode
                   <>
-                    <h3 className="text-lg font-medium text-gray-900">{product.name}</h3>
-                    <p className="text-sm text-gray-600">{product.description}</p>
+                    <h3 className="text-lg font-medium text-text-primary">{product.name}</h3>
+                    <p className="text-sm text-text-secondary">{product.description}</p>
                     <div className="flex flex-wrap gap-4">
                       <span className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded">₦{product.price}</span>
                       <span className="px-2 py-1 bg-gray-100 text-gray-800 text-sm rounded">{product.category}</span>

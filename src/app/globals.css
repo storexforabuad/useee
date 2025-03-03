@@ -2,25 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Base Theme Variables */
 :root {
   --background: #ffffff;
   --foreground: #171717;
   --navbar-height: 64px;
+  --card-background: #ffffff;
+  --card-hover: #f3f4f6;
+  --border-color: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --navbar-bg: #ffffff;
+  --input-background: #ffffff;
+  --input-border: #e5e7eb;
+  --button-secondary: #f3f4f6;
+  --shadow-color: rgb(0 0 0 / 0.1);
+  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
 }
 
+/* Dark Theme Variables */
+[data-theme='dark'] {
+  --background: #111827;
+  --foreground: #f9fafb;
+  --card-background: #1f2937;
+  --card-hover: #374151;
+  --border-color: #374151;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --navbar-bg: #1f2937;
+  --input-background: #374151;
+  --input-border: #4b5563;
+  --button-secondary: #374151;
+  --shadow-color: rgb(0 0 0 / 0.25);
+  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.25), 0 1px 2px -1px rgb(0 0 0 / 0.25);
+}
+
+/* System Dark Mode Preference */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme='light']) {
+    --background: #111827;
+    --foreground: #f9fafb;
+    --card-background: #1f2937;
+    --card-hover: #374151;
+    --border-color: #374151;
+    --text-primary: #f9fafb;
+    --text-secondary: #9ca3af;
+    --navbar-bg: #1f2937;
+    --input-background: #374151;
+    --input-border: #4b5563;
+    --button-secondary: #374151;
+    --shadow-color: rgb(0 0 0 / 0.25);
+    --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.25), 0 1px 2px -1px rgb(0 0 0 / 0.25);
   }
 }
 
+/* Base Styles */
 body {
-  color: var(--foreground);
+  color: var(--text-primary);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* CategoryBar Styles */
@@ -31,15 +74,19 @@ body {
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   will-change: transform;
+  background-color: var(--card-background);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .category-bar-container.is-sticky {
   position: fixed;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  background-color: var(--card-background/95);
+  box-shadow: 0 1px 3px var(--shadow-color);
 }
 
-/* Fix for iOS sticky behavior */
+/* iOS Sticky Fix */
 @supports (-webkit-touch-callout: none) {
   .category-bar-container {
     position: -webkit-sticky;
@@ -74,6 +121,34 @@ body {
   }
 }
 
+/* Card Styles */
+.card {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  box-shadow: var(--card-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px var(--shadow-color), 
+              0 2px 4px -2px var(--shadow-color);
+}
+
+/* Input Styles */
+.input {
+  background-color: var(--input-background);
+  border: 1px solid var(--input-border);
+  color: var(--text-primary);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input:focus {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px var(--shadow-color);
+}
+
 /* Performance Optimizations */
 @media (prefers-reduced-motion: reduce) {
   * {
@@ -96,4 +171,12 @@ body {
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   will-change: transform;
+}
+
+/* Theme Transition */
+* {
+  transition: background-color 0.2s ease-in-out, 
+              border-color 0.2s ease-in-out, 
+              color 0.2s ease-in-out,
+              box-shadow 0.2s ease-in-out;
 }

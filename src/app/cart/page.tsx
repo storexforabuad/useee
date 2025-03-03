@@ -36,7 +36,7 @@ export default function CartPage() {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
         <h2 className="text-2xl font-bold">Your list is empty</h2>
-        <p className="mt-2 text-gray-600">Start shopping by adding items to your list.</p>
+        <p className="mt-2 text-text-secondary">Start shopping by adding items to your list.</p>
       </div>
     );
   }
@@ -51,7 +51,7 @@ export default function CartPage() {
         ))}
       </div>
 
-      <div className="mt-8 border-t border-gray-200 pt-8">
+      <div className="mt-8 border-t border-border-color pt-8">
         <div className="flex justify-between text-lg font-medium">
           <span>Total</span>
           <span>{formatPrice(state.totalAmount)}</span>
@@ -67,7 +67,7 @@ export default function CartPage() {
       </div>
       
 
-      <footer className="py-12 text-center text-gray-600">
+      <footer className="py-12 text-center text-text-secondary">
         <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
           <span>powered by ABS &copy; {new Date().getFullYear()}.</span>
           <a 

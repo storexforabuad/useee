@@ -18,7 +18,7 @@ export default function CartItem({ item }: CartItemProps) {
   };
 
   return (
-    <div className="flex items-center gap-4 border-b border-gray-200 py-4">
+    <div className="flex items-center gap-4 border-b border-border-color py-4">
       <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md">
         <Image
           src={item.images[0]}
@@ -30,7 +30,7 @@ export default function CartItem({ item }: CartItemProps) {
       </div>
 
       <div className="flex flex-1 flex-col">
-        <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
+        <h3 className="text-sm font-medium text-text-primary">{item.name}</h3>
         <p className="mt-1 text-sm text-gray-500">{formatPrice(item.price)}</p>
       </div>
 
@@ -42,7 +42,7 @@ export default function CartItem({ item }: CartItemProps) {
               payload: { id: item.id, quantity: item.quantity - 1 }
             })
           }
-          className="rounded-md p-1 text-gray-600 hover:bg-gray-100"
+          className="rounded-md p-1 text-text-secondary hover:bg-gray-100"
         >
           <Minus size={16} />
         </button>
@@ -56,7 +56,7 @@ export default function CartItem({ item }: CartItemProps) {
               payload: { id: item.id, quantity: item.quantity + 1 }
             })
           }
-          className="rounded-md p-1 text-gray-600 hover:bg-gray-100"
+          className="rounded-md p-1 text-text-secondary hover:bg-gray-100"
         >
           <Plus size={16} />
         </button>

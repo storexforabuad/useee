@@ -50,8 +50,8 @@ const PopularProducts = () => {
               />
             )}
             <h3 className="mt-2 text-lg font-bold">{product.name}</h3>
-            <p className="mt-1 text-gray-600">{product.description}</p>
-            <p className="mt-1 text-gray-900 font-semibold">{product.price}</p>
+            <p className="mt-1 text-text-secondary">{product.description}</p>
+            <p className="mt-1 text-text-primary font-semibold">{product.price}</p>
           </Link>
         ))}
       </div>

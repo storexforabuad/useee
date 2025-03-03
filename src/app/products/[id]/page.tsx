@@ -143,14 +143,14 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
               {product.category}
             </span>
           </div>
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{product.name}</h1>
-          <p className="mt-2 text-lg md:text-xl font-medium text-gray-900">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-text-primary">{product.name}</h1>
+          <p className="mt-2 text-lg md:text-xl font-medium text-text-primary">
             {formatPrice(product.price)}
           </p>
           {product.features && (
             <div className="mt-2">
-              <h2 className="text-sm font-medium text-gray-900">Features</h2>
-              <ul className="mt-1 list-inside list-disc text-sm text-gray-600">
+              <h2 className="text-sm font-medium text-text-primary">Features</h2>
+              <ul className="mt-1 list-inside list-disc text-sm text-text-secondary">
                 {product.features.map((feature, index) => (
                   <li key={index}>{feature}</li>
                 ))}
@@ -184,7 +184,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
       </div>
     
 
-      <footer className="py-12 text-center text-gray-600">
+      <footer className="py-12 text-center text-text-secondary">
         <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
           <span>powered by ABS &copy; {new Date().getFullYear()}.</span>
           <a 

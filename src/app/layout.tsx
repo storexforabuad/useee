@@ -1,6 +1,7 @@
 import './globals.css'
 import { Metadata, Viewport } from 'next'
 import { CartProvider } from '../lib/cartContext'
+import { ThemeProvider } from '../lib/themeContext'
 import Navbar from '../components/layout/navbar'
 import InstallPrompt from '../components/InstallPrompt'
 
@@ -35,13 +36,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <CartProvider>
-          <Navbar />
-          <main className="min-h-screen pt-16 bg-gray-50">
-            {children}
-          </main>
-          <InstallPrompt />
-        </CartProvider>
+        <ThemeProvider>
+          <CartProvider>
+            <Navbar />
+            <main className="min-h-screen pt-16 bg-background text-foreground">
+              {children}
+            </main>
+            <InstallPrompt />
+          </CartProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
