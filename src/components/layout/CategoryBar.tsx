@@ -14,7 +14,6 @@ export default function CategoryBar({ onCategorySelect }: { onCategorySelect: (c
   const [activeCategory, setActiveCategory] = useState<string>('');
   const [isSticky, setIsSticky] = useState(false);
 
-  // Debounced scroll handler
   const handleScroll = useCallback(() => {
     const navbar = document.querySelector('nav');
     const navHeight = navbar?.getBoundingClientRect().height || 64;
@@ -30,9 +29,7 @@ export default function CategoryBar({ onCategorySelect }: { onCategorySelect: (c
     };
     fetchCategories();
 
-    // Add passive scroll listener for better performance
     window.addEventListener('scroll', handleScroll, { passive: true });
-    // Initial check
     handleScroll();
     
     return () => window.removeEventListener('scroll', handleScroll);
@@ -71,16 +68,14 @@ export default function CategoryBar({ onCategorySelect }: { onCategorySelect: (c
   };
 
   return (
-    <div 
-      className={`category-bar-container ${
-        isSticky 
-          ? 'is-sticky fixed top-16 left-0 right-0 z-40 bg-card-background/95 backdrop-blur-sm shadow-[var(--shadow-md)]' 
-          : 'relative'
-      }`}
-    >
+    <div className={`category-bar-container ${isSticky ? 'is-sticky' : ''}`}>
       {/* Gradient Fade Effect */}
-      <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[var(--background)] to-transparent z-10" />
-      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[var(--background)] to-transparent z-10" />
+      <div className={`absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r ${
+        isSticky ? 'from-[var(--navbar-bg)]' : 'from-[var(--background)]'
+      } to-transparent z-10 transition-colors duration-300`} />
+      <div className={`absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l ${
+        isSticky ? 'from-[var(--navbar-bg)]' : 'from-[var(--background)]'
+      } to-transparent z-10 transition-colors duration-300`} />
       
       {/* Scrollable Container */}
       <div className="overflow-x-auto scrollbar-hide mx-4">

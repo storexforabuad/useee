@@ -1,6 +1,6 @@
 {
-  "name": "LaDevidaApp",
-  "short_name": "LaDevidaApp",
+  "name": "LaDevida App",
+  "short_name": "LaDevida App",
   "description": "Your one-stop shop for all your needs",
   "start_url": "/",
   "display": "standalone",

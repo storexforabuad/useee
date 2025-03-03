@@ -148,20 +148,23 @@ body {
 .category-bar-container {
   position: sticky;
   top: var(--navbar-height);
+  z-index: 40;
   transition: all 0.3s ease-in-out;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   will-change: transform;
-  background-color: var(--card-background);
-  border-bottom: 1px solid var(--border-color);
+  background-color: transparent;
 }
 
 .category-bar-container.is-sticky {
   position: fixed;
+  top: var(--navbar-height);
+  left: 0;
+  right: 0;
+  background-color: var(--navbar-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  background-color: var(--card-background/95);
-  box-shadow: 0 1px 3px var(--shadow-color);
+  box-shadow: var(--shadow-md);
 }
 
 /* iOS Sticky Fix */
