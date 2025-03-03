@@ -52,6 +52,11 @@ export default function CategoryBar({ onCategorySelect }: { onCategorySelect: (c
       'Baby': '👶🏻',
       'Watches': '⌚',
       'Home': '🏠',
+      'Automobile': '🚗',
+      'Perfume': '🌸',
+      'Incense': '⭐',
+      'Real-Estate': '🏘️',
+      'Solar': '☀️',
     };
     return iconMap[categoryName] || '❓';
   };
@@ -63,6 +68,11 @@ export default function CategoryBar({ onCategorySelect }: { onCategorySelect: (c
       'Baby': 'bg-[var(--badge-yellow-bg)] text-[var(--badge-yellow-text)]',
       'Watches': 'bg-[var(--badge-blue-bg)] text-[var(--badge-blue-text)]',
       'Home': 'bg-[var(--badge-green-bg)] text-[var(--badge-green-text)]',
+      'Automobile': 'bg-[var(--badge-red-bg)] text-[var(--badge-red-text)]',
+      'Perfume': 'bg-[var(--badge-pink-bg)] text-[var(--badge-pink-text)]',
+      'Incense': 'bg-[var(--badge-purple-bg)] text-[var(--badge-purple-text)]',
+      'Real-Estate': 'bg-[var(--badge-blue-bg)] text-[var(--badge-blue-text)]',
+      'Solar': 'bg-[var(--badge-yellow-bg)] text-[var(--badge-yellow-text)]',
     };
     return colorMap[categoryName] || 'bg-card-hover text-text-primary';
   };
