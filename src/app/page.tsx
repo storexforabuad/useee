@@ -12,8 +12,7 @@ import type { Product } from '../types/product';
 import NavigationStore from '@/lib/navigationStore';
 import ConnectionErrorToast from '../components/ConnectionErrorToast';
 import { CategoryCache } from '../lib/categoryCache';
-import { ProductCache, ProductListCache } from '../lib/productCache';
-import { CartCache } from '@/lib/cartCache';
+import { ProductListCache } from '../lib/productCache';
 
 const ProductGrid = dynamic(
   () => import('../components/products/ProductGrid'),
@@ -67,6 +66,14 @@ export default function Home() {
         console.log('Using cached products');
         fetchedProducts = cached;
       } else {
+        // Debug: Log category and all products for this category
+        if (category && category !== 'Promo' && category !== 'Back in Stock' && category !== '') {
+          const allProducts = await getProducts();
+          console.log('DEBUG: Category selected:', category);
+          console.log('DEBUG: All products:', allProducts.map(p => ({id: p.id, name: p.name, category: p.category})));
+          const filtered = allProducts.filter(p => p.category === category);
+          console.log('DEBUG: Products matching category:', filtered);
+        }
         switch (category) {
           case 'Promo': {
             const promoProducts = await getProducts();
@@ -89,6 +96,8 @@ export default function Home() {
           }
           default: {
             fetchedProducts = await getProductsByCategory(category);
+            // Debug: Log what getProductsByCategory returns
+            console.log('DEBUG: getProductsByCategory returned:', fetchedProducts);
           }
         }
         // Sort by createdAt descending
@@ -112,39 +121,24 @@ export default function Home() {
 
   useEffect(() => {
     const savedState = NavigationStore.getState();
-    
     const fetchInitialData = async () => {
       try {
         const cachedCategories = CategoryCache.get();
-        
+        let fetchedCategories;
         if (cachedCategories) {
-          console.log('Using cached categories');
-          setCategories(cachedCategories);
-          
-          if (savedState.category) {
-            setActiveCategory(savedState.category);
-            await handleCategorySelect(savedState.category);
-          } else {
-            await handleCategorySelect('Promo');
-          }
+          fetchedCategories = cachedCategories;
         } else {
-          console.log('Fetching fresh categories');
-          const [fetchedCategories] = await Promise.all([
-            getProducts(),
-            getCategories()
-          ]);
-          
-          setCategories(fetchedCategories);
+          // Only get categories from getCategories, not getProducts
+          fetchedCategories = await getCategories();
           CategoryCache.save(fetchedCategories);
-          
-          if (savedState.category) {
-            setActiveCategory(savedState.category);
-            await handleCategorySelect(savedState.category);
-          } else {
-            await handleCategorySelect('Promo');
-          }
         }
-
+        setCategories(fetchedCategories);
+        if (savedState.category) {
+          setActiveCategory(savedState.category);
+          await handleCategorySelect(savedState.category);
+        } else {
+          await handleCategorySelect('Promo');
+        }
         if (savedState.scrollPosition) {
           setTimeout(() => {
             window.scrollTo(0, savedState.scrollPosition);
@@ -158,9 +152,8 @@ export default function Home() {
         setInitialLoading(false);
       }
     };
-
     fetchInitialData();
-  }, [handleCategorySelect, setIsConnectionError]); // Add missing dependencies
+  }, [handleCategorySelect, setIsConnectionError]);
 
   const scrollProductGridToTop = () => {
     if (productGridRef.current) {

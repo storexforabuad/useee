@@ -14,7 +14,7 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "Alaniq INT.",
-  description: "Discover the finest items for your wardrobe",
+  description: "Discover Beautiful RTW, Perfumes, Incense & More",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
