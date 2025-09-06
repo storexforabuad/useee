@@ -13,13 +13,13 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
-  title: "Supermom Store",
+  title: "Alaniq INT.",
   description: "Discover the finest items for your wardrobe",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Supermom Store",
+    title: "Alaniq INT.",
   },
   formatDetection: {
     telephone: false,

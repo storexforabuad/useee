@@ -57,7 +57,7 @@ export default function Navbar() {
               <Link href={isAdminRoute ? '/admin' : '/'} className="flex items-center gap-2">
                 <ShoppingBag className="h-8 w-8 text-text-primary" />
                 <span className="text-xl font-semibold text-text-primary flex items-center gap-2">
-                  {isAdminRoute ? 'Admin' : 'Supermom Store'}
+                  {isAdminRoute ? 'Admin' : 'Alaniq INT.'}
                 </span>
               </Link>
             )}

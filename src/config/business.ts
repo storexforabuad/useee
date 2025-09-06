@@ -19,8 +19,8 @@ export interface BusinessConfig {
   }
   
   export const businessConfig: BusinessConfig = {
-    name: "Supermom Store",
-    shortName: "Supermom Store App",
+    name: "Alaniq INT.",
+    shortName: "Alaniq INT. App",
     description: "Your one-stop shop for all your fashion needs",
     contact: {
       whatsapp: "+2347032905036",

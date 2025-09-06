@@ -1,7 +1,7 @@
 import { memo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { Grid2X2, LayoutList, Info, Phone, MessageCircle, Store, MapPin, Shield, Star, Clock, X, Atom } from 'lucide-react';
+import { Grid2X2, LayoutList, Info, Phone, MessageCircle, Shield, Star, Clock, X, Atom } from 'lucide-react';
 import { Product } from '../../types/product';
 import { motion, LayoutGroup, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
@@ -21,16 +21,16 @@ const ProductCard = dynamic(() => import('./ProductCard'), {
 
 const DUMMY_BUSINESS = {
   ceo: {
-  name: 'Haj. Maryam G. L.',
+  name: 'Haj. Fatimah I. Goni',
   image: '/images/ceo-profile-northern-nigeria.png',
 },
-  businessName: 'Supermom Store',
-  phone: '+2348061316002',
-  whatsapp: '+2348061316002',
+  businessName: 'Alaniq INT.',
+  phone: '+2349021067212',
+  whatsapp: '+2349021067212',
   address: 'No. 2, Garki Plaza, Ahmadu Bello Way, Abuja',
   hasPhysicalStore: true,
   rating: 4.8,
-  reviews: 846,
+  reviews: 476,
   certified: true,
   years: 4,
   delivery: 'Nationwide Delivery',
@@ -38,9 +38,9 @@ const DUMMY_BUSINESS = {
   countryFlag: '🇳🇬',
   businessHours: 'Open 24/7',
   responseTime: 'Usually responds within 1 hour',
-  instagram: '@supermoms.store.ng',
-  facebook: 'SuperMom store ',
-  specialization: 'Premium & Affordable Products For Mom & Her Kids'
+  instagram: '@al_aniq_int',
+  facebook: 'Alaniq INT. ',
+  specialization: 'Premium Turanrenwuta, Khumras, Oil Perfumes & RTW'
 };
 
 function GlassAboutButton({ onClick }: { onClick: () => void }) {
@@ -151,10 +151,10 @@ function BusinessCardModal({ open, onClose }: { open: boolean; onClose: () => vo
 
               {/* Business Info */}
               <div className="space-y-2 mb-4">
-                <div className="flex items-center gap-2 p-2.5 bg-slate-50/80 dark:bg-slate-700/50 rounded-lg">
+                {/* <div className="flex items-center gap-2 p-2.5 bg-slate-50/80 dark:bg-slate-700/50 rounded-lg">
                   <MapPin className="w-4 h-4 text-slate-600 dark:text-slate-300 flex-shrink-0 fill-current" />
                   <span className="text-xs text-slate-700 dark:text-slate-200">{b.address}</span>
-                </div>
+                </div> */}
                 
                 <div className="flex items-center gap-2 p-2.5 bg-slate-50/80 dark:bg-slate-700/50 rounded-lg">
                   <Clock className="w-4 h-4 text-slate-600 dark:text-slate-300 flex-shrink-0 fill-current" />
@@ -188,7 +188,7 @@ function BusinessCardModal({ open, onClose }: { open: boolean; onClose: () => vo
                     {b.years}+ Years <span role="img" aria-label="Years in business">🗓️</span>
                   </span>
                   <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium flex-shrink-0">
-                    <span role="img" aria-label="Nigerian flag">{b.countryFlag}</span> {b.delivery}
+                    {b.delivery}<span role="img" aria-label="Nigerian flag">{b.countryFlag}</span> 
                   </span>
                   {b.certified && (
                     <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium flex-shrink-0">
@@ -226,7 +226,7 @@ function BusinessCardModal({ open, onClose }: { open: boolean; onClose: () => vo
                   </motion.a>
                 </div>
 
-                <motion.button
+                {/* <motion.button
                   className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700/50 dark:hover:bg-slate-600/50 text-slate-800 dark:text-slate-200 font-semibold py-2.5 rounded-xl transition-colors border border-slate-300/50 dark:border-slate-600/50"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -234,7 +234,7 @@ function BusinessCardModal({ open, onClose }: { open: boolean; onClose: () => vo
                 >
                   <Store className="w-4 h-4 fill-current" />
                   <span className="text-sm">Visit Store</span>
-                </motion.button>
+                </motion.button> */}
               </div>
 
               {/* Footer */}

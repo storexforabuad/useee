@@ -4,7 +4,7 @@ import { ThemeProvider } from '../../lib/themeContext'
 import ClientProviders from '../../components/ClientProviders'
 
 export const metadata: Metadata = {
-  title: "Supermom Store Admin Dashboard",
+  title: "Alaniq INT. Admin Dashboard",
   description: "Manage your store, products, and orders.",
   manifest: "/admin-manifest.json",
   appleWebApp: {

@@ -14,7 +14,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification('Supermom Store', options)
+    self.registration.showNotification('Alaniq INT.', options)
   );
 });
 

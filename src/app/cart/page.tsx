@@ -49,7 +49,7 @@ export default function CartPage() {
       `Thank you! 🙏`;
   
     const encodedMessage = encodeURIComponent(message);
-    const whatsappLink = `https://wa.me/+2348061316002?text=${encodedMessage}`;
+    const whatsappLink = `https://wa.me/+2349021067212?text=${encodedMessage}`;
     window.open(whatsappLink, '_blank');
   };
 
