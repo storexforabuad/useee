@@ -2,7 +2,6 @@ import { Archive, X } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect } from 'react';
 import { Product } from '../../../types/product';
-import AnimatedViewCount from '../../AnimatedViewCount';
 import Modal from '../../Modal';
 
 interface TotalProductsModalProps {
@@ -72,7 +71,7 @@ const TotalProductsModal: React.FC<TotalProductsModalProps> = ({
         </div>
         <h2 className="text-xl font-bold text-text-primary dark:text-white">Total Products</h2>
         <p className="text-4xl font-bold text-blue-500 dark:text-blue-300 my-1">
-          <AnimatedViewCount value={totalProducts} />
+          {totalProducts}
         </p>
         <p className="text-sm text-text-secondary dark:text-slate-300 mb-6">All products currently in your store.</p>
         {/* Content */}

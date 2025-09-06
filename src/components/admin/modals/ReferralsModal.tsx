@@ -1,6 +1,5 @@
 import Modal from '../../Modal';
 import { Gift, X } from 'lucide-react';
-import AnimatedViewCount from '../../AnimatedViewCount';
 
 interface ReferralsModalProps {
   referrals: number;
@@ -24,7 +23,7 @@ const ReferralsModal: React.FC<ReferralsModalProps> = ({ referrals, handleClose 
         </div>
         <h2 className="text-xl font-bold text-text-primary">Referrals</h2>
         <p className="text-4xl font-bold text-orange-500 my-1">
-          <AnimatedViewCount value={referrals} />
+          {referrals}
         </p>
         <p className="text-sm text-text-secondary mb-6 text-center">Businesses you&apos;ve referred for this service.</p>
         {/* Content */}

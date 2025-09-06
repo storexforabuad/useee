@@ -1,6 +1,5 @@
 import { Layers, X } from 'lucide-react';
 import { useEffect } from 'react';
-import AnimatedViewCount from '../../AnimatedViewCount';
 import Modal from '../../Modal';
 
 interface DebtorsModalProps {
@@ -36,7 +35,7 @@ const DebtorsModal: React.FC<DebtorsModalProps> = ({ debtors, handleClose }) => 
         </div>
         <h2 className="text-xl font-bold text-text-primary">Debtors</h2>
         <p className="text-4xl font-bold text-fuchsia-500 my-1">
-          <AnimatedViewCount value={debtors} />
+          {debtors}
         </p>
         <p className="text-sm text-text-secondary mb-6 text-center">Customers with outstanding payments.</p>
         {/* Content */}

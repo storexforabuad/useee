@@ -27,7 +27,7 @@ const StoreLinkModal: React.FC<StoreLinkModalProps> = ({ storeLink, handleClose 
   const qrCodeUrl = '/store-qr-code.png';
   const screenshotUrl = '/arewamodescreen.png';
   const shareMessage =
-    '🌟 Discover authentic fashion at the new Arewa Mode Online Store! 🛒 Enjoy exclusive discounts 🎉 A beautiful selection of fabrics & Materias ✨ Nationwide delivery 🚚 🇳🇬. Shop now: https://https://tinyurl.com/alaniqint.com/arewamode1';
+    '🌟 Discover authentic products at the new Alaniq INT. Online Store! 🛒 Enjoy exclusive discounts 🎉 A beautiful selection of RTW, Perfumes, Incense & More ✨ Nationwide delivery 🚚 🇳🇬. Shop now: https://tinyurl.com/alaniqint';
   const [copyMsgSuccess, setCopyMsgSuccess] = useState(false);
 
   const handleCopyLink = () => {
@@ -67,7 +67,7 @@ const StoreLinkModal: React.FC<StoreLinkModalProps> = ({ storeLink, handleClose 
   };
 
   const socialPlatforms = [
-    { name: 'WhatsApp', icon: WhatsAppIcon, url: `https://wa.me/?text=${encodeURIComponent('🌟 Discover authentic fashion at the new Arewa Mode Online Store! 🛒 Enjoy exclusive discounts 🎉 A beautiful selection of fabrics & Materias ✨ Nationwide delivery 🚚 🇳🇬. Shop now: https://https://tinyurl.com/alaniqint.com/arewamode1')}`, color: 'hover:text-[#25D366]' },
+    { name: 'WhatsApp', icon: WhatsAppIcon, url: `https://wa.me/?text=${encodeURIComponent('🌟 Discover authentic products at the new Alaniq INT. Online Store! 🛒 Enjoy exclusive discounts 🎉 A beautiful selection of RTW, Perfumes, Incense & More ✨ Nationwide delivery 🚚 🇳🇬. Shop now: https://tinyurl.com/alaniqint')}`, color: 'hover:text-[#25D366]' },
     { name: 'Facebook', icon: FacebookIcon, url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(storeLinkValue)}`, color: 'hover:text-[#1877F2]' },
     { name: 'Instagram', icon: InstagramIcon, url: `https://www.instagram.com`, color: 'hover:text-[#E4405F]' },
     { name: 'Twitter', icon: TwitterIcon, url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(storeLinkValue)}`, color: 'hover:text-[#1DA1F2]' },

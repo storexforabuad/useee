@@ -251,7 +251,7 @@ const AdminDashboard = () => {
                   categories={categories}
                   debtors={0}
                   subscriptionStatus={"Active"}
-                  storeLink={'http://https://tinyurl.com/alaniqint.com/supermum1'}
+                  storeLink={'http://https://tinyurl.com/alaniqint'}
                   referrals={0}
                   setIsModalOpen={setIsModalOpen}
                   onRefresh={fetchData}

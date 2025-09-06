@@ -2,7 +2,6 @@ import { Eye, Tag, X } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect } from 'react';
 import { Product } from '../../../types/product';
-import AnimatedViewCount from '../../AnimatedViewCount';
 import Modal from '../../Modal';
 
 interface TotalViewsModalProps {
@@ -89,9 +88,9 @@ const TotalViewsModal: React.FC<TotalViewsModalProps> = ({
           <Eye className="w-7 h-7 text-success" />
         </div>
         <h2 className="text-xl font-bold text-text-primary">Total Views</h2>
-        <div className="text-4xl font-bold text-success my-1">
-          <AnimatedViewCount value={totalViews} />
-        </div>
+        <p className="text-4xl font-bold text-success my-1">
+          {totalViews}
+        </p>
         <p className="text-sm text-text-secondary mb-6 text-center">Total product views across your store.</p>
         {/* Content */}
         <div className="w-full">
