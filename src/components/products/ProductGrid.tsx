@@ -22,7 +22,7 @@ const ProductCard = dynamic(() => import('./ProductCard'), {
 const DUMMY_BUSINESS = {
   ceo: {
   name: 'Haj. Fatimah I. Goni',
-  image: '/images/ceo-profile-northern-nigeria.png',
+  image: '/images/ceo-profile-northern-nigeria.jpg',
 },
   businessName: 'Alaniq INT.',
   phone: '+2349021067212',
@@ -241,7 +241,7 @@ function BusinessCardModal({ open, onClose }: { open: boolean; onClose: () => vo
               <div className="text-center pt-2 border-t border-slate-200/50 dark:border-slate-600/50">
                 <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1">
                   Powered by <span className='font-semibold text-slate-700 dark:text-slate-300'>Business + Science™</span>
-                  <Atom className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />
+                  {/* <Atom className="w-3 h-3 text-indigo-500 dark:text-indigo-400" /> */}
                 </p>
               </div>
             </div>
