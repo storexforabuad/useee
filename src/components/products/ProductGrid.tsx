@@ -252,6 +252,28 @@ function BusinessCardModal({ open, onClose }: { open: boolean; onClose: () => vo
   );
 }
 
+const EmptyCategory = () => (
+  <div className="flex flex-col items-center justify-center min-h-[40vh] py-12 px-4 text-center select-none">
+    <motion.div
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.4, type: 'spring', stiffness: 180 }}
+      className="mb-4"
+    >
+      {/* SVG or emoji for visual appeal, auto darkmode */}
+      <span className="block text-6xl sm:text-7xl mb-2 drop-shadow-lg">
+        🛒
+      </span>
+    </motion.div>
+    <h2 className="text-xl sm:text-2xl font-bold text-slate-700 dark:text-slate-100 mb-2">
+      All items sold out!
+    </h2>
+    <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+      Please check back soon or explore other collections for amazing products!
+    </p>
+  </div>
+);
+
 interface ProductGridProps {
   products: Product[];
   containerRef?: React.Ref<HTMLDivElement>;
@@ -319,24 +341,30 @@ const ProductGrid = memo(function ProductGrid({ products, containerRef }: Produc
           transform: 'translateZ(0)'
         }}
       >
-        {sortedProducts.map((product) => (
-          <motion.div
-            key={product.id}
-            layout
-            transition={transition}
-            style={{
-              willChange: 'transform',
-              transform: 'translateZ(0)'
-            }}
-          >
-            <Link
-              href={`/products/${product.id}`}
-              className="group block relative touch-manipulation"
+        {sortedProducts.length === 0 ? (
+          <div className="col-span-full w-full">
+            <EmptyCategory />
+          </div>
+        ) : (
+          sortedProducts.map((product) => (
+            <motion.div
+              key={product.id}
+              layout
+              transition={transition}
+              style={{
+                willChange: 'transform',
+                transform: 'translateZ(0)'
+              }}
             >
-              <ProductCard product={product} />
-            </Link>
-          </motion.div>
-        ))}
+              <Link
+                href={`/products/${product.id}`}
+                className="group block relative touch-manipulation"
+              >
+                <ProductCard product={product} />
+              </Link>
+            </motion.div>
+          ))
+        )}
       </motion.div>
     </LayoutGroup>
   );

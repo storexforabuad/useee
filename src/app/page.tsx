@@ -149,8 +149,7 @@ export default function Home() {
             setActiveCategory(savedState.category);
             await handleCategorySelect(savedState.category);
           } else {
-            const products = await getProducts();
-            setProducts(products);
+            await handleCategorySelect('Promo');
           }
         } else {
           console.log('Fetching fresh categories');
@@ -166,7 +165,7 @@ export default function Home() {
             setActiveCategory(savedState.category);
             await handleCategorySelect(savedState.category);
           } else {
-            setProducts(products);
+            await handleCategorySelect('Promo');
           }
         }
 
@@ -300,7 +299,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background overscroll-none">
-      <PullToRefresh onRefresh={handleRefresh} />
+      {/* <PullToRefresh onRefresh={handleRefresh} /> */}
       <Navbar />
       <div className="pt-16 pb-safe-area-inset-bottom">
         <CategoryBar 
@@ -317,15 +316,21 @@ export default function Home() {
               {isConnectionError && (
                 <ConnectionErrorToast onRetry={() => window.location.reload()} />
               )}
-              <ProductGrid 
-                products={products}
-                containerRef={productGridRef}
-              />
+              {/* Show skeleton loader while loading, else ProductGrid or empty state */}
+              {loading ? (
+                <LoadingGrid />
+              ) : products.length === 0 ? (
+                <ProductGrid products={[]} containerRef={productGridRef} />
+              ) : (
+                <ProductGrid 
+                  products={products}
+                  containerRef={productGridRef}
+                />
+              )}
               {/* Infinite scroll sentinel */}
-              {hasMore && (
+              {hasMore && !loading && (
                 <div ref={observerRef} className="h-8" />
               )}
-              {loading && <LoadingGrid />}
             </>
           )}
         </div>
