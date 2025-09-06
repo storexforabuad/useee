@@ -13,9 +13,7 @@ import NavigationStore from '@/lib/navigationStore';
 import ConnectionErrorToast from '../components/ConnectionErrorToast';
 import { CategoryCache } from '../lib/categoryCache';
 import { ProductCache, ProductListCache } from '../lib/productCache';
-import PullToRefresh from '../components/PullToRefresh';
 import { CartCache } from '@/lib/cartCache';
-
 
 const ProductGrid = dynamic(
   () => import('../components/products/ProductGrid'),
@@ -112,28 +110,6 @@ export default function Home() {
     }
   }, []);
 
-  const handleRefresh = async () => {
-    try {
-      setLoading(true);
-      const [products, fetchedCategories] = await Promise.all([
-        activeCategory ? getProductsByCategory(activeCategory) : getProducts(),
-        getCategories()
-      ]);
-      
-      setCategories(fetchedCategories);
-      setProducts(products);
-      CategoryCache.clear();
-      ProductCache.clear();
-      CartCache.clear();
-      setIsConnectionError(false);
-    } catch (error) {
-      console.error('Error refreshing:', error);
-      setIsConnectionError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     const savedState = NavigationStore.getState();
     
@@ -153,7 +129,7 @@ export default function Home() {
           }
         } else {
           console.log('Fetching fresh categories');
-          const [products, fetchedCategories] = await Promise.all([
+          const [fetchedCategories] = await Promise.all([
             getProducts(),
             getCategories()
           ]);
@@ -299,7 +275,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background overscroll-none">
-      {/* <PullToRefresh onRefresh={handleRefresh} /> */}
       <Navbar />
       <div className="pt-16 pb-safe-area-inset-bottom">
         <CategoryBar 
