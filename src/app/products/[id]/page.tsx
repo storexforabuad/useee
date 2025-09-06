@@ -2,11 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { getProductById } from '../../../lib/db';
-import { Phone, PlusCircle } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { getProductById, incrementProductViews} from '../../../lib/db';
+import { CirclePlus, ShoppingCart, Clock, Check } from 'lucide-react';
 import { useCart } from '../../../lib/cartContext';
 import { Product } from '../../../types/product';
-import SkeletonLoader from '../../../components/SkeletonLoader';
+import { calculateDiscount, formatPrice } from '../../../utils/price';
+import { ViewHistoryCache } from '@/lib/viewHistoryCache';
+import { ProductDetailCache } from '../../../lib/productDetailCache';
+
+// Dynamic imports
+const ProductDetailSkeleton = dynamic(() => import('../../../components/ProductDetailSkeleton'), {
+  ssr: false
+});
+
+const AnimatedViewCount = dynamic(() => import('../../../components/AnimatedViewCount'), {
+  ssr: false,
+  loading: () => <div className="w-16 h-6 bg-gray-200 rounded animate-pulse" />
+});
 
 export default function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
   const [selectedImage, setSelectedImage] = useState(0);
@@ -16,19 +29,33 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
   const [isInCart, setIsInCart] = useState(false);
   const { state, dispatch } = useCart();
 
+  const [imageLoading, setImageLoading] = useState(true); // Add this state
+
+  const discount = product ? calculateDiscount(product.price, product.originalPrice) : null;
+
   useEffect(() => {
+    let isMounted = true;
     async function fetchProduct() {
       try {
         const { id } = await params;
-        const fetchedProduct = await getProductById(id);
-        setProduct(fetchedProduct);
+        let fetchedProduct: Product | undefined = ProductDetailCache.get(id);
+        if (!fetchedProduct) {
+          fetchedProduct = (await getProductById(id)) || undefined;
+        }
+        if (!isMounted) return;
+        if (fetchedProduct) {
+          setProduct(fetchedProduct);
+          ViewHistoryCache.add(fetchedProduct);
+          await incrementProductViews(id);
+        }
       } catch (error) {
-        console.error('Error fetching product:', error);
+        console.error('[PROD] Error in product detail:', error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     }
     fetchProduct();
+    return () => { isMounted = false; };
   }, [params]);
 
   useEffect(() => {
@@ -38,166 +65,255 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
     }
   }, [product, state.items]);
 
-  if (isLoading) {
-    return (
-      <div className="p-4">
-        <SkeletonLoader />
-      </div>
-    );
-  }
+ if (isLoading) {
+  return <ProductDetailSkeleton />;
+}
 
   if (!product) {
     return <div className="p-4">Product not found</div>;
   }
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN'
-    }).format(price);
-  };
-
   const createWhatsAppMessage = () => {
-    const message = `Hello! I'm interested in buying:\n\n*${product.name}*\nPrice: ${formatPrice(product.price)}\n\nCan you help me with this order?\n\nProduct Link: ${window.location.href}`;
+    const message = 
+      `🛍️ *New Order Request*\n\n` +
+      `Hello! I would like to order this item:\n\n` +
+      `*${product.name}*\n` +
+      `• Price: ${formatPrice(product.price)}\n` +
+      `• Product Link: ${window.location.href}\n\n` +
+      `Thank you! 🙏`;
+    
     const encodedMessage = encodeURIComponent(message);
-    const whatsappLink = `https://wa.me/+2348164981183?text=${encodedMessage}`;
+    const whatsappLink = `https://wa.me/+2348061316002?text=${encodedMessage}`;
     window.open(whatsappLink, '_blank');
   };
 
   const handleAddToCart = () => {
+    if (!product) return;
+    
     setIsAdding(true);
-    dispatch({ type: 'ADD_ITEM', payload: product });
+    dispatch({ 
+      type: 'ADD_ITEM', 
+      payload: {
+        ...product,
+        quantity: 1,
+      }
+    });
     setIsAdding(false);
     setIsInCart(true);
   };
 
-  const getCategoryColor = (categoryName: string): string => {
-    const colorMap: { [key: string]: string } = {
-      'Electronics': 'bg-orange-400',
-      'Men': 'bg-red-500',
-      'Women': 'bg-yellow-500',
-      'Watches': 'bg-blue-400',
-      'Home': 'bg-green-400',
-      // Add more mappings as needed
+  const getCategoryColor = (categoryName: string): { background: string; text: string } => {
+    const colorMap: { [key: string]: { background: string; text: string } } = {
+      'Bespoke': {
+        background: 'bg-[var(--badge-purple-bg)]',
+        text: 'text-[var(--badge-purple-text)]'
+      },
+      'Ready To Wear': {
+        background: 'bg-[var(--badge-pink-bg)]',
+        text: 'text-[var(--badge-pink-text)]'
+      }
     };
-    return colorMap[categoryName] || 'bg-gray-500';
+    
+    return colorMap[categoryName] || {
+      background: 'bg-[var(--badge-blue-bg)]',
+      text: 'text-[var(--badge-blue-text)]'
+    };
   };
 
-  return (
-    <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6 py-4">
-      <div className="grid gap-4 md:gap-8 md:grid-cols-2">
-        <div>
-          <div className="aspect-square overflow-hidden rounded-lg">
-            {product.images[selectedImage] ? (
-              <Image
-                src={product.images[selectedImage]}
-                alt={product.name}
-                width={500}
-                height={500}
-                className="h-full w-full object-cover"
-                priority={false}
-                loading="lazy"
-              />
-            ) : (
-              <div className="h-full w-full bg-gray-200 flex items-center justify-center">
-                <span>No Image Available</span>
-              </div>
-            )}
-          </div>
+return (
+  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 pt-[calc(var(--navbar-height)+1rem)] lg:pt-[calc(var(--navbar-height)+2rem)]">
+    <div className="flex flex-col lg:flex lg:flex-row gap-6 lg:gap-x-8">
+      {/* Image Section */}
+      <div className="flex-1 flex flex-col">
+        <div className="relative overflow-hidden rounded-2xl bg-gray-50">
+        {imageLoading && (
+  <div className="absolute inset-0 bg-[var(--skeleton-background)] animate-pulse">
+    <div className="aspect-square" />
+  </div>
+)}
+          {product.images[selectedImage] ? (
+            <Image
+              src={product.images[selectedImage]}
+              alt={product.name}
+              width={600}
+              height={600}
+              className={`w-full h-auto object-contain transition-opacity duration-300
+                ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+              priority={true}
+              loading="eager"
+              placeholder="blur"
+              blurDataURL={product.images[selectedImage]}
+              onLoadingComplete={() => setImageLoading(false)}
+              onLoad={() => setImageLoading(false)}
+            />
+          ) : (
+            <div className="h-full w-full bg-gray-100 flex items-center justify-center">
+              <span className="text-gray-400">No Image Available</span>
+            </div>
+          )}
+        </div>
+        {/* Reduce spacing below image for mobile */}
+        <div className="mt-0.5 mb-0.5">
+          {/* Thumbnail Images */}
           {product.images.length > 1 && (
-            <div className="mt-2 grid grid-cols-4 gap-2">
+            <div className="mt-1 grid grid-cols-4 gap-2">
               {product.images.map((image, index) => (
                 <button
                   key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`aspect-square overflow-hidden rounded-lg border-2 
-                    ${selectedImage === index ? 'border-gray-600' : 'border-transparent'}`}
+                  onClick={() => {
+                    setImageLoading(true);
+                    setSelectedImage(index);
+                  }}
+                  className={`relative overflow-hidden rounded-lg min-w-[48px] min-h-[48px] sm:min-w-[56px] sm:min-h-[56px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--button-primary)] transition-shadow duration-150
+                    ${selectedImage === index 
+                      ? 'ring-2 ring-offset-2 ring-[var(--button-primary)]' 
+                      : 'hover:opacity-75'
+                    }`}
+                  aria-label={`View image ${index + 1} of ${product.name}`}
+                  tabIndex={0}
                 >
-                  {image ? (
-                    <Image
-                      src={image}
-                      alt={`${product.name} ${index + 1}`}
-                      width={100}
-                      height={100}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-gray-200 flex items-center justify-center">
-                      <span>No Image</span>
-                    </div>
-                  )}
+                  <Image
+                    src={image}
+                    alt={`${product.name} ${index + 1}`}
+                    width={150}
+                    height={150}
+                    className="w-full h-auto object-contain pointer-events-none"
+                  />
                 </button>
               ))}
             </div>
           )}
         </div>
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2 mb-2">
+      </div>
+      {/* Product Info */}
+      <div className="mt-1 lg:mt-0 flex flex-col">
+        {/* Badges and View Count Row - moved up for mobile */}
+        <div className="flex items-center justify-between mb-1">
+          {/* Left side - Badges */}
+          <div className="flex flex-wrap gap-1.5">
             {product.limitedStock && (
-              <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border border-gray-200 bg-[var(--badge-yellow-bg)] text-[var(--badge-yellow-text)]">
                 Limited Stock
               </span>
             )}
-            <span className={`text-white text-xs font-bold px-2 py-1 rounded-lg ${getCategoryColor(product.category)}`}>
-              {product.category}
+            {product?.soldOut && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border border-gray-200 bg-[var(--badge-red-bg)] text-[var(--badge-red-text)]">
+                Sold Out
+              </span>
+            )}
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border border-gray-200 ${product && getCategoryColor(product.category).background} ${product && getCategoryColor(product.category).text}`}>
+              {product?.category}
             </span>
           </div>
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-text-primary">{product.name}</h1>
-          <p className="mt-2 text-lg md:text-xl font-medium text-text-primary">
-            {formatPrice(product.price)}
-          </p>
-          {product.features && (
-            <div className="mt-2">
-              <h2 className="text-sm font-medium text-text-primary">Features</h2>
-              <ul className="mt-1 list-inside list-disc text-sm text-text-secondary">
-                {product.features.map((feature, index) => (
-                  <li key={index}>{feature}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          <div className="mt-8 flex flex-col gap-4">
-            <button
-              onClick={handleAddToCart}
-              disabled={isAdding || isInCart}
-              className={`flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-white shadow-sm
-                ${isAdding || isInCart
-                  ? 'bg-gray-600 cursor-not-allowed'
-                  : 'bg-gray-800 hover:bg-gray-900'
-                }`}
-            >
-              <PlusCircle size={24} />
-              <span className="text-lg transition-all duration-300">
-                {isAdding || isInCart ? 'Added to list' : ' Add to list'}
-              </span>
-            </button>
-            <button
-              onClick={createWhatsAppMessage}
-              className="flex items-center justify-center gap-2 rounded-lg bg-green-500 px-6 py-3 text-white shadow-sm hover:bg-green-800"
-            >
-              <Phone size={24} />
-              <span className="text-lg">Order via WhatsApp</span>
-            </button>
+
+          {/* Right side - View Count */}
+          <div className="text-base font-semibold px-3 py-1 rounded-full border border-gray-200 bg-gray-100 text-[var(--text-primary)]">
+            <AnimatedViewCount value={product?.views || 0} />
           </div>
         </div>
-      </div>
-    
 
-      <footer className="py-12 text-center text-text-secondary">
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
-          <span>powered by ABS &copy; {new Date().getFullYear()}.</span>
-          <a 
-            href={`https://wa.me/+2349099933360`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex items-center gap-1"
-          >
-            <Phone size={16} />
-            <span>09099933360</span>
-          </a>
-        </div>
-      </footer>
+        {/* Conditional Content based on soldOut status */}
+        {product?.soldOut ? (
+          // Only show the "Check Back Later" message for sold out products
+          <div className="mt-2 bg-[var(--card-background)] border border-[var(--border-color)] 
+            rounded-2xl p-6 text-center">
+            {/* Icon Container */}
+            <div className="mb-4 inline-flex items-center justify-center w-12 h-12 
+              rounded-full bg-[var(--badge-blue-bg)]">
+              <Clock className="w-6 h-6 text-[var(--badge-blue-text)]" />
+            </div>
+            
+            {/* Message */}
+            <h3 className="text-lg font-medium text-[var(--text-primary)] mb-2">
+              Currently Unavailable
+            </h3>
+            <p className="text-[var(--text-secondary)] text-sm">
+              This item is temporarily out of stock. Please check back later or explore our other collections.
+            </p>
+          </div>
+        ) : (
+          // Show full product details for in-stock products
+          <>
+            {/* Product Title */}
+            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] mb-4">
+              {product?.name}
+            </h1>
+
+            {/* Price Section */}
+            <div className="flex items-center gap-3 mb-6">
+              <p className="text-2xl font-semibold text-[var(--text-primary)]">
+                {product && formatPrice(product.price)}
+              </p>
+              {product?.originalPrice && product.originalPrice > product.price && (
+                <>
+                  <p className="text-lg text-text-secondary line-through">
+                    {formatPrice(product.originalPrice)}
+                  </p>
+                  {discount && (
+                    <span className="px-2 py-1 rounded-full text-sm font-medium 
+                      bg-[var(--badge-green-bg)] text-[var(--badge-green-text)]">
+                      {discount}% OFF
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Features Section */}
+            {product?.features && (
+              <div className="mb-8">
+                {/* <h2 className="text-sm font-medium text-[var(--text-primary)] mb-4">Features</h2> */}
+                <ul className="space-y-2">
+
+                  {product.features.map((feature, index) => (
+                    <li key={index} className="flex items-center text-[var(--text-secondary)]">
+                      <span className="mr-2">•</span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={createWhatsAppMessage}
+                className="group relative w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-[980px] bg-[var(--button-success)] text-white font-medium shadow-sm hover:shadow-md transition-all duration-300 hover:bg-[var(--button-success-hover)] transform-gpu active:scale-[0.98] cursor-default disabled:opacity-75 disabled:cursor-not-allowed product-detail-button-success min-h-[48px] text-base"
+                style={{ minHeight: '48px', fontSize: '1rem' }}
+                tabIndex={0}
+                aria-label="Order Now"
+              >
+                <ShoppingCart className="w-5 h-5 transition-transform group-hover:-translate-y-0.5" />
+                <span className="relative tracking-[-0.01em]">Order Now</span>
+              </button>
+              <button 
+                onClick={handleAddToCart}
+                disabled={isAdding || isInCart}
+                className={`group relative w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-[980px] font-medium tracking-[-0.01em] transition-all duration-300 shadow-sm hover:shadow-md transform-gpu min-h-[48px] text-base
+                  ${isAdding || isInCart
+                    ? 'bg-[var(--button-secondary-disabled)] text-[var(--text-secondary-disabled)] cursor-default'
+                    : 'bg-[var(--button-secondary)] text-[var(--text-primary)] hover:bg-[var(--button-secondary-hover)] active:bg-[var(--button-secondary-active)] product-detail-button-secondary'
+                  }
+                  disabled:opacity-100`}
+                style={{ minHeight: '48px', fontSize: '1rem' }}
+                aria-disabled={isAdding || isInCart}
+                tabIndex={0}
+                aria-label={isAdding || isInCart ? 'Added To List' : 'Add To List'}
+              >
+                {isInCart
+                  ? <Check className="w-5 h-5 transition-transform opacity-80" />
+                  : <CirclePlus className={`w-5 h-5 transition-transform ${isAdding ? 'opacity-60' : 'group-hover:-translate-y-0.5'}`} />
+                }
+                <span>
+                  {isInCart ? 'Added To List' : 'Add To List'}
+                </span>
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
-  ); 
+  </div>
+);
 }

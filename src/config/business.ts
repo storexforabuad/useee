@@ -1,19 +1,39 @@
-export const businessConfig = {
-  "name": "LaDevida",
-  "shortName": "LaDevida App",
-  "description": "Your one-stop shop for all your needs",
-  "contact": {
-    "whatsapp": "+2348164981183",
-    "support": "+2348164981183",
-    "payment": {
-      "accountName": "Usman Muhammad Sani",
-      "accountNumber": "1234567890",
-      "bankName": "GTBank"
-    }
-  },
-  "theme": {
-    "primaryColor": "blue-800",
-    "secondaryColor": "green-500",
-    "backgroundColor": "gray-50"
+export interface BusinessConfig {
+    name: string;
+    shortName: string;
+    description: string;
+    contact: {
+      whatsapp: string;
+      support: string;
+      payment: {
+        accountName: string;
+        accountNumber: string;
+        bankName: string;
+      }
+    };
+    theme: {
+      primaryColor: string;
+      secondaryColor: string;
+      backgroundColor: string;
+    };
   }
-};
+  
+  export const businessConfig: BusinessConfig = {
+    name: "Supermom Store",
+    shortName: "Supermom Store App",
+    description: "Your one-stop shop for all your fashion needs",
+    contact: {
+      whatsapp: "+2347032905036",
+      support: "+2347032905036",
+      payment: {
+        accountName: "Aisha Ibrahim Lame",
+        accountNumber: "0057360918",
+        bankName: "Access Bank"
+      }
+    },
+    theme: {
+      primaryColor: "blue-800",
+      secondaryColor: "green-500",
+      backgroundColor: "gray-50"
+    }
+  };

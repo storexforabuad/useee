@@ -22,14 +22,30 @@ export default {
         'input-border': "var(--input-border)",
         'button-secondary': "var(--button-secondary)",
       },
+      animation: {
+        pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        pulseCart: 'pulseCart 0.5s ease-in-out',
+        'fade-in': 'fadeIn 0.5s ease-out',
+      },
       keyframes: {
+        pulse: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '.5' },
+        },
         pulseCart: {
           '0%, 100%': { transform: 'scale(1)' },
-          '50%': { transform: 'scale(1.2)' },
+          '50%': { transform: 'scale(1.1)' },
         },
-      },
-      animation: {
-        pulseCart: 'pulseCart 0.5s ease-in-out',
+        fadeIn: {
+          '0%': { 
+            opacity: '0',
+            transform: 'translateY(10px)'
+          },
+          '100%': { 
+            opacity: '1',
+            transform: 'translateY(0)'
+          },
+        },
       },
     },
   },

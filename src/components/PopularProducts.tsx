@@ -79,10 +79,12 @@ export default function PopularProducts() {
           </div>
 
           {product.limitedStock && (
-            <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-[var(--badge-red-bg)] text-[var(--badge-red-text)] text-xs font-medium">
-              Limited Stock
-            </div>
-          )}
+  <div className="absolute top-2 left-2 z-10 inline-flex items-center px-2.5 py-0.5 
+    rounded-full text-xs font-medium bg-[var(--badge-red-bg)] text-[var(--badge-red-text)] 
+    shadow-sm animate-fade-in">
+    Limited Stock
+  </div>
+)}
         </Link>
       ))}
     </div>

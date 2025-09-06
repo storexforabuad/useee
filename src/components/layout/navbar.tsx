@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ShoppingBagIcon, Moon, Sun, ListIcon, WalletIcon } from 'lucide-react';
+import { ClipboardListIcon, Moon, Sun, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { useCart } from '../../lib/cartContext';
 import { useTheme } from '../../lib/themeContext';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function Navbar() {
   const { state } = useCart();
@@ -13,33 +13,60 @@ export default function Navbar() {
   const [isBouncing, setIsBouncing] = useState(false);
   const [prevTotalItems, setPrevTotalItems] = useState(state.totalItems);
   const pathname = usePathname();
+  const router = useRouter();
   const isAdminRoute = pathname?.startsWith('/admin');
+  const isProductPage = pathname?.startsWith('/products/');
+  const isCartPage = pathname === '/cart';
+  const showBackButton = isProductPage || isCartPage;
 
   useEffect(() => {
     if (state.totalItems > prevTotalItems) {
       setIsBouncing(true);
-      setTimeout(() => setIsBouncing(false), 1000);
+      setTimeout(() => setIsBouncing(false), 500);
     }
     setPrevTotalItems(state.totalItems);
   }, [state.totalItems, prevTotalItems]);
+  
+  const handleBack = () => {
+    if (isCartPage || isProductPage) {
+      router.back();
+    }
+  };
+
+  if (isAdminRoute) return null;
 
   return (
-    <nav className="fixed top-0 z-50 w-full bg-card-background border-b border-border-color transition-colors duration-200">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <nav className="fixed top-0 z-50 w-full transition-colors duration-200">
+      <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between">
-          <div className="flex items-center">
-            <Link href={isAdminRoute ? '/admin' : '/'} className="flex items-center">
-              <ShoppingBagIcon className="h-8 w-8 text-text-primary mr-2" />
-              <span className="text-xl font-semibold text-text-primary">
-                {isAdminRoute ? 'Admin' : 'LaDevida'}
-              </span>
-            </Link>
+          <div className="flex items-center gap-2">
+            {showBackButton ? (
+              <>
+                <button
+                  onClick={handleBack}
+                  className="p-2 rounded-lg hover:bg-card-hover transition-colors"
+                  aria-label="Go back"
+                >
+                  <ArrowLeft className="h-6 w-6 text-text-primary" />
+                </button>
+                <span className="text-xl font-semibold text-text-primary flex items-center gap-2">
+                  {isCartPage ? 'Cart' : ''}
+                </span>
+              </>
+            ) : (
+              <Link href={isAdminRoute ? '/admin' : '/'} className="flex items-center gap-2">
+                <ShoppingBag className="h-8 w-8 text-text-primary" />
+                <span className="text-xl font-semibold text-text-primary flex items-center gap-2">
+                  {isAdminRoute ? 'Admin' : 'Supermom Store'}
+                </span>
+              </Link>
+            )}
           </div>
           
           <div className="flex items-center gap-4">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-card-hover transition-colors"
+              className="p-3 rounded-lg hover:bg-card-hover transition-colors"
               aria-label="Toggle theme"
             >
               {theme === 'light' ? (
@@ -48,27 +75,34 @@ export default function Navbar() {
                 <Sun className="w-5 h-5 text-text-primary" />
               )}
             </button>
-
-            <Link 
-              href={isAdminRoute ? '/admin/referrals' : '/cart'} 
-              className="relative group"
-            >
-              {isAdminRoute ? (
-                <WalletIcon className="h-6 w-6 text-text-secondary group-hover:text-text-primary transition-colors" />
-              ) : (
-                <>
-                  <ListIcon 
-                    className={`h-6 w-6 text-text-secondary group-hover:text-text-primary transition-colors
-                      ${isBouncing ? 'animate-bounce' : ''}`}
+  
+            {/* Only show cart icon on non-admin routes */}
+            {!isAdminRoute && (
+              <Link 
+                href="/cart"
+                className="relative group p-2"
+              >
+                <div className="relative">
+                  <ClipboardListIcon 
+                    className="h-6 w-6 text-text-primary transition-colors"
                   />
-                  {state.totalItems > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {state.totalItems}
-                    </span>
-                  )}
-                </>
-              )}
-            </Link>
+                  <span 
+                    className={`absolute -top-1 -right-1 
+                      ${state.totalItems > 0 ? 'bg-red-500' : 'bg-[var(--badge-gray-bg)]'} 
+                      ${state.totalItems > 0 ? 'text-white' : 'text-[var(--badge-gray-text)]'}
+                      text-xs rounded-full h-5 w-5 flex items-center justify-center
+                      transition-all duration-300
+                      ${isBouncing ? 'animate-badge-bounce' : ''}`}
+                    style={{
+                      transform: 'translateZ(0)',
+                      backfaceVisibility: 'hidden'
+                    }}
+                  >
+                    {state.totalItems}
+                  </span>
+                </div>
+              </Link>
+            )}
           </div>
         </div>
       </div>

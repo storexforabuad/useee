@@ -1,31 +1,36 @@
 import './globals.css'
-import { Metadata, Viewport } from 'next'
+import type { Metadata } from 'next'
+import { Poppins } from 'next/font/google'
 import { CartProvider } from '../lib/cartContext'
 import { ThemeProvider } from '../lib/themeContext'
 import Navbar from '../components/layout/navbar'
-import InstallPrompt from '../components/InstallPrompt'
+import ClientProviders from '../components/ClientProviders'
+
+const poppins = Poppins({ 
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
-  title: "LaDevidaStore",
-  description: 'Quality products at wholesale prices',
-  manifest: '/manifest.json',
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/icons/icon-192x192.png',
-  },
+  title: "Supermom Store",
+  description: "Discover the finest items for your wardrobe",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
-    title: "LaDevidaStore",
+    statusBarStyle: "default",
+    title: "Supermom Store",
+  },
+  formatDetection: {
+    telephone: false,
   },
 }
 
-export const viewport: Viewport = {
-  themeColor: '#ffffff',
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+export const viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+    { media: '(prefers-color-scheme: dark)', color: '#020617' },
+  ],
 }
 
 export default function RootLayout({
@@ -34,15 +39,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body className={poppins.className}>
         <ThemeProvider>
           <CartProvider>
-            <Navbar />
-            <main className="min-h-screen pt-16 bg-background text-foreground">
+            <ClientProviders>
+              <Navbar />
               {children}
-            </main>
-            <InstallPrompt />
+            </ClientProviders>
           </CartProvider>
         </ThemeProvider>
       </body>
