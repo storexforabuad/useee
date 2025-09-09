@@ -18,6 +18,7 @@ interface ManageProductsSectionProps {
   viewMode: 'all' | 'popular' | 'limited' | 'soldout';
   setViewMode: (mode: 'all' | 'popular' | 'limited' | 'soldout') => void;
   categories: { id: string; name: string }[];
+  storeId: string; // Add storeId prop
 }
 
 const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({ 
@@ -31,6 +32,7 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({
   viewMode,
   setViewMode,
   categories,
+  storeId, // Accept storeId
 }) => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -41,14 +43,18 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({
   useEffect(() => {
     async function fetchPopularProducts() {
       try {
-        const popular = await getPopularProducts(6);
+        const popular = await getPopularProducts(storeId, 6);
         setPopularProducts(popular.map(p => p.id));
       } catch (error) {
         console.error('Error fetching popular products:', error);
       }
     }
     fetchPopularProducts();
-  }, []);
+  }, [storeId]);
+
+  if (!storeId) {
+    return <div className="text-red-500">Error: Store ID is missing. Cannot manage products.</div>;
+  }
 
   const filteredProducts = (() => {
     if (viewMode === 'popular') return products.filter(p => popularProducts.includes(p.id));

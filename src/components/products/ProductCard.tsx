@@ -13,9 +13,15 @@ const DEFAULT_IMAGES = {
 
 interface ProductCardProps {
   product: Product;
+  storeId: string;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, storeId }: ProductCardProps) {
+  if (!storeId || !product.id) {
+    console.error('Missing storeId or product id in ProductCard');
+    return null;
+  }
+
   const [imageLoading, setImageLoading] = useState(true);
   const [imgSrc, setImgSrc] = useState(product.images?.[0] || DEFAULT_IMAGES.medium);
   const discount = calculateDiscount(product.price, product.originalPrice);

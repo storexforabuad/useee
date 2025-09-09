@@ -7,7 +7,11 @@ import { useCart } from '../../lib/cartContext';
 import { useTheme } from '../../lib/themeContext';
 import { usePathname, useRouter } from 'next/navigation';
 
-export default function Navbar() {
+interface NavbarProps {
+  storeName?: string;
+}
+
+export default function Navbar({ storeName }: NavbarProps) {
   const { state } = useCart();
   const { theme, toggleTheme } = useTheme();
   const [isBouncing, setIsBouncing] = useState(false);
@@ -15,9 +19,14 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const isAdminRoute = pathname?.startsWith('/admin');
+  
+  // Improved route detection for multi-vendor product detail pages
+  const pathSegments = pathname?.split('/').filter(Boolean) || [];
+  // Matches /[storeId]/products/[productId]
+  const isStoreProductPage = pathSegments.length === 3 && pathSegments[1] === 'products';
   const isProductPage = pathname?.startsWith('/products/');
-  const isCartPage = pathname === '/cart';
-  const showBackButton = isProductPage || isCartPage;
+  const isCartPage = pathname === '/cart' || (pathSegments.length === 2 && pathSegments[1] === 'cart');
+  const showBackButton = isProductPage || isStoreProductPage || isCartPage;
 
   useEffect(() => {
     if (state.totalItems > prevTotalItems) {
@@ -28,7 +37,7 @@ export default function Navbar() {
   }, [state.totalItems, prevTotalItems]);
   
   const handleBack = () => {
-    if (isCartPage || isProductPage) {
+    if (showBackButton) {
       router.back();
     }
   };
@@ -50,14 +59,14 @@ export default function Navbar() {
                   <ArrowLeft className="h-6 w-6 text-text-primary" />
                 </button>
                 <span className="text-xl font-semibold text-text-primary flex items-center gap-2">
-                  {isCartPage ? 'Cart' : ''}
+                  {storeName || 'Alaniq INT.'}
                 </span>
               </>
             ) : (
               <Link href={isAdminRoute ? '/admin' : '/'} className="flex items-center gap-2">
                 <ShoppingBag className="h-8 w-8 text-text-primary" />
                 <span className="text-xl font-semibold text-text-primary flex items-center gap-2">
-                  {isAdminRoute ? 'Admin' : 'Alaniq INT.'}
+                  {isAdminRoute ? 'Admin' : (storeName || 'Alaniq INT.')}
                 </span>
               </Link>
             )}

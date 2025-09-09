@@ -27,6 +27,7 @@ interface AddProductSectionProps {
   setIsAddProductOpen: React.Dispatch<React.SetStateAction<boolean>>;
   categories: { id: string; name: string }[];
   onProductAdded: () => void;
+  storeId?: string; // Add storeId prop for multi-tenancy
 }
 
 const ModernToggle: React.FC<{ checked: boolean; onChange: (checked: boolean) => void; label: string; }> = ({ checked, onChange, label }) => (
@@ -46,6 +47,7 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
   setIsAddProductOpen,
   categories,
   onProductAdded,
+  storeId, // Accept storeId
 }) => {
   const [batchProducts, setBatchProducts] = useState<BatchProduct[]>([]);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
@@ -231,7 +233,8 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
             const compressedFile = await compressImage(productData.file);
 
             setUploadProgress(prev => prev.map((p, idx) => idx === i ? { ...p, status: 'uploading', statusText: 'Uploading...' } : p));
-            const imageUrl = await uploadImageToCloudinary(compressedFile);
+            if (!storeId) throw new Error('Missing storeId for image upload');
+            const imageUrl = await uploadImageToCloudinary(compressedFile, storeId);
 
             const productToAdd: Omit<Product, 'id' | 'createdAt'> & { originalPrice?: number } = {
                 name: productData.name!,
@@ -251,7 +254,15 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
               productToAdd.originalPrice = Number(productData.originalPrice);
             }
             
-            await addProduct(productToAdd as Product);
+            // Always require storeId for multi-tenancy
+            if (storeId) {
+              await addProduct(storeId, productToAdd as Product);
+            } else {
+              toast.error('Missing storeId. Cannot add product.');
+              setUploadProgress(prev => prev.map((p, idx) => idx === i ? { ...p, status: 'error', statusText: 'No storeId', error: 'Missing storeId' } : p));
+              errorCount++;
+              continue;
+            }
             setUploadProgress(prev => prev.map((p, idx) => idx === i ? { ...p, status: 'success', statusText: 'Success' } : p));
             successCount++;
         } catch (error) {
@@ -271,6 +282,7 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
 
     onProductAdded();
     setLoading(false);
+    setIsUploading(false);
   };
   
   const renderProgressIcon = (status: UploadStatus) => {
@@ -286,6 +298,10 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
         return null;
     }
   };
+
+  if (!storeId) {
+    return <div className="text-red-500">Error: Store ID is missing. Cannot upload products.</div>;
+  }
 
   if (isUploading) {
     return (
@@ -310,6 +326,9 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
         </div>
     );
   }
+
+  // Only show vendor-generated categories in the product upload form
+  const vendorCategories = categories.filter(c => c.name !== 'Promo' && c.name !== '' && c.name !== 'New Arrivals' && c.name !== 'Back in Stock');
 
   return (
     <section className="mb-8">
@@ -405,7 +424,7 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
                                 <label className="block text-sm font-medium text-text-secondary mb-1">Category*</label>
                                 <select value={product.category || ''} onChange={e => handleBatchProductChange(index, 'category', e.target.value)} className="w-full p-2 border border-input-border rounded-md bg-input-background focus:ring-2 focus:ring-blue-500">
                                     <option value="">Select Category</option>
-                                    {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                                    {vendorCategories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                                 </select>
                             </div>
                              <div className="space-y-3 pt-2">

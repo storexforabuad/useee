@@ -3,37 +3,38 @@ import { getCategories, addCategory, updateCategory, deleteCategory } from '../l
 import { CategoryCache } from '../lib/categoryCache';
 import { toast } from 'react-hot-toast';
 
-const CategoryManagement = () => {
+interface CategoryManagementProps {
+  storeId: string;
+}
+
+const CategoryManagement = ({ storeId }: CategoryManagementProps) => {
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [newCategory, setNewCategory] = useState('');
   const [editingCategory, setEditingCategory] = useState<{ id: string, name: string } | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const fetchedCategories = await getCategories();
-      setCategories(fetchedCategories);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      toast.error('Failed to load categories.');
-    }
+  // Helper to fetch vendor categories only
+  const fetchVendorCategories = async () => {
+    if (!storeId) return;
+    const allCategories = await getCategories(storeId);
+    const vendorCategories = allCategories.filter(c => c.name !== 'Promo' && c.name !== '' && c.name !== 'New Arrivals' && c.name !== 'Back in Stock');
+    setCategories(vendorCategories);
   };
+
+  useEffect(() => {
+    fetchVendorCategories();
+  }, [storeId]);
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) {
       toast.error('Category name cannot be empty.');
       return;
     }
-
     try {
       setIsAdding(true);
-      await addCategory(newCategory.trim());
+      await addCategory(storeId, newCategory.trim());
       setNewCategory('');
-      await fetchCategories();
+      await fetchVendorCategories();
       CategoryCache.clear(); // Clear cache when adding
       toast.success('Category added successfully!');
     } catch (error) {
@@ -49,11 +50,10 @@ const CategoryManagement = () => {
       toast.error('Category name cannot be empty.');
       return;
     }
-
     try {
-      await updateCategory(editingCategory.id, editingCategory.name.trim());
+      await updateCategory(storeId, editingCategory.id, editingCategory.name.trim());
       setEditingCategory(null);
-      await fetchCategories();
+      await fetchVendorCategories();
       CategoryCache.clear(); // Clear cache when updating
       toast.success('Category updated successfully!');
     } catch (error) {
@@ -64,8 +64,8 @@ const CategoryManagement = () => {
 
   const handleDeleteCategory = async (id: string) => {
     try {
-      await deleteCategory(id);
-      await fetchCategories();
+      await deleteCategory(storeId, id);
+      await fetchVendorCategories();
       CategoryCache.clear(); // Clear cache when deleting
       toast.success('Category deleted successfully!');
     } catch (error) {

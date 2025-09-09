@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { getPopularProducts } from '../lib/db';
 import { Product } from '../types/product';
 
-export default function PopularProducts() {
+export default function PopularProducts({ storeId }: { storeId: string }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -12,7 +12,7 @@ export default function PopularProducts() {
     async function fetchProducts() {
       try {
         // Fetch 6 popular products by default
-        const popularProducts = await getPopularProducts(6);
+        const popularProducts = await getPopularProducts(storeId, 6);
         setProducts(popularProducts);
       } catch (error) {
         console.error('Error fetching popular products:', error);
@@ -20,8 +20,8 @@ export default function PopularProducts() {
         setLoading(false);
       }
     }
-    fetchProducts();
-  }, []);
+    if (storeId) fetchProducts();
+  }, [storeId]);
 
   if (loading) {
     return (

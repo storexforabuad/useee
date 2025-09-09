@@ -3,33 +3,34 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import { useParams } from 'next/navigation';
-import { getProductById, incrementProductViews} from '../../../lib/db';
-import { CirclePlus, ShoppingCart, Clock, Check } from 'lucide-react';
-import { useCart } from '../../../lib/cartContext';
-import { Product } from '../../../types/product';
-import { calculateDiscount, formatPrice } from '../../../utils/price';
-import { ViewHistoryCache } from '@/lib/viewHistoryCache';
-import { ProductDetailCache } from '../../../lib/productDetailCache';
-import Navbar from '../../../components/layout/navbar';
+import { useParams, useRouter } from 'next/navigation';
+import { getProductById, incrementProductViews } from '../../../../lib/db';
+import { CirclePlus, ShoppingCart, Clock, Check, ArrowLeft } from 'lucide-react';
+import { useCart } from '../../../../lib/cartContext';
+import { Product } from '../../../../types/product';
+import { calculateDiscount, formatPrice } from '../../../../utils/price';
+import { ViewHistoryCache } from '../../../../lib/viewHistoryCache';
+import { ProductDetailCache } from '../../../../lib/productDetailCache';
+import Navbar from '../../../../components/layout/navbar';
 
 // Dynamic imports
-const ProductDetailSkeleton = dynamic(() => import('../../../components/ProductDetailSkeleton'), {
+const ProductDetailSkeleton = dynamic(() => import('../../../../components/ProductDetailSkeleton'), {
   ssr: false
 });
 
-const AnimatedViewCount = dynamic(() => import('../../../components/AnimatedViewCount'), {
+const AnimatedViewCount = dynamic(() => import('../../../../components/AnimatedViewCount'), {
   ssr: false,
   loading: () => <div className="w-16 h-6 bg-gray-200 rounded animate-pulse" />
 });
 
-export default function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
+export default function ProductDetail() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
   const { state, dispatch } = useCart();
+  const router = useRouter();
 
   const [imageLoading, setImageLoading] = useState(true); // Add this state
 
@@ -37,28 +38,28 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
 
   const routeParams = useParams();
   const storeId = typeof routeParams?.storeId === 'string' ? routeParams.storeId : Array.isArray(routeParams?.storeId) ? routeParams.storeId[0] : undefined;
+  const productId = typeof routeParams?.productId === 'string' ? routeParams.productId : Array.isArray(routeParams?.productId) ? routeParams.productId[0] : undefined;
 
   useEffect(() => {
     let isMounted = true;
     async function fetchProduct() {
       try {
-        const { id } = await params;
-        let fetchedProduct: Product | undefined = ProductDetailCache.get(id);
-        // Defensive: If storeId is missing, show error and skip fetch
-        if (!storeId) {
+        // Defensive: If storeId or productId is missing, show error and skip fetch
+        if (!storeId || !productId) {
           setProduct(null);
           setIsLoading(false);
-          console.error('Missing storeId in product detail page');
+          console.error('Missing storeId or productId in product detail page');
           return;
         }
+        let fetchedProduct: Product | undefined = ProductDetailCache.get(productId);
         if (!fetchedProduct) {
-          fetchedProduct = (await getProductById(storeId, id)) || undefined;
+          fetchedProduct = (await getProductById(storeId, productId)) || undefined;
         }
         if (!isMounted) return;
         if (fetchedProduct) {
           setProduct(fetchedProduct);
           ViewHistoryCache.add(fetchedProduct);
-          await incrementProductViews(storeId, id);
+          await incrementProductViews(storeId, productId);
         }
       } catch (error) {
         console.error('[PROD] Error in product detail:', error);
@@ -68,7 +69,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
     }
     fetchProduct();
     return () => { isMounted = false; };
-  }, [params, storeId]);
+  }, [storeId, productId]);
 
   useEffect(() => {
     if (product) {
@@ -134,7 +135,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
 
 return (
   <>
-    <Navbar />
+    <Navbar storeName={storeId || 'Alaniq INT.'} />
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 pt-[calc(var(--navbar-height)+1rem)] lg:pt-[calc(var(--navbar-height)+2rem)]">
       <div className="flex flex-col lg:flex lg:flex-row gap-6 lg:gap-x-8">
         {/* Image Section */}

@@ -277,9 +277,10 @@ const EmptyCategory = () => (
 interface ProductGridProps {
   products: Product[];
   containerRef?: React.Ref<HTMLDivElement>;
+  storeId: string;
 }
 
-const ProductGrid = memo(function ProductGrid({ products, containerRef }: ProductGridProps) {
+const ProductGrid = memo(function ProductGrid({ products, containerRef, storeId }: ProductGridProps) {
   const [isSingleColumn, setIsSingleColumn] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
 
@@ -347,22 +348,24 @@ const ProductGrid = memo(function ProductGrid({ products, containerRef }: Produc
           </div>
         ) : (
           sortedProducts.map((product) => (
-            <motion.div
-              key={product.id}
-              layout
-              transition={transition}
-              style={{
-                willChange: 'transform',
-                transform: 'translateZ(0)'
-              }}
-            >
-              <Link
-                href={`/products/${product.id}`}
-                className="group block relative touch-manipulation"
+            product && product.id && storeId ? (
+              <motion.div
+                key={product.id}
+                layout
+                transition={transition}
+                style={{
+                  willChange: 'transform',
+                  transform: 'translateZ(0)'
+                }}
               >
-                <ProductCard product={product} />
-              </Link>
-            </motion.div>
+                <Link
+                  href={`/${storeId}/products/${product.id}`}
+                  className="group block relative touch-manipulation"
+                >
+                  <ProductCard product={product} storeId={storeId} />
+                </Link>
+              </motion.div>
+            ) : null
           ))
         )}
       </motion.div>

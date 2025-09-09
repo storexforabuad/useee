@@ -18,11 +18,13 @@ const CategoryManagement = dynamic(
 interface CategoryManagementSectionProps {
   isCategoryManagementOpen: boolean;
   setIsCategoryManagementOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  storeId: string;
 }
 
 const CategoryManagementSection: React.FC<CategoryManagementSectionProps> = ({
   isCategoryManagementOpen,
   setIsCategoryManagementOpen,
+  storeId,
 }) => {
   return (
     <section className="bg-card-background p-4 sm:p-6 rounded-xl shadow-sm transition-all">
@@ -47,7 +49,7 @@ const CategoryManagementSection: React.FC<CategoryManagementSectionProps> = ({
 
       {isCategoryManagementOpen && (
         <div className="mt-4">
-          <CategoryManagement />
+          <CategoryManagement storeId={storeId} />
         </div>
       )}
 

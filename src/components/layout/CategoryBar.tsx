@@ -58,6 +58,11 @@ export default function CategoryBar({ onCategorySelect, activeCategory, categori
       }
     }
 
+    // Defensive check: ensure onCategorySelect always gets a valid category string
+    if (typeof category !== 'string') {
+      console.warn('CategoryBar: Invalid category selected:', category);
+      return;
+    }
     if (activeCategory === category) {
       if (onActiveCategoryClick) onActiveCategoryClick();
     } else {
@@ -65,6 +70,7 @@ export default function CategoryBar({ onCategorySelect, activeCategory, categori
     }
   };
 
+  // Defensive check: ensure categories passed in always have valid id and name
   const getIconForCategory = (categoryName: string) => {
     const iconMap: { [key: string]: string } = {
       'New Arrivals': '⭐',
@@ -133,6 +139,15 @@ export default function CategoryBar({ onCategorySelect, activeCategory, categori
     </motion.button>
   );
 
+  // Default categories
+  const defaultCategories = [
+    { id: 'promo', name: 'Promo' },
+    { id: 'new', name: 'New Arrivals' },
+    { id: 'back', name: 'Back in Stock' }
+  ];
+  // Only show vendor-generated categories in the vendor section
+  const vendorCategories = categories.filter(c => !defaultCategories.some(dc => dc.name === c.name));
+
   return (
     <div className={`category-bar-container ${isSticky ? 'is-sticky' : ''} relative`}>
       <div className={`absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r ${
@@ -144,6 +159,7 @@ export default function CategoryBar({ onCategorySelect, activeCategory, categori
       <div className="absolute left-0 right-0 top-0 h-px bg-[var(--border-color)] opacity-40 z-20" />
       <div className="overflow-x-auto scrollbar-hide px-4">
         <div className="flex gap-3 py-3 min-w-min justify-center items-center">
+          {/* Default categories */}
           <CategoryButton 
             name="Promo" 
             onClick={(e) => handleCategoryClick('Promo', e)} 
@@ -154,16 +170,9 @@ export default function CategoryBar({ onCategorySelect, activeCategory, categori
             onClick={(e) => handleCategoryClick('', e)} 
             isActive={activeCategory === ''}
           />
-          
-          {/*
-          <CategoryButton 
-            name="Back in Stock" 
-            onClick={(e) => handleCategoryClick('Back in Stock', e)} 
-            isActive={activeCategory === 'Back in Stock'}
-          />
-          */}
+          {/* Vendor-generated categories */}
           <div className="w-px h-10 bg-[var(--border-color)] opacity-60 mx-2 " />
-          {categories.map((category) => (
+          {vendorCategories.map((category) => (
             <CategoryButton
               key={category.id}
               name={category.name}

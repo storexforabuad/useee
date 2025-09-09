@@ -1,4 +1,4 @@
-export async function uploadImageToCloudinary(file: File): Promise<string> {
+export async function uploadImageToCloudinary(file: File, storeId: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -10,7 +10,10 @@ export async function uploadImageToCloudinary(file: File): Promise<string> {
       return;
     }
 
-    formData.append('upload_preset', uploadPreset); // Use the correct upload preset name
+    formData.append('upload_preset', uploadPreset);
+    // Use storeId as a prefix in the public_id
+    const publicId = `${storeId}_${file.name.replace(/\.[^/.]+$/, '')}_${Date.now()}`;
+    formData.append('public_id', publicId);
 
     console.log('Uploading to Cloudinary with the following details:');
     console.log('Cloud Name:', cloudName);
