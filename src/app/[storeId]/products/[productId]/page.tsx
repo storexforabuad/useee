@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
-import { getProductById, incrementProductViews } from '../../../../lib/db';
+import { getProductById, incrementProductViews, getStoreMeta } from '../../../../lib/db';
 import { CirclePlus, ShoppingCart, Clock, Check, ArrowLeft } from 'lucide-react';
 import { useCart } from '../../../../lib/cartContext';
 import { Product } from '../../../../types/product';
@@ -31,6 +31,7 @@ export default function ProductDetail() {
   const [isInCart, setIsInCart] = useState(false);
   const { state, dispatch } = useCart();
   const router = useRouter();
+  const [storeMeta, setStoreMeta] = useState<{ whatsapp?: string } | null>(null);
 
   const [imageLoading, setImageLoading] = useState(true); // Add this state
 
@@ -72,6 +73,15 @@ export default function ProductDetail() {
   }, [storeId, productId]);
 
   useEffect(() => {
+    async function fetchMeta() {
+      if (!storeId) return;
+      const meta = await getStoreMeta(storeId);
+      setStoreMeta(meta && meta.whatsapp ? { whatsapp: meta.whatsapp } : null);
+    }
+    fetchMeta();
+  }, [storeId]);
+
+  useEffect(() => {
     if (product) {
       const productInCart = state.items.find(item => item.id === product.id);
       setIsInCart(!!productInCart);
@@ -96,7 +106,8 @@ export default function ProductDetail() {
       `Thank you! 🙏`;
     
     const encodedMessage = encodeURIComponent(message);
-    const whatsappLink = `https://wa.me/+2349021067212?text=${encodedMessage}`;
+    const whatsappNumber = storeMeta?.whatsapp || '+2349021067212';
+    const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${encodedMessage}`;
     window.open(whatsappLink, '_blank');
   };
 
@@ -222,8 +233,8 @@ return (
             </div>
 
             {/* Right side - View Count */}
-            <div className="text-base font-semibold px-3 py-1 rounded-full border border-gray-200 bg-gray-100 text-[var(--text-primary)]">
-              <AnimatedViewCount value={product?.views || 0} />
+            <div className="px-4 py-1 rounded-full border border-gray-300 dark:border-slate-700/40 bg-white/60 dark:bg-slate-900/40 shadow-sm flex items-center min-w-[64px] justify-center transition-colors duration-300" aria-label="Views" role="status">
+              <AnimatedViewCount value={product?.views || 0} duration={2.5} className="text-base font-semibold text-slate-700 dark:text-slate-200" />
             </div>
           </div>
 

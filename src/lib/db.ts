@@ -25,6 +25,7 @@ export interface StoreMeta {
   id: string;
   name: string;
   createdAt?: any;
+  whatsapp?: string;
   // Add more fields as needed (e.g., description, contact, etc.)
 }
 
@@ -33,12 +34,13 @@ function assertDb() {
 }
 
 // Create a new store (vendor) and seed default categories/products
-export async function createStore(store: { id: string; name: string }): Promise<void> {
+export async function createStore(store: { id: string; name: string; whatsapp?: string }): Promise<void> {
   try {
     const storeRef = doc(db, 'stores', store.id);
     await setDoc(storeRef, {
       name: store.name,
       createdAt: serverTimestamp(),
+      whatsapp: store.whatsapp || '',
     });
     // Seed default categories if not present
     const categoriesRef = collection(db, 'stores', store.id, 'categories');
@@ -90,12 +92,12 @@ export async function ensureDefaultStore(): Promise<void> {
 }
 
 // Fetch store metadata by storeId
-export async function getStoreMeta(storeId: string): Promise<{ id: string; name: string } | null> {
+export async function getStoreMeta(storeId: string): Promise<StoreMeta | null> {
   try {
     const storeRef = doc(db, 'stores', storeId);
     const storeSnap = await getDoc(storeRef);
     if (!storeSnap.exists()) return null;
-    return { id: storeSnap.id, ...storeSnap.data() } as { id: string; name: string };
+    return { id: storeSnap.id, ...storeSnap.data() } as StoreMeta;
   } catch (error) {
     console.error('Error fetching store meta:', error);
     return null;

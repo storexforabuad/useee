@@ -17,8 +17,9 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, storeId }: ProductCardProps) {
+  // Defensive: multi-vendor check
   if (!storeId || !product.id) {
-    console.error('Missing storeId or product id in ProductCard');
+    console.error('Missing storeId or product id in ProductCard', { storeId, product });
     return null;
   }
 

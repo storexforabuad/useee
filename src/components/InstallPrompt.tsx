@@ -2,17 +2,30 @@
 
 import { XMarkIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
-import { useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { usePathname, useParams } from 'next/navigation';
+import { getStoreMeta } from '../lib/db';
 
 export default function InstallPrompt() {
   const { showPrompt, setShowPrompt, deferredPrompt } = useInstallPrompt();
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith('/admin') || pathname === '/signin';
+  const params = useParams();
+  const storeId = typeof params?.storeId === 'string' ? params.storeId : Array.isArray(params?.storeId) ? params.storeId[0] : '';
+  const [storeName, setStoreName] = useState('');
 
   useEffect(() => {
     console.log('InstallPrompt mounted, showPrompt:', showPrompt);
   }, [showPrompt]);
+
+  useEffect(() => {
+    async function fetchStoreName() {
+      if (!storeId) return;
+      const meta = await getStoreMeta(storeId);
+      setStoreName(meta?.name || storeId || 'Alaniq INT.');
+    }
+    fetchStoreName();
+  }, [storeId]);
 
   const handleInstall = async () => {
     if (deferredPrompt) {
@@ -54,7 +67,7 @@ export default function InstallPrompt() {
           <div className="flex flex-col items-start">
             <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
               <span className="text-xl">📱</span>{' '}
-              {isAdmin ? 'Install Your Store Dashboard' : 'Get Alaniq INT. App'}
+              {isAdmin ? 'Install Your Store Dashboard' : `Get ${storeName} App`}
             </h3>
             <p className="mt-2 text-sm text-text-secondary space-y-2 leading-relaxed">
               {isAdmin ? (

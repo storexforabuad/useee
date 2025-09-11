@@ -143,7 +143,8 @@ const cardData = [
 
 export default function AdminHomeCards(props: AdminHomeCardsProps) {
   const [openModal, setOpenModal] = useState<number | null>(null);
-  const { setIsModalOpen, onRefresh, isRefreshing } = props;
+  const [refreshing, setRefreshing] = useState(false);
+  const { setIsModalOpen, onRefresh } = props;
 
   useEffect(() => {
     if (openModal !== null) {
@@ -175,12 +176,16 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
     <section className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 overflow-x-hidden">
         <div className="mb-4">
             <button
-                onClick={() => onRefresh(true)}
-                disabled={isRefreshing}
+                onClick={async () => {
+                  setRefreshing(true);
+                  await onRefresh(true);
+                  setRefreshing(false);
+                }}
+                disabled={refreshing}
                 className="col-span-2 sm:col-span-3 md:col-span-4 w-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-bold py-3 px-4 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center dark:hover:shadow-lg dark:hover:shadow-purple-500/30"
             >
-                <RefreshCw className={`mr-2 h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                <RefreshCw className={`mr-2 h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
+                {refreshing ? 'Refreshing...' : 'Refresh'}
             </button>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">

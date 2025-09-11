@@ -3,6 +3,8 @@
 import dynamic from 'next/dynamic';
 import { useCart } from '../../lib/cartContext';
 import { ShoppingCart } from 'lucide-react';
+import { getStoreMeta } from '../../lib/db';
+import { useState, useEffect } from 'react';
 
 const CartItem = dynamic(
   () => import('../../components/cart/CartItem'),
@@ -14,6 +16,18 @@ const CartItem = dynamic(
 
 export default function CartPage() {
   const { state, dispatch } = useCart();
+  const [storeMeta, setStoreMeta] = useState<{ whatsapp?: string } | null>(null);
+  const routeParams = typeof window !== 'undefined' ? window.location.pathname.split('/') : [];
+  const storeId = routeParams.length > 1 ? routeParams[1] : 'alaniq';
+
+  useEffect(() => {
+    async function fetchMeta() {
+      if (!storeId) return;
+      const meta = await getStoreMeta(storeId);
+      setStoreMeta(meta && meta.whatsapp ? { whatsapp: meta.whatsapp } : null);
+    }
+    fetchMeta();
+  }, [storeId]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -49,7 +63,8 @@ export default function CartPage() {
       `Thank you! 🙏`;
   
     const encodedMessage = encodeURIComponent(message);
-    const whatsappLink = `https://wa.me/+2349021067212?text=${encodedMessage}`;
+    const whatsappNumber = storeMeta?.whatsapp || '+2349021067212';
+    const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${encodedMessage}`;
     window.open(whatsappLink, '_blank');
   };
 

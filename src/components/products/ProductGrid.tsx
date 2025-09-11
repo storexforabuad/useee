@@ -5,6 +5,7 @@ import { Grid2X2, LayoutList, Info, Phone, MessageCircle, Shield, Star, Clock, X
 import { Product } from '../../types/product';
 import { motion, LayoutGroup, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { getStoreMeta } from '../../lib/db';
 
 const ProductCard = dynamic(() => import('./ProductCard'), {
   loading: () => (
@@ -46,19 +47,29 @@ const DUMMY_BUSINESS = {
 function GlassAboutButton({ onClick }: { onClick: () => void }) {
   return (
     <motion.button
-      className="ml-2 px-3 py-2 rounded-xl flex items-center gap-2 glassmorphic shadow-lg border border-white/30 backdrop-blur-md bg-white/20"
+      className="ml-2 px-3 py-2 rounded-xl flex items-center gap-2 glassmorphic shadow-lg border border-white/30 dark:border-slate-700/40 backdrop-blur-md bg-white/20 dark:bg-slate-900/30"
       onClick={onClick}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       aria-label="About this business"
     >
-      <Info className="w-5 h-5 text-slate-700" />
+      <Info className="w-5 h-5 text-slate-700 dark:text-slate-200" />
     </motion.button>
   );
 }
 
-function BusinessCardModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const b = DUMMY_BUSINESS;
+function BusinessCardModal({ open, onClose, storeMeta }: { open: boolean; onClose: () => void; storeMeta?: { name?: string; businessName?: string; whatsapp?: string; phone?: string; specialization?: string; ceo?: { name?: string; image?: string }; rating?: number; reviews?: number; certified?: boolean; years?: number; delivery?: string; countryFlag?: string; businessHours?: string; responseTime?: string; instagram?: string; facebook?: string; } }) {
+  const b = {
+    ...DUMMY_BUSINESS,
+    ...storeMeta,
+    businessName: storeMeta?.name || storeMeta?.businessName || DUMMY_BUSINESS.businessName,
+    phone: storeMeta?.phone || storeMeta?.whatsapp || DUMMY_BUSINESS.phone,
+    whatsapp: storeMeta?.whatsapp || storeMeta?.phone || DUMMY_BUSINESS.whatsapp,
+    ceo: {
+      ...DUMMY_BUSINESS.ceo,
+      ...storeMeta?.ceo
+    }
+  };
   
   // Handle back button press
   useEffect(() => {
@@ -118,8 +129,8 @@ function BusinessCardModal({ open, onClose }: { open: boolean; onClose: () => vo
                 <div className="relative mb-3">
                   {/* Replace <img> with <Image /> for Next.js optimization */}
                   <Image
-                    src={b.ceo.image}
-                    alt={b.ceo.name}
+                    src={b.ceo?.image || DUMMY_BUSINESS.ceo.image}
+                    alt={b.ceo?.name || DUMMY_BUSINESS.ceo.name}
                     width={64}
                     height={64}
                     className="w-16 h-16 rounded-xl object-cover shadow-lg border-2 border-white dark:border-slate-600"
@@ -145,7 +156,7 @@ function BusinessCardModal({ open, onClose }: { open: boolean; onClose: () => vo
                     <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                     <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">{b.rating}</span>
                   </div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">({b.reviews.toLocaleString()} reviews)</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">({b.reviews?.toLocaleString()} reviews)</span>
                 </div>
               </div>
 
@@ -225,16 +236,6 @@ function BusinessCardModal({ open, onClose }: { open: boolean; onClose: () => vo
                     <span className="text-sm">WhatsApp</span>
                   </motion.a>
                 </div>
-
-                {/* <motion.button
-                  className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700/50 dark:hover:bg-slate-600/50 text-slate-800 dark:text-slate-200 font-semibold py-2.5 rounded-xl transition-colors border border-slate-300/50 dark:border-slate-600/50"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <Store className="w-4 h-4 fill-current" />
-                  <span className="text-sm">Visit Store</span>
-                </motion.button> */}
               </div>
 
               {/* Footer */}
@@ -283,8 +284,21 @@ interface ProductGridProps {
 const ProductGrid = memo(function ProductGrid({ products, containerRef, storeId }: ProductGridProps) {
   const [isSingleColumn, setIsSingleColumn] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [storeMeta, setStoreMeta] = useState<any>(null);
 
-  const sortedProducts = [...products].sort((a, b) => {
+  useEffect(() => {
+    async function fetchStoreMeta() {
+      if (!storeId) return;
+      const meta = await getStoreMeta(storeId);
+      setStoreMeta(meta);
+    }
+    fetchStoreMeta();
+  }, [storeId]);
+
+  // Defensive: filter out products missing id or required fields
+  const validProducts = products.filter(p => p && p.id && Array.isArray(p.images));
+
+  const sortedProducts = [...validProducts].sort((a, b) => {
     const timestampA = a.createdAt?.toMillis?.() || 0;
     const timestampB = b.createdAt?.toMillis?.() || 0;
     return timestampB - timestampA;
@@ -327,7 +341,7 @@ const ProductGrid = memo(function ProductGrid({ products, containerRef, storeId 
         </div>
       </div>
       
-      <BusinessCardModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
+      <BusinessCardModal open={aboutOpen} onClose={() => setAboutOpen(false)} storeMeta={storeMeta} />
       
       <motion.div
         ref={containerRef}
@@ -348,24 +362,22 @@ const ProductGrid = memo(function ProductGrid({ products, containerRef, storeId 
           </div>
         ) : (
           sortedProducts.map((product) => (
-            product && product.id && storeId ? (
-              <motion.div
-                key={product.id}
-                layout
-                transition={transition}
-                style={{
-                  willChange: 'transform',
-                  transform: 'translateZ(0)'
-                }}
+            <motion.div
+              key={product.id}
+              layout
+              transition={transition}
+              style={{
+                willChange: 'transform',
+                transform: 'translateZ(0)'
+              }}
+            >
+              <Link
+                href={`/${storeId}/products/${product.id}`}
+                className="group block relative touch-manipulation"
               >
-                <Link
-                  href={`/${storeId}/products/${product.id}`}
-                  className="group block relative touch-manipulation"
-                >
-                  <ProductCard product={product} storeId={storeId} />
-                </Link>
-              </motion.div>
-            ) : null
+                <ProductCard product={product} storeId={storeId} />
+              </Link>
+            </motion.div>
           ))
         )}
       </motion.div>

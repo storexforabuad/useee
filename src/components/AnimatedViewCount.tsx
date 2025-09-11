@@ -5,27 +5,24 @@ import { EyeIcon } from 'lucide-react';
 
 interface AnimatedViewCountProps {
   value: number;
+  duration?: number; // animation duration in seconds
+  className?: string;
 }
 
-export default function AnimatedViewCount({ value }: AnimatedViewCountProps) {
+export default function AnimatedViewCount({ value, duration = 1, className }: AnimatedViewCountProps) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    // Don't animate if value is 0
     if (value === 0) {
       setCount(0);
       return;
     }
-
-    // Start from 0
     setCount(0);
-
     // Calculate animation duration based on value
-    const duration = 2000; // 1 second
-    const steps = 60; // 60 frames
+    const msDuration = duration * 1000;
+    const steps = 60;
     const increment = value / steps;
-    const stepDuration = duration / steps;
-
+    const stepDuration = msDuration / steps;
     let current = 0;
     const timer = setInterval(() => {
       current += increment;
@@ -36,15 +33,14 @@ export default function AnimatedViewCount({ value }: AnimatedViewCountProps) {
         setCount(Math.floor(current));
       }
     }, stepDuration);
-
     return () => clearInterval(timer);
-  }, [value]);
+  }, [value, duration]);
 
   return (
-    <div className="flex items-center gap-1.5 text-xs font-medium
-      bg-[var(--badge-gray-bg)] px-2.5 py-0.5 rounded-full shadow-sm">
-      <EyeIcon className="w-3.5 h-3.5" />
-      <span>{count.toLocaleString()} views</span>
+    <div className={`flex items-center gap-1.5 text-xs font-medium ${className || ''}`}
+      aria-label="View count">
+      <EyeIcon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+      <span>{count}</span>
     </div>
   );
 }

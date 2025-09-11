@@ -26,6 +26,7 @@ export default function AdminStorePage() {
   const [isCategoryManagementOpen, setIsCategoryManagementOpen] = useState(false);
   const [isAddProductOpen, setIsAddProductOpen] = useState(true);
   const [viewMode, setViewMode] = useState<'all' | 'popular' | 'limited' | 'soldout'>('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (!storeId) return;
@@ -33,8 +34,8 @@ export default function AdminStorePage() {
     // eslint-disable-next-line
   }, [storeId]);
 
-  async function fetchData() {
-    setLoading(true);
+  async function fetchData(showRefresh = false) {
+    if (showRefresh) setIsRefreshing(true);
     try {
       const [fetchedProducts, fetchedCategories] = await Promise.all([
         getProducts(storeId),
@@ -45,6 +46,7 @@ export default function AdminStorePage() {
     } catch (error) {
       // handle error
     } finally {
+      if (showRefresh) setIsRefreshing(false);
       setLoading(false);
     }
   }
@@ -76,7 +78,7 @@ export default function AdminStorePage() {
                 setManageTab={setViewMode}
                 setIsManageProductsOpen={setIsManageProductsOpen}
                 onRefresh={fetchData}
-                isRefreshing={false}
+                isRefreshing={isRefreshing}
                 totalProducts={products.length}
                 totalCategories={categories.length}
                 popularProducts={products.filter(p => p.views && p.views > 10).length}
@@ -123,8 +125,8 @@ export default function AdminStorePage() {
                 isAddProductOpen={isAddProductOpen}
                 setIsAddProductOpen={setIsAddProductOpen}
                 categories={categories}
-                onProductAdded={fetchData}
-                storeId={storeId} // Pass storeId to AddProductSection
+                onProductAdded={() => { /* Do nothing here; let AddProductSection handle summary and reset */ }}
+                storeId={storeId}
               />
             </div>
           )}
