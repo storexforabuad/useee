@@ -27,6 +27,21 @@ const pwa = withPWA({
 });
 
 const nextConfig: NextConfig = {
+  // Add a development-only headers configuration to handle CORS issues in cloud workstations
+  async headers() {
+    return process.env.NODE_ENV === 'development'
+      ? [
+          {
+            source: '/:path*',
+            headers: [
+              { key: 'Access-Control-Allow-Origin', value: '*' },
+              { key: 'Access-Control-Allow-Methods', value: 'GET, OPTIONS, PATCH, DELETE, POST, PUT' },
+              { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
+            ],
+          },
+        ]
+      : [];
+  },
   images: {
     remotePatterns: [
       {
@@ -42,17 +57,14 @@ const nextConfig: NextConfig = {
   },
   // Bundle optimization settings
   compiler: {
-    // Remove console.* in production
     removeConsole: process.env.NODE_ENV === 'production' ? {
       exclude: ['error', 'warn'],
     } : false,
   },
-  // Enable module concatenation
   experimental: {
-    optimizeCss: true, // Enable CSS optimization
+    optimizeCss: true,
     optimizePackageImports: ['@firebase/firestore', '@firebase/auth', 'lucide-react', 'framer-motion'],
   },
-  // Webpack configuration for better optimization
   webpack: (config: Configuration, { dev, isServer }: { dev: boolean; isServer: boolean }) => {
     if (!dev) {
       config.optimization = {

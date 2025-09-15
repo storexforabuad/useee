@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getStores, StoreMeta, getProducts, getPopularProducts } from '../../lib/db';
 import CategoryManagement from '../../components/CategoryManagement';
 import Link from 'next/link';
-import { ShoppingBag, ClipboardListIcon, Sun } from 'lucide-react';
+import { ShoppingBag, ClipboardListIcon, Sun, PlusCircle } from 'lucide-react';
+import CreateStoreModal from '../../components/admin/modals/CreateStoreModal';
+import { motion } from 'framer-motion';
 
 interface StoreStats {
   id: string;
@@ -19,178 +21,131 @@ interface StoreStats {
 
 export default function DevteamPage() {
   const [stores, setStores] = useState<StoreMeta[]>([]);
-  const [selectedStore, setSelectedStore] = useState<string | null>(null);
+  const [selectedStore, setSelectedStore] = useState<string | null>([]);
   const [storeStats, setStoreStats] = useState<StoreStats[]>([]);
-  const [newStoreId, setNewStoreId] = useState('');
-  const [newStoreName, setNewStoreName] = useState('');
-  const [newStoreWhatsapp, setNewStoreWhatsapp] = useState('');
-  const [creating, setCreating] = useState(false);
-  const [error, setError] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  async function handleCreateStore(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newStoreId.trim() || !newStoreName.trim() || !newStoreWhatsapp.trim()) {
-      setError('Store ID, Name, and WhatsApp/Phone are required');
-      return;
-    }
-    setCreating(true);
-    setError('');
-    try {
-      await getStores().then(async stores => {
-        if (stores.some(s => s.id === newStoreId.trim())) {
-          setError('Store ID already exists');
-          setCreating(false);
-          return;
-        }
-        await import('../../lib/db').then(db => db.createStore({ id: newStoreId.trim(), name: newStoreName.trim(), whatsapp: newStoreWhatsapp.trim() }));
-      });
-      setNewStoreId('');
-      setNewStoreName('');
-      setNewStoreWhatsapp('');
-      setError('');
-      setCreating(false);
-      // Refresh stores
-      const data = await getStores();
-      setStores(data);
-    } catch {
-      setError('Failed to create store');
-      setCreating(false);
-    }
+  const fetchStores = useCallback(async () => {
+    const data = await getStores();
+    setStores(data);
+  }, []);
+
+  const fetchStats = useCallback(async () => {
+    const storesData = await getStores();
+    const statsPromises = storesData.map(async (store) => {
+      const products = await getProducts(store.id);
+      const popularProducts = await getPopularProducts(store.id, 6);
+      const totalViews = products.reduce((sum, p) => sum + (p.views || 0), 0);
+      return {
+        id: store.id,
+        name: store.name,
+        totalProducts: products.length,
+        limitedStock: products.filter(p => p.limitedStock).length,
+        soldOut: products.filter(p => p.soldOut).length,
+        popularCount: popularProducts.length,
+        totalViews,
+        rank: 0, // will be set after sorting
+      };
+    });
+    const stats = await Promise.all(statsPromises);
+    stats.sort((a, b) => b.totalViews - a.totalViews);
+    stats.forEach((s, i) => s.rank = i + 1);
+    setStoreStats(stats);
+  }, []);
+
+  useEffect(() => {
+    fetchStores();
+    fetchStats();
+  }, [fetchStores, fetchStats]);
+  
+  const handleModalClose = () => {
+      setIsModalOpen(false);
+      // Refresh data after modal closes, in case a new store was added
+      fetchStores();
+      fetchStats();
   }
 
-  useEffect(() => {
-    async function fetchStores() {
-      const data = await getStores();
-      setStores(data);
-    }
-    fetchStores();
-  }, []);
-
-  useEffect(() => {
-    async function fetchStats() {
-      const stores = await getStores();
-      const stats = await Promise.all(stores.map(async (store) => {
-        const products = await getProducts(store.id);
-        const totalProducts = products.length;
-        const limitedStock = products.filter(p => p.limitedStock).length;
-        const soldOut = products.filter(p => p.soldOut).length;
-        const popularProducts = await getPopularProducts(store.id, 6);
-        const totalViews = products.reduce((sum, p) => sum + (p.views || 0), 0);
-        return {
-          id: store.id,
-          name: store.name,
-          totalProducts,
-          limitedStock,
-          soldOut,
-          popularCount: popularProducts.length,
-          totalViews,
-          rank: 0 // will be set after sorting
-        };
-      }));
-      // Rank by views
-      stats.sort((a, b) => b.totalViews - a.totalViews);
-      stats.forEach((s, i) => s.rank = i + 1);
-      setStoreStats(stats);
-    }
-    fetchStats();
-  }, []);
-
-  // Find selected store meta and stats
   const selectedStoreMeta = stores.find(s => s.id === selectedStore);
   const selectedStoreStats = storeStats.find(s => s.id === selectedStore);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 px-2 py-4 pt-[calc(var(--navbar-height,64px)+1.5rem)]">
-      <header className="flex flex-col items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">DevTeam Dashboard</h1>
-        <p className="text-sm text-gray-500 text-center max-w-md">
-          Manage stores, categories, and view live stats. Optimized for mobile and fast workflows.
-        </p>
-      </header>
-      {/* Store creation form */}
-      <form onSubmit={handleCreateStore} className="mb-6 flex flex-col sm:flex-row gap-2 items-center max-w-lg mx-auto">
-        <input
-          type="text"
-          placeholder="Store ID (e.g. alaniq)"
-          value={newStoreId}
-          onChange={e => setNewStoreId(e.target.value)}
-          className="border px-3 py-2 rounded w-full sm:w-1/4 text-sm"
-        />
-        <input
-          type="text"
-          placeholder="Store Name"
-          value={newStoreName}
-          onChange={e => setNewStoreName(e.target.value)}
-          className="border px-3 py-2 rounded w-full sm:w-1/3 text-sm"
-        />
-        <input
-          type="text"
-          placeholder="WhatsApp/Phone Number (e.g. +234... )"
-          value={newStoreWhatsapp}
-          onChange={e => setNewStoreWhatsapp(e.target.value)}
-          className="border px-3 py-2 rounded w-full sm:w-1/3 text-sm"
-        />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded font-semibold text-sm" disabled={creating}>
-          {creating ? 'Creating...' : 'Add Store'}
-        </button>
-      </form>
-      {error && <div className="text-red-500 mb-4 text-sm text-center">{error}</div>}
-      <section className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Select Store</label>
-        <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
-          {stores.map((store: StoreMeta) => (
-            <button
-              key={store.id}
-              className={`px-4 py-2 rounded-lg border text-sm font-semibold transition-colors duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${selectedStore === store.id ? 'bg-blue-600 text-white' : 'bg-white text-blue-700 border-blue-200'}`}
-              onClick={() => setSelectedStore(store.id)}
-            >
-              {store.name}
-            </button>
-          ))}
+    <>
+      <CreateStoreModal isOpen={isModalOpen} onClose={handleModalClose} />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 px-2 py-4 pt-[calc(var(--navbar-height,64px)+1.5rem)]">
+        <header className="flex flex-col items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">DevTeam Dashboard</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-md">
+            Manage stores, categories, and view live stats.
+          </p>
+        </header>
+
+        <div className="max-w-4xl mx-auto">
+            <div className="flex justify-center mb-6">
+                 <button 
+                    onClick={() => setIsModalOpen(true)}
+                    className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-105"
+                >
+                    <PlusCircle className="w-5 h-5" />
+                    Add New Store
+                </button>
+            </div>
+
+            <section className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 text-center">Select a Store to Manage</label>
+                <div className="flex flex-wrap gap-2 justify-center">
+                {stores.map((store: StoreMeta) => (
+                    <button
+                    key={store.id}
+                    className={`px-4 py-2 rounded-lg border text-sm font-semibold transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${selectedStore === store.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-800 text-blue-700 dark:text-blue-300 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                    onClick={() => setSelectedStore(store.id)}
+                    >
+                    {store.name}
+                    </button>
+                ))}
+                </div>
+            </section>
+
+            {selectedStore && selectedStoreMeta && selectedStoreStats && (
+                <motion.section 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="mb-6 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-4"
+                >
+                <div className="flex items-center justify-between mb-3">
+                    <h2 className="font-bold text-lg text-blue-700 dark:text-blue-300">{selectedStoreStats.name}</h2>
+                    <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">{selectedStoreStats.id}</span>
+                </div>
+                <div className="flex gap-2 mb-4">
+                    <a href={`/admin/${selectedStoreStats.id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition">Admin Panel</a>
+                    <a href={`/${selectedStoreStats.id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-md bg-green-50 text-green-700 text-xs font-semibold hover:bg-green-100 transition">Live Store</a>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-center">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-900/50 rounded-lg"><span className="font-bold text-blue-800 dark:text-blue-200">{selectedStoreStats.totalProducts}</span><p className="text-xs text-blue-600 dark:text-blue-300">Products</p></div>
+                    <div className="p-2 bg-yellow-50 dark:bg-yellow-900/50 rounded-lg"><span className="font-bold text-yellow-800 dark:text-yellow-200">{selectedStoreStats.limitedStock}</span><p className="text-xs text-yellow-600 dark:text-yellow-300">Limited</p></div>
+                    <div className="p-2 bg-red-50 dark:bg-red-900/50 rounded-lg"><span className="font-bold text-red-800 dark:text-red-200">{selectedStoreStats.soldOut}</span><p className="text-xs text-red-600 dark:text-red-300">Sold Out</p></div>
+                    <div className="p-2 bg-green-50 dark:bg-green-900/50 rounded-lg"><span className="font-bold text-green-800 dark:text-green-200">{selectedStoreStats.popularCount}</span><p className="text-xs text-green-600 dark:text-green-300">Popular</p></div>
+                    <div className="p-2 bg-purple-50 dark:bg-purple-900/50 rounded-lg"><span className="font-bold text-purple-800 dark:text-purple-200">{selectedStoreStats.totalViews.toLocaleString()}</span><p className="text-xs text-purple-600 dark:text-purple-300">Views</p></div>
+                    <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg"><span className="font-bold text-gray-800 dark:text-gray-200">#{selectedStoreStats.rank}</span><p className="text-xs text-gray-600 dark:text-gray-400">Rank</p></div>
+                </div>
+                <div className="mt-4">
+                  <CategoryManagement storeId={selectedStore} />
+                </div>
+                </motion.section>
+            )}
         </div>
-      </section>
 
-      {/* Only show stats card and category manager when a store is selected */}
-      {selectedStore && selectedStoreMeta && selectedStoreStats && (
-        <section className="mb-6">
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-4 flex flex-col justify-between min-w-[220px] mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-base text-blue-700">{selectedStoreStats.name}</span>
-              <span className="text-xs text-gray-400">{selectedStoreStats.id}</span>
-            </div>
-            <div className="flex gap-2 mb-2">
-              <a href={`/admin/${selectedStoreStats.id}`} target="_blank" rel="noopener noreferrer" className="px-2 py-1 rounded bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition">Admin</a>
-              <a href={`/${selectedStoreStats.id}`} target="_blank" rel="noopener noreferrer" className="px-2 py-1 rounded bg-green-50 text-green-700 text-xs font-semibold hover:bg-green-100 transition">Customer</a>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              <span className="px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs font-semibold">Products: {selectedStoreStats.totalProducts}</span>
-              <span className="px-2 py-1 rounded bg-yellow-100 text-yellow-800 text-xs font-semibold">Limited: {selectedStoreStats.limitedStock}</span>
-              <span className="px-2 py-1 rounded bg-red-100 text-red-800 text-xs font-semibold">Sold Out: {selectedStoreStats.soldOut}</span>
-              <span className="px-2 py-1 rounded bg-green-100 text-green-800 text-xs font-semibold">Popular: {selectedStoreStats.popularCount}</span>
-              <span className="px-2 py-1 rounded bg-purple-100 text-purple-800 text-xs font-semibold">Views: {selectedStoreStats.totalViews}</span>
-              <span className="px-2 py-1 rounded bg-gray-100 text-gray-800 text-xs font-semibold">Rank: {selectedStoreStats.rank}</span>
-            </div>
-            <div className="mt-3 text-xs text-gray-500">Created: {selectedStoreMeta.createdAt?.toDate?.().toLocaleDateString?.() || 'N/A'}</div>
-          </div>
-          <CategoryManagement storeId={selectedStore} />
-        </section>
-      )}
-
-      {/* Sticky/floating bottom nav for mobile */}
-      <nav className="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-gray-200 shadow-lg flex sm:hidden justify-around py-2 px-2">
-        <Link href="/devteam" className="flex flex-col items-center text-blue-600 hover:text-blue-800 text-xs font-semibold">
-          <ShoppingBag className="w-6 h-6 mb-1" />
-          Dashboard
-        </Link>
-        <Link href="/devteam" className="flex flex-col items-center text-blue-600 hover:text-blue-800 text-xs font-semibold">
-          <ClipboardListIcon className="w-6 h-6 mb-1" />
-          Stores
-        </Link>
-        <Link href="/settings" className="flex flex-col items-center text-blue-600 hover:text-blue-800 text-xs font-semibold">
-          <Sun className="w-6 h-6 mb-1" />
-          Settings
-        </Link>
-      </nav>
-    </div>
+        <nav className="fixed bottom-0 left-0 w-full z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 shadow-lg flex sm:hidden justify-around py-2">
+            <Link href="/devteam" className="flex flex-col items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs font-semibold">
+            <ShoppingBag className="w-6 h-6 mb-1" />
+            Dashboard
+            </Link>
+            <Link href="/admin" className="flex flex-col items-center text-gray-600 dark:text-gray-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs font-semibold">
+            <ClipboardListIcon className="w-6 h-6 mb-1" />
+            Admin
+            </Link>
+        </nav>
+      </div>
+    </>
   );
 }

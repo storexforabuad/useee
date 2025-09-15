@@ -1,22 +1,19 @@
-
-export type StoreMeta = {
-    name?: string;
-    businessName?: string;
-    whatsapp?: string;
-    phone?: string;
-    specialization?: string;
-    ceo?: {
-      name?: string;
-      image?: string;
-    };
-    rating?: number;
-    reviews?: number;
-    certified?: boolean;
-    years?: number;
-    delivery?: string;
-    countryFlag?: string;
-    businessHours?: string;
-    responseTime?: string;
-    instagram?: string;
-    facebook?: string;
-  };
+export interface StoreMeta {
+  name: string;
+  whatsapp: string;
+  instagram?: string; // Optional field
+  ceoName?: string;
+  ceoImage?: string;
+  ceoPhone?: string;
+  ceoEmail?: string;
+  ceoInstagram?: string;
+  businessDescription?: string;
+  hasPhysicalShop?: boolean;
+  shopNumber?: string;
+  plazaBuildingName?: string;
+  streetAddress?: string;
+  country?: string;
+  state?: string;
+  businessInstagram?: string;
+  storeId?: string; // This is the document ID in Firestore
+}

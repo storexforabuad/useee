@@ -1,163 +1,87 @@
-import { useState, useEffect, useCallback } from 'react';
-import { getCategories, addCategory, updateCategory, deleteCategory } from '../lib/db';
-import { CategoryCache } from '../lib/categoryCache';
-import { toast } from 'react-hot-toast';
+"use client";
+
+import { useState, useEffect, FormEvent } from 'react';
+import { collection, addDoc, onSnapshot, deleteDoc, doc, WriteBatch, writeBatch, serverTimestamp, query, getDocs } from "firebase/firestore";
+import { db } from '../../lib/db';
+import { ProductCategory } from '../../types/store';
+import { Trash2 } from 'lucide-react';
 
 interface CategoryManagementProps {
   storeId: string;
 }
 
-const CategoryManagement = ({ storeId }: CategoryManagementProps) => {
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
-  const [newCategory, setNewCategory] = useState('');
-  const [editingCategory, setEditingCategory] = useState<{ id: string, name: string } | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
+const SYSTEM_CATEGORIES = ["Promo", "New Arrivals"];
 
-  // Helper to fetch vendor categories only
-  const fetchVendorCategories = useCallback(async () => {
-    if (!storeId) return;
-    const allCategories = await getCategories(storeId);
-    const vendorCategories = allCategories.filter(c => c.name !== 'Promo' && c.name !== '' && c.name !== 'New Arrivals' && c.name !== 'Back in Stock');
-    setCategories(vendorCategories);
-  }, [storeId]);
+export default function CategoryManagement({ storeId }: CategoryManagementProps) {
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [newCategory, setNewCategory] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchVendorCategories();
-  }, [storeId, fetchVendorCategories]);
+    if (!storeId) return;
 
-  const handleAddCategory = async () => {
-    if (!newCategory.trim()) {
-      toast.error('Category name cannot be empty.');
-      return;
-    }
+    const q = query(collection(db, `stores/${storeId}/categories`));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const categoriesData: ProductCategory[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        // Filter out system categories from the display
+        if (!SYSTEM_CATEGORIES.includes(data.name)) {
+            categoriesData.push({ id: doc.id, ...data } as ProductCategory);
+        }
+      });
+      setCategories(categoriesData);
+      setIsLoading(false);
+    }, (err) => {
+      console.error("Error fetching categories:", err);
+      setError("Failed to load categories. Please try again later.");
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [storeId]);
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    if (!storeId) return;
     try {
-      setIsAdding(true);
-      await addCategory(storeId, newCategory.trim());
-      setNewCategory('');
-      await fetchVendorCategories();
-      CategoryCache.clear(); // Clear cache when adding
-      toast.success('Category added successfully!');
-    } catch (error) {
-      console.error('Error adding category:', error);
-      toast.error('Failed to add category.');
-    } finally {
-      setIsAdding(false);
+      await deleteDoc(doc(db, `stores/${storeId}/categories`, categoryId));
+    } catch (err) {
+      console.error("Error deleting category:", err);
+      setError("Failed to delete category.");
     }
   };
 
-  const handleUpdateCategory = async () => {
-    if (!editingCategory || !editingCategory.name.trim()) {
-      toast.error('Category name cannot be empty.');
-      return;
-    }
-    try {
-      await updateCategory(storeId, editingCategory.id, editingCategory.name.trim());
-      setEditingCategory(null);
-      await fetchVendorCategories();
-      CategoryCache.clear(); // Clear cache when updating
-      toast.success('Category updated successfully!');
-    } catch (error) {
-      console.error('Error updating category:', error);
-      toast.error('Failed to update category.');
-    }
-  };
+  if (isLoading) {
+    return <div className="text-center p-4">Loading categories...</div>;
+  }
 
-  const handleDeleteCategory = async (id: string) => {
-    try {
-      await deleteCategory(storeId, id);
-      await fetchVendorCategories();
-      CategoryCache.clear(); // Clear cache when deleting
-      toast.success('Category deleted successfully!');
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      toast.error('Failed to delete category.');
-    }
-  };
-
-  const startEditing = (category: { id: string; name: string }) => {
-    setEditingCategory(category);
-  };
-
-  const cancelEditing = () => {
-    setEditingCategory(null);
-  };
+  if (error) {
+    return <div className="text-center p-4 text-red-500">{error}</div>;
+  }
 
   return (
-    <div className="bg-card-background p-6 rounded-xl shadow-md border border-border-color">
-      <h2 className="text-xl font-semibold mb-4 text-text-primary">Manage Categories</h2>
-
-      {/* Add Category Section */}
-      <div className="mb-6">
-        <div className="flex rounded-md shadow-sm">
-          <input
-            type="text"
-            className="flex-grow block w-full min-w-0 rounded-none rounded-l-md border border-border-color focus:ring-blue-500 focus:border-blue-500 text-sm text-text-primary bg-input-background p-2"
-            placeholder="New Category"
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-          />
-          <button
-            type="button"
-            className="relative inline-flex items-center space-x-2 rounded-r-md border border-border-color bg-button-primary px-4 py-2 text-sm font-medium text-text-primary hover:bg-button-primary-hover focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            onClick={handleAddCategory}
-            disabled={isAdding}
-          >
-            <span>Add</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Category List */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
+      <h3 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">Manage Categories</h3>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+        These are the categories for your products. System categories like 'Promo' and 'New Arrivals' are managed automatically.
+      </p>
+      <div className="space-y-2">
         {categories.map((category) => (
-          <div key={category.id} className="flex flex-col justify-between p-4 rounded-lg border border-border-color bg-input-background">
-            {editingCategory?.id === category.id ? (
-              <div>
-                <input
-                  type="text"
-                  className="w-full rounded-md border border-border-color focus:ring-blue-500 focus:border-blue-500 text-sm text-text-primary bg-input-background p-2 mb-2"
-                  value={editingCategory.name}
-                  onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
-                />
-                <div className="flex justify-end">
-                  <button
-                    className="bg-button-success hover:bg-button-success-hover text-text-primary font-semibold py-2 px-4 rounded-md mr-2 transition-colors"
-                    onClick={handleUpdateCategory}
-                  >
-                    Save
-                  </button>
-                  <button
-                    className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-2 px-4 rounded-md transition-colors"
-                    onClick={cancelEditing}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between">
-                <span className="text-text-primary font-medium text-sm">{category.name}</span>
-                <div className="flex">
-                  <button
-                    className="bg-button-primary hover:bg-button-primary-hover text-text-primary font-semibold py-2 px-4 rounded-md mr-2 transition-colors"
-                    onClick={() => startEditing(category)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="bg-button-danger hover:bg-button-danger-hover text-text-primary font-semibold py-2 px-4 rounded-md transition-colors"
-                    onClick={() => handleDeleteCategory(category.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            )}
+          <div key={category.id} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 p-2 rounded-lg">
+            <span className="text-gray-800 dark:text-gray-200">{category.name}</span>
+            <button 
+              onClick={() => handleDeleteCategory(category.id)}
+              className="text-gray-500 hover:text-red-500 dark:hover:text-red-400 p-1 rounded-full transition-colors"
+            >
+              <Trash2 size={18} />
+            </button>
           </div>
         ))}
       </div>
+      {categories.length === 0 && (
+          <p className="text-sm text-center text-gray-500 dark:text-gray-400 py-4">You haven't added any custom product categories yet.</p>
+      )}
     </div>
   );
-};
-
-export default CategoryManagement;
+}
