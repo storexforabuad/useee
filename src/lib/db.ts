@@ -238,7 +238,6 @@ export async function updateNotificationStatus(
     });
   } catch (error) {
     console.error('Error updating notification status:', error);
-    throw error;
   }
 }
 
@@ -273,7 +272,7 @@ export async function getProductsByCategory(storeId: string, category: string): 
       const data = doc.data();
       return {
         ...data,
-        id: doc.id, 
+        id: doc.id,
       } as Product;
     });
   } catch (error) {

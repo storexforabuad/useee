@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, FormEvent } from 'react';
-import { collection, addDoc, onSnapshot, deleteDoc, doc, WriteBatch, writeBatch, serverTimestamp, query, getDocs } from "firebase/firestore";
-import { db } from '../../lib/db';
+import { addCategory, deleteCategory, getCategories } from '../lib/db';
 import { ProductCategory } from '../../types/store';
 import { Trash2 } from 'lucide-react';
 
@@ -21,31 +20,47 @@ export default function CategoryManagement({ storeId }: CategoryManagementProps)
   useEffect(() => {
     if (!storeId) return;
 
-    const q = query(collection(db, `stores/${storeId}/categories`));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const categoriesData: ProductCategory[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        // Filter out system categories from the display
-        if (!SYSTEM_CATEGORIES.includes(data.name)) {
-            categoriesData.push({ id: doc.id, ...data } as ProductCategory);
-        }
-      });
-      setCategories(categoriesData);
-      setIsLoading(false);
-    }, (err) => {
-      console.error("Error fetching categories:", err);
-      setError("Failed to load categories. Please try again later.");
-      setIsLoading(false);
-    });
+    const fetchCategories = async () => {
+      try {
+        const categoriesData = await getCategories(storeId);
+        const filteredCategories = categoriesData.filter(category => !SYSTEM_CATEGORIES.includes(category.name));
+        setCategories(filteredCategories);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        setError("Failed to load categories. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    return () => unsubscribe();
+    fetchCategories();
   }, [storeId]);
+
+  const handleAddCategory = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!storeId || !newCategory.trim()) return;
+
+    try {
+      await addCategory(storeId, newCategory.trim());
+      setNewCategory("");
+      // Refetch categories to update the list
+      const categoriesData = await getCategories(storeId);
+      const filteredCategories = categoriesData.filter(category => !SYSTEM_CATEGORIES.includes(category.name));
+      setCategories(filteredCategories);
+    } catch (err) {
+      console.error("Error adding category:", err);
+      setError("Failed to add category.");
+    }
+  };
 
   const handleDeleteCategory = async (categoryId: string) => {
     if (!storeId) return;
     try {
-      await deleteDoc(doc(db, `stores/${storeId}/categories`, categoryId));
+      await deleteCategory(storeId, categoryId);
+      // Refetch categories to update the list
+      const categoriesData = await getCategories(storeId);
+      const filteredCategories = categoriesData.filter(category => !SYSTEM_CATEGORIES.includes(category.name));
+      setCategories(filteredCategories);
     } catch (err) {
       console.error("Error deleting category:", err);
       setError("Failed to delete category.");
@@ -63,6 +78,16 @@ export default function CategoryManagement({ storeId }: CategoryManagementProps)
   return (
     <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
       <h3 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">Manage Categories</h3>
+      <form onSubmit={handleAddCategory} className="flex items-center mb-4">
+        <input
+          type="text"
+          value={newCategory}
+          onChange={(e) => setNewCategory(e.target.value)}
+          placeholder="Add new category"
+          className="flex-grow p-2 border rounded-l-md bg-input-background focus:ring-2 border-input-border focus:ring-blue-500"
+        />
+        <button type="submit" className="p-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700">Add</button>
+      </form>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
         These are the categories for your products. System categories like 'Promo' and 'New Arrivals' are managed automatically.
       </p>

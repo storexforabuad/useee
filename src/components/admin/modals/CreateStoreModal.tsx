@@ -4,7 +4,8 @@ import { useState, ChangeEvent, FormEvent, useRef } from "react";
 import { StoreMeta } from "../../../types/store";
 import { geography, Country, State } from "../../../config/geography";
 import { categorySuggestions } from "../../../config/categories";
-import { db, storage } from "../../../lib/firebase";
+import { db } from "../../../lib/firebase";
+import { uploadImageToCloudinary } from "../../../lib/cloudinary";
 import {
   collection,
   doc,
@@ -12,7 +13,6 @@ import {
   writeBatch,
   serverTimestamp,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Image from "next/image";
 
 interface CreateStoreModalProps {
@@ -135,15 +135,13 @@ export default function CreateStoreModal({
     setIsLoading(true);
 
     try {
+        const storeId = formData.name?.toLowerCase().replace(/\s+/g, "-") ?? "";
+        if (!storeId) throw new Error("Store name is required to generate an ID");
+
         let ceoImageUrl = "";
         if (ceoImageFile) {
-            const storageRef = ref(storage, `ceo-images/${Date.now()}_${ceoImageFile.name}`);
-            await uploadBytes(storageRef, ceoImageFile);
-            ceoImageUrl = await getDownloadURL(storageRef);
+            ceoImageUrl = await uploadImageToCloudinary(ceoImageFile, storeId);
         }
-
-        const storeId = formData.name?.toLowerCase().replace(/\\s+/g, "-") ?? "";
-        if (!storeId) throw new Error("Store name is required to generate an ID");
 
         const storeRef = doc(db, "stores", storeId);
 
@@ -158,8 +156,6 @@ export default function CreateStoreModal({
         await setDoc(storeRef, finalFormData);
 
         const batch = writeBatch(db);
-        // Only commit the categories the user has explicitly added.
-        // System categories like "Promo" and "New Arrivals" will be handled at the display layer.
         const allCategories = [...new Set(categories)];
         
         allCategories.forEach((categoryName) => {
@@ -218,7 +214,7 @@ export default function CreateStoreModal({
             {step === 2 && (
               <div className="space-y-4 animate-fade-in">
                  <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">Business Info</h2>
-                 <p className="text-sm text-center text-gray-500 dark:text-gray-400">Tell us about the business and where it\'s located</p>
+                 <p className="text-sm text-center text-gray-500 dark:text-gray-400">Tell us about the business and where it's located</p>
                  <input name="name" value={formData.name} onChange={handleInputChange} placeholder="Business Name *" className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-lg" required />
                  <div className="flex flex-col sm:flex-row gap-4">
                      <input name="whatsapp" value={formData.whatsapp} onChange={handleInputChange} placeholder="WhatsApp *" className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-lg" required />
@@ -240,11 +236,11 @@ export default function CreateStoreModal({
                 <div className="flex flex-col sm:flex-row gap-4">
                     <select name="country" value={formData.country} onChange={handleCountryChange} className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-lg" required>
                         <option value="">Select your country</option>
-                        {geography.map(c => <option key={c.name} value={c.name}>{c.flag} {c.name}</option>)}\
+                        {geography.map(c => <option key={c.name} value={c.name}>{c.flag} {c.name}</option>)}
                     </select>
                     <select name="state" value={formData.state} onChange={handleInputChange} className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-lg" required disabled={!formData.country}>
                         <option value="">Select state/province</option>
-                        {selectedCountry?.states.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}\
+                        {selectedCountry?.states.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
                     </select>
                 </div>
                  <textarea name="businessDescription" value={formData.businessDescription} onChange={handleInputChange} placeholder="Business Description (max 500 chars)..." className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-lg h-24" maxLength={500}></textarea>
@@ -257,24 +253,24 @@ export default function CreateStoreModal({
                     <p className="text-sm text-center text-gray-500 dark:text-gray-400">Select categories that best describe the products</p>
                     <div className="flex flex-wrap gap-2 justify-center">
                         {categorySuggestions.map(cat => (
-                            <button key={cat} type="button" onClick={() => handleCategorySelect(cat)} className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${categories.includes(cat) ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>\
-                                {cat}\
+                            <button key={cat} type="button" onClick={() => handleCategorySelect(cat)} className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${categories.includes(cat) ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>
+                                {cat}
                             </button>
-                        ))}\
+                        ))}
                     </div>
-                    <div className="flex gap-2">\
-                        <input value={customCategory} onChange={(e) => setCustomCategory(e.target.value)} placeholder="Or add a custom category..." className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-lg" />\
-                        <button type="button" onClick={handleAddCustomCategory} className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600">+</button>\
+                    <div className="flex gap-2">
+                        <input value={customCategory} onChange={(e) => setCustomCategory(e.target.value)} placeholder="Or add a custom category..." className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-lg" />
+                        <button type="button" onClick={handleAddCustomCategory} className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600">+</button>
                     </div>
-                    <div>\
-                        <h3 className="font-semibold mt-4">Selected Categories:</h3>\
+                    <div>
+                        <h3 className="font-semibold mt-4">Selected Categories:</h3>
                         {categories.length > 0 ? (
                             <ul className="list-disc pl-5 mt-2 text-gray-700 dark:text-gray-300">
-                               {categories.map(c => <li key={c}>{c}</li>)}\
+                               {categories.map(c => <li key={c}>{c}</li>)}
                             </ul>
                         ) : (
                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">No categories selected yet. System categories 'Promo' and 'New Arrivals' will be available by default.</p>
-                        )}\
+                        )}
                     </div>
                  </div>
             )}

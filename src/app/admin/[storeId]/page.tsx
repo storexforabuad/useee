@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useCallback } from 'react';
 import { getProducts, getCategories, updateProduct, deleteProduct, getContacts, WholesaleData } from '../../../lib/db';
 import { Product } from '../../../types/product';
 import AdminHeader from '../../../components/admin/AdminHeader';
@@ -24,18 +24,13 @@ export default function AdminStorePage() {
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('home');
   const [isManageProductsOpen, setIsManageProductsOpen] = useState(false);
-  const [isCategoryManagementOpen, setIsCategoryManagementOpen] = useState(false);
+  const [isCategoryManagementOpen, setIsCategoryManagementOpen] = useState(true);
   const [isAddProductOpen, setIsAddProductOpen] = useState(true);
   const [viewMode, setViewMode] = useState<'all' | 'popular' | 'limited' | 'soldout'>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
+  const fetchData = useCallback(async (showRefresh = false) => {
     if (!storeId) return;
-    fetchData();
-    // eslint-disable-next-line
-  }, [storeId]);
-
-  async function fetchData(showRefresh = false) {
     if (showRefresh) setIsRefreshing(true);
     try {
       const [fetchedProducts, fetchedCategories, fetchedContacts] = await Promise.all([
@@ -52,7 +47,13 @@ export default function AdminStorePage() {
       if (showRefresh) setIsRefreshing(false);
       setLoading(false);
     }
-  }
+  }, [storeId]);
+
+  useEffect(() => {
+    if (storeId) {
+      fetchData();
+    }
+  }, [storeId, fetchData]);
 
   async function handleUpdateProduct(id: string, updatedProduct: Partial<Product>) {
     await updateProduct(storeId, id, updatedProduct);
@@ -81,7 +82,7 @@ export default function AdminStorePage() {
                 storeLink={`/${storeId}`}
                 setManageTab={setViewMode}
                 setIsManageProductsOpen={setIsManageProductsOpen}
-                onRefresh={fetchData}
+                onRefresh={() => fetchData(true)}
                 isRefreshing={isRefreshing}
                 totalProducts={products.length}
                 totalCategories={categories.length}
@@ -130,7 +131,7 @@ export default function AdminStorePage() {
                 isAddProductOpen={isAddProductOpen}
                 setIsAddProductOpen={setIsAddProductOpen}
                 categories={categories}
-                onProductAdded={() => { /* Do nothing here; let AddProductSection handle summary and reset */ }}
+                onProductAdded={() => { fetchData(true) }}
                 storeId={storeId}
               />
             </div>

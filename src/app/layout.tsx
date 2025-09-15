@@ -12,10 +12,12 @@ const poppins = Poppins({
   display: 'swap',
 })
 
+const manifest = process.env.NODE_ENV === 'production' ? '/manifest.json' : undefined;
+
 export const metadata: Metadata = {
   title: "Alaniq INT.",
   description: "Discover Beautiful RTW, Perfumes, Incense & More",
-  manifest: "/manifest.json",
+  manifest: manifest,
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

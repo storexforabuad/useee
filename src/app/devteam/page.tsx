@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getStores, StoreMeta, getProducts, getPopularProducts } from '../../lib/db';
-import CategoryManagement from '../../components/CategoryManagement';
 import Link from 'next/link';
 import { ShoppingBag, ClipboardListIcon, Sun, PlusCircle } from 'lucide-react';
 import CreateStoreModal from '../../components/admin/modals/CreateStoreModal';
@@ -127,9 +126,6 @@ export default function DevteamPage() {
                     <div className="p-2 bg-green-50 dark:bg-green-900/50 rounded-lg"><span className="font-bold text-green-800 dark:text-green-200">{selectedStoreStats.popularCount}</span><p className="text-xs text-green-600 dark:text-green-300">Popular</p></div>
                     <div className="p-2 bg-purple-50 dark:bg-purple-900/50 rounded-lg"><span className="font-bold text-purple-800 dark:text-purple-200">{selectedStoreStats.totalViews.toLocaleString()}</span><p className="text-xs text-purple-600 dark:text-purple-300">Views</p></div>
                     <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg"><span className="font-bold text-gray-800 dark:text-gray-200">#{selectedStoreStats.rank}</span><p className="text-xs text-gray-600 dark:text-gray-400">Rank</p></div>
-                </div>
-                <div className="mt-4">
-                  <CategoryManagement storeId={selectedStore} />
                 </div>
                 </motion.section>
             )}
