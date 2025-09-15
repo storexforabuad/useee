@@ -9,7 +9,6 @@ import Navbar from '../../components/layout/navbar';
 import CategoryBar from '../../components/layout/CategoryBar';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import type { Product } from '../../types/product';
-import NavigationStore from '@/lib/navigationStore';
 import ConnectionErrorToast from '../../components/ConnectionErrorToast';
 import { CategoryCache } from '../../lib/categoryCache';
 import { ProductListCache } from '../../lib/productCache';
@@ -96,8 +95,8 @@ export default function StorefrontPage() {
       }
       setProducts(Array.isArray(fetchedProducts) ? fetchedProducts.slice(0, PRODUCTS_PAGE_SIZE) : []);
       setHasMore(Array.isArray(fetchedProducts) ? PRODUCTS_PAGE_SIZE < fetchedProducts.length : false);
-    } catch (error) {
-      console.error('Error fetching products:', error);
+    } catch {
+      console.error('Error fetching products:');
     } finally {
       setLoading(false);
     }
@@ -119,7 +118,7 @@ export default function StorefrontPage() {
         const storeMeta = await getStoreMeta(storeId);
         setStoreName(storeMeta?.name || storeId);
         await handleCategorySelect('Promo');
-      } catch (error) {
+      } catch {
         setIsConnectionError(true);
       } finally {
         setInitialLoading(false);
@@ -222,7 +221,7 @@ export default function StorefrontPage() {
         const paged = fetchedProducts.slice(0, page * PRODUCTS_PAGE_SIZE);
         setProducts(paged);
         setHasMore(paged.length < fetchedProducts.length);
-      } catch (error) {
+      } catch {
         // handle error
       } finally {
         setLoading(false);

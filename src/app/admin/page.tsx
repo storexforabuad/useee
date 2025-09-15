@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { getProducts, updateProduct, deleteProduct, getCategories } from '../../lib/db';
+import { useState, useEffect, Suspense, useCallback } from 'react';
+import { getProducts, updateProduct, deleteProduct, getCategories, getContacts } from '../../lib/db';
 import { Product } from '../../types/product';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import dynamic from 'next/dynamic';
-import { getAuth, signOut } from 'firebase/auth';
+import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import AdminHeader from '../../components/admin/AdminHeader';
 import AdminSkeleton from '../../components/admin/AdminSkeleton';
@@ -15,114 +15,27 @@ import { toast } from 'react-hot-toast';
 import { ProductCache } from '../../lib/productCache';
 import AdminHomeCards from '../../components/admin/AdminHomeCards';
 import AddProductSection from '../../components/AddProductSection';
+import PopularProductsSection from '../../components/PopularProductsSection'; // Import the new component
 
 // Lazy load components
 const ManageProductsSection = dynamic(() => import('../../components/ManageProductsSection'));
 const CategoryManagementSection = dynamic(() => import('../../components/CategoryManagementSection'));
 
-// Mock data for contacts to calculate totalContacts
-const mockWholesaleData = [
-  {
-    id: 'vendor-state',
-    name: 'Your Vendor State',
-    contacts: [
-      {
-        name: 'Local Supply Co.',
-        role: 'Sales Manager',
-        phone: '+2348012345678',
-        email: 'sales@localsupply.com',
-        specialization: 'General Goods',
-      },
-      {
-        name: 'Agro Distributors',
-        role: 'Account Manager',
-        phone: '+2348023456789',
-        email: 'info@agrodist.com',
-        specialization: 'Agricultural Products',
-      },
-    ],
-  },
-  {
-    id: 'your-region',
-    name: 'Your Region',
-    contacts: [
-      {
-        name: 'Regional Wholesalers Ltd.',
-        role: 'Operations Head',
-        phone: '+2347011223344',
-        email: 'ops@regionalwholesale.com',
-        specialization: 'Electronics, Home Goods',
-      },
-      {
-        name: 'Textile Hub',
-        role: 'Manager',
-        phone: '+2347022334455',
-        email: 'contact@textilehub.com',
-        specialization: 'Fabrics, Clothing',
-      },
-    ],
-  },
-  {
-    id: 'kano-nigeria',
-    name: 'Kano, Nigeria',
-    contacts: [
-      {
-        name: 'Kano Commodities',
-        role: 'Logistics',
-        phone: '+2349033445566',
-        email: 'logistics@kanocommodities.com',
-        specialization: 'Foodstuffs, Grains',
-      },
-      {
-        name: 'Central Market Suppliers',
-        role: 'Wholesale Rep',
-        phone: '+2349044556677',
-        email: 'sales@centralmarket.com',
-        specialization: 'Consumer Goods',
-      },
-    ],
-  },
-  {
-    id: 'lagos-nigeria',
-    name: 'Lagos, Nigeria',
-    contacts: [
-      {
-        name: 'Lagos Import/Export',
-        role: 'Director',
-        phone: '+2348155667788',
-        email: 'ceo@lagosimport.com',
-        specialization: 'Variety of Imported Goods',
-      },
-      {
-        name: 'Balogun Market Wholesalers',
-        role: 'Sales',
-        phone: '+2348166778899',
-        email: 'info@balogunwholesale.com',
-        specialization: 'Fashion, Beauty Products',
-      },
-    ],
-  },
-  {
-    id: 'china',
-    name: 'China',
-    contacts: [
-      {
-        name: 'Shenzhen Tech Solutions',
-        role: 'International Sales',
-        phone: '+8613912345678',
-        email: 'intlsales@shenzhentech.cn',
-        specialization: 'Electronics, Gadgets',
-      },
-      {
-        name: 'Guangzhou General Trading',
-        role: 'Export Manager',
-        phone: '+8613898765432',
-        email: 'export@guangzhoutrade.cn',
-        specialization: 'Clothing, Accessories, Small Wares',
-      },
-    ],
-  },
-];
+
+// Define types for the mock data
+interface Contact {
+  name: string;
+  role: string;
+  phone: string;
+  email: string;
+  specialization: string;
+}
+
+interface WholesaleData {
+  id: string;
+  name: string;
+  contacts: Contact[];
+}
 
 const AdminDashboard = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -131,39 +44,60 @@ const AdminDashboard = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isManageProductsOpen, setIsManageProductsOpen] = useState(false);
   const [isCategoryManagementOpen, setIsCategoryManagementOpen] = useState(false);
+  const [isPopularProductsOpen, setIsPopularProductsOpen] = useState(false); // Add state for popular products section
   const [batchTemplate, setBatchTemplate] = useState<Partial<Product> | null>(null);
   const [isAddProductOpen, setIsAddProductOpen] = useState(true);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [contacts, setContacts] = useState<WholesaleData[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'all' | 'popular' | 'limited' | 'soldout'>('all');
+  const [storeId, setStoreId] = useState<string | null>(null);
 
   const auth = getAuth();
   const router = useRouter();
 
-  const fetchData = async (showRefresh = false) => {
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setStoreId(user.uid);
+      } else {
+        console.log('no store id');
+        router.push('/signin');
+      }
+    });
+    return () => unsubscribe();
+  }, [auth, router]);
+
+  const fetchData = useCallback(async (showRefresh = false) => {
+    if (!storeId) return;
     if (showRefresh) setIsRefreshing(true);
     try {
-      const [fetchedProducts, fetchedCategories] = await Promise.all([
-        getProducts(),
-        getCategories(),
+      const [fetchedProducts, fetchedCategories, fetchedContacts] = await Promise.all([
+        getProducts(storeId),
+        getCategories(storeId),
+        getContacts(storeId)
       ]);
       setProducts(fetchedProducts);
       setCategories(fetchedCategories);
+      setContacts(fetchedContacts);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
       if (showRefresh) setIsRefreshing(false);
     }
-  };
+  }, [storeId]);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (storeId) {
+      fetchData();
+    }
+  }, [storeId, fetchData]);
 
   const handleUpdateProduct = async (id: string, updatedProduct: Partial<Product>) => {
+    if (!storeId) return;
     try {
-      await updateProduct(id, updatedProduct);
+      await updateProduct(storeId, id, updatedProduct);
       ProductCache.clear();
       await fetchData(true);
       toast.success('Product updated successfully');
@@ -174,8 +108,9 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteProduct = async (id: string) => {
+    if (!storeId) return;
     try {
-      await deleteProduct(id);
+      await deleteProduct(storeId, id);
       ProductCache.clear();
       await fetchData(true);
       toast.success('Product deleted');
@@ -212,7 +147,6 @@ const AdminDashboard = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -222,10 +156,9 @@ const AdminDashboard = () => {
     }
   };
 
-  // Calculate total contacts here
-  const totalContacts = mockWholesaleData.reduce((sum, region) => sum + region.contacts.length, 0);
+  const totalContacts = contacts.reduce((sum, region) => sum + region.contacts.length, 0);
 
-  if (loading) {
+  if (loading && !isRefreshing) {
     return <AdminSkeleton screen="home" />;
   }
 
@@ -235,7 +168,7 @@ const AdminDashboard = () => {
         <AdminHeader onLogout={handleLogout} isRefreshing={isRefreshing} />
         <main className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
           <Suspense fallback={<AdminSkeleton isNavigation={true} />}>
-            {activeSection === 'home' && (
+            {activeSection === 'home' && storeId && (
               <div className="mb-8">
                 <AdminHomeCards
                   totalProducts={products.length}
@@ -249,21 +182,29 @@ const AdminDashboard = () => {
                   setManageTab={setViewMode}
                   products={products}
                   categories={categories}
+                  contacts={contacts}
                   debtors={0}
                   subscriptionStatus={"Active"}
                   storeLink={'http://https://tinyurl.com/alaniqint'}
                   referrals={0}
                   setIsModalOpen={setIsModalOpen}
-                  onRefresh={fetchData}
+                  onRefresh={() => fetchData(true)}
                   isRefreshing={isRefreshing}
-                  totalContacts={totalContacts} // Pass totalContacts as a prop
+                  totalContacts={totalContacts}
+                  storeId={storeId}
+                />
+                <PopularProductsSection 
+                  isPopularProductsOpen={isPopularProductsOpen} 
+                  setIsPopularProductsOpen={setIsPopularProductsOpen} 
+                  storeId={storeId} 
                 />
               </div>
             )}
 
-            {activeSection === 'manage' && (
+            {activeSection === 'manage' && storeId && (
               <div className="mb-8">
                 <ManageProductsSection
+                  storeId={storeId}
                   products={products}
                   handleUpdateProduct={handleUpdateProduct}
                   handleDeleteProduct={handleDeleteProduct}
@@ -278,18 +219,20 @@ const AdminDashboard = () => {
               </div>
             )}
 
-            {activeSection === 'categories' && (
+            {activeSection === 'categories' && storeId &&(
               <div className="mb-8">
                 <CategoryManagementSection
+                  storeId={storeId}
                   isCategoryManagementOpen={isCategoryManagementOpen}
                   setIsCategoryManagementOpen={setIsCategoryManagementOpen}
                 />
               </div>
             )}
 
-            {activeSection === 'add' && (
+            {activeSection === 'add' && storeId &&(
               <div className="mb-8">
                 <AddProductSection
+                  storeId={storeId}
                   batchTemplate={batchTemplate}
                   isAddProductOpen={isAddProductOpen}
                   setIsAddProductOpen={setIsAddProductOpen}

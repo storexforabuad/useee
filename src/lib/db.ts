@@ -15,7 +15,8 @@ import {
   limit,
   serverTimestamp ,
   increment,
-  setDoc
+  setDoc,
+  Timestamp
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Product } from '../types/product';
@@ -24,9 +25,24 @@ import { Product } from '../types/product';
 export interface StoreMeta {
   id: string;
   name: string;
-  createdAt?: any;
+  createdAt?: Timestamp;
   whatsapp?: string;
   // Add more fields as needed (e.g., description, contact, etc.)
+}
+
+// Define types for the contact data
+export interface Contact {
+  name: string;
+  role: string;
+  phone: string;
+  email: string;
+  specialization: string;
+}
+
+export interface WholesaleData {
+  id: string;
+  name: string;
+  contacts: Contact[];
 }
 
 function assertDb() {
@@ -49,16 +65,6 @@ export async function createStore(store: { id: string; name: string; whatsapp?: 
       await addDoc(categoriesRef, { name: 'Promo', createdAt: serverTimestamp() });
       await addDoc(categoriesRef, { name: 'New Arrivals', createdAt: serverTimestamp() });
     }
-    // Optionally seed a sample product (uncomment if desired)
-    // const productsRef = collection(db, 'stores', store.id, 'products');
-    // await addDoc(productsRef, {
-    //   name: 'Sample Product',
-    //   price: 1000,
-    //   category: 'Promo',
-    //   createdAt: serverTimestamp(),
-    //   views: 0,
-    //   soldOut: false,
-    // });
   } catch (error) {
     console.error('Error creating store:', error);
     throw error;
@@ -113,10 +119,9 @@ export async function updateProduct(storeId: string, productId: string, data: Pa
     if (productSnap.exists()) {
       const currentData = productSnap.data();
       
-      // Check if product is changing from soldOut to in stock
       if (currentData.soldOut === true && data.soldOut === false) {
-        data.backInStock = true; // Set backInStock flag
-        await handleBackInStock(storeId, productId); // Handle notifications
+        data.backInStock = true; 
+        await handleBackInStock(storeId, productId); 
       }
       
       await updateDoc(productRef, data);
@@ -127,9 +132,7 @@ export async function updateProduct(storeId: string, productId: string, data: Pa
   }
 }
 
-// Add this helper function
-// Update the handleBackInStock function
-// Update handleBackInStock to require storeId
+
 async function handleBackInStock(storeId: string, productId: string): Promise<void> {
   try {
     const notifications = await getStockNotificationsForProduct(productId);
@@ -140,7 +143,6 @@ async function handleBackInStock(storeId: string, productId: string): Promise<vo
       try {
         if (!notification.pushSubscription) return;
 
-        // Add productId to the notification payload
         await fetch('/api/notifications', {
           method: 'POST',
           headers: {
@@ -150,7 +152,7 @@ async function handleBackInStock(storeId: string, productId: string): Promise<vo
             subscription: notification.pushSubscription,
             message: {
               text: `${product.name} is back in stock!`,
-              productId: productId // Add this
+              productId: productId 
             }
           }),
         });
@@ -249,7 +251,7 @@ export async function getProducts(storeId: string): Promise<Product[]> {
       const data = doc.data();
       return {
         ...data,
-        id: doc.id, // Always use Firestore doc.id
+        id: doc.id,
       } as Product;
     });
   } catch (error) {
@@ -271,7 +273,7 @@ export async function getProductsByCategory(storeId: string, category: string): 
       const data = doc.data();
       return {
         ...data,
-        id: doc.id, // Always use Firestore doc.id
+        id: doc.id, 
       } as Product;
     });
   } catch (error) {
@@ -400,6 +402,41 @@ export async function getPopularProducts(storeId: string, limitCount: number = 6
   } catch (error) {
     console.error('Error fetching popular products:', error);
     return [];
+  }
+}
+
+export async function getContacts(storeId: string): Promise<WholesaleData[]> {
+  if (!storeId) {
+    console.error('Missing storeId in getContacts');
+    return [];
+  }
+  assertDb();
+  try {
+    const contactsRef = collection(db, 'stores', storeId, 'contacts');
+    const q = query(contactsRef, orderBy('name', 'asc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WholesaleData));
+  } catch (error) {
+    console.error('Error fetching contacts:', error);
+    return [];
+  }
+}
+
+export async function addContact(storeId: string, contact: Omit<Contact, 'id'>): Promise<string> {
+  if (!storeId) {
+    throw new Error('Missing storeId. Cannot add contact.');
+  }
+  assertDb();
+  try {
+    const contactsRef = collection(db, 'stores', storeId, 'contacts');
+    const docRef = await addDoc(contactsRef, {
+      ...contact,
+      createdAt: serverTimestamp(),
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error adding contact:', error);
+    throw error;
   }
 }
 

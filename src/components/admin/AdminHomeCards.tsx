@@ -15,6 +15,7 @@ import ReferralsModal from './modals/ReferralsModal';
 import SoldOutModal from './modals/SoldOutModal';
 import ContactsModal from './modals/ContactsModal'; // Updated import
 import { Product } from '../../types/product';
+import { WholesaleData } from '../../lib/db';
 
 interface AdminHomeCardsProps {
   totalProducts: number;
@@ -26,6 +27,7 @@ interface AdminHomeCardsProps {
   subscriptionStatus: string;
   products: Product[];
   categories: { id: string; name: string }[];
+  contacts: WholesaleData[];
   setActiveSection: (section: string) => void;
   storeLink: string;
   referrals: number;
@@ -35,13 +37,14 @@ interface AdminHomeCardsProps {
   setIsManageProductsOpen?: (open: boolean) => void;
   onRefresh: (showRefresh: boolean) => void;
   isRefreshing: boolean;
-  totalContacts: number; // Added totalContacts prop
+  totalContacts: number;
+  storeId: string; // Added storeId
 }
 
 const cardData = [
-  {
+    {
       label: 'Contacts',
-      valueKey: 'totalContacts', // Changed to use totalContacts
+      valueKey: 'totalContacts',
       icon: Handshake,
       gradient: 'from-purple-400 via-indigo-500 to-blue-600',
       text: 'text-white',
@@ -231,7 +234,7 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
                       {card.label === 'Store Link'
                         ? 'Your'
                         : card.label === 'Contacts'
-                          ? props.totalContacts // Display actual totalContacts
+                          ? props.totalContacts
                           : card.label === 'Sold Out'
                             ? props.soldOut
                             : (() => {
@@ -271,6 +274,7 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
                 ...props,
                 handleClose: handleCloseModal,
                 setIsManageProductsOpen: props.setIsManageProductsOpen || (() => {}),
+                onContactAdded: () => props.onRefresh(true),
               };
               return <ModalComponent {...modalProps} />;
               

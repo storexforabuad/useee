@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
-import { X, Handshake, ChevronDown } from 'lucide-react';
+import { X, Handshake, ChevronDown, Plus } from 'lucide-react';
 import Modal from '../../Modal';
+import { addContact, WholesaleData } from '../../../lib/db'; // Import WholesaleData
+import { toast } from 'react-hot-toast';
 
-interface ContactsModalProps { // Renamed interface
+interface ContactsModalProps {
   handleClose: () => void;
+  storeId: string;
+  contacts: WholesaleData[]; // Use the specific type
+  onContactAdded: () => void;
 }
 
 interface Contact {
@@ -14,125 +19,71 @@ interface Contact {
   specialization: string;
 }
 
-interface RegionData {
-  id: string;
-  name: string;
-  contacts: Contact[];
+// Define types for the Contact Picker API to avoid using 'any'
+interface ContactPickerResult {
+  name: string[];
+  tel: string[];
+  email: string[];
 }
 
-const mockWholesaleData: RegionData[] = [
-  {
-    id: 'vendor-state',
-    name: 'Your Vendor State',
-    contacts: [
-      {
-        name: 'Local Supply Co.',
-        role: 'Sales Manager',
-        phone: '+2348012345678',
-        email: 'sales@localsupply.com',
-        specialization: 'General Goods',
-      },
-      {
-        name: 'Agro Distributors',
-        role: 'Account Manager',
-        phone: '+2348023456789',
-        email: 'info@agrodist.com',
-        specialization: 'Agricultural Products',
-      },
-    ],
-  },
-  {
-    id: 'your-region',
-    name: 'Your Region',
-    contacts: [
-      {
-        name: 'Regional Wholesalers Ltd.',
-        role: 'Operations Head',
-        phone: '+2347011223344',
-        email: 'ops@regionalwholesale.com',
-        specialization: 'Electronics, Home Goods',
-      },
-      {
-        name: 'Textile Hub',
-        role: 'Manager',
-        phone: '+2347022334455',
-        email: 'contact@textilehub.com',
-        specialization: 'Fabrics, Clothing',
-      },
-    ],
-  },
-  {
-    id: 'kano-nigeria',
-    name: 'Kano, Nigeria',
-    contacts: [
-      {
-        name: 'Kano Commodities',
-        role: 'Logistics',
-        phone: '+2349033445566',
-        email: 'logistics@kanocommodities.com',
-        specialization: 'Foodstuffs, Grains',
-      },
-      {
-        name: 'Central Market Suppliers',
-        role: 'Wholesale Rep',
-        phone: '+2349044556677',
-        email: 'sales@centralmarket.com',
-        specialization: 'Consumer Goods',
-      },
-    ],
-  },
-  {
-    id: 'lagos-nigeria',
-    name: 'Lagos, Nigeria',
-    contacts: [
-      {
-        name: 'Lagos Import/Export',
-        role: 'Director',
-        phone: '+2348155667788',
-        email: 'ceo@lagosimport.com',
-        specialization: 'Variety of Imported Goods',
-      },
-      {
-        name: 'Balogun Market Wholesalers',
-        role: 'Sales',
-        phone: '+2348166778899',
-        email: 'info@balogunwholesale.com',
-        specialization: 'Fashion, Beauty Products',
-      },
-    ],
-  },
-  {
-    id: 'china',
-    name: 'China',
-    contacts: [
-      {
-        name: 'Shenzhen Tech Solutions',
-        role: 'International Sales',
-        phone: '+8613912345678',
-        email: 'intlsales@shenzhentech.cn',
-        specialization: 'Electronics, Gadgets',
-      },
-      {
-        name: 'Guangzhou General Trading',
-        role: 'Export Manager',
-        phone: '+8613898765432',
-        email: 'export@guangzhoutrade.cn',
-        specialization: 'Clothing, Accessories, Small Wares',
-      },
-    ],
-  },
-];
+interface ContactsManager {
+  select(
+    properties: Array<'name' | 'tel' | 'email'>,
+    options?: { multiple: boolean }
+  ): Promise<ContactPickerResult[]>;
+}
 
-const ContactsModal: React.FC<ContactsModalProps> = ({ handleClose }) => {
+const ContactsModal: React.FC<ContactsModalProps> = ({ handleClose, storeId, contacts, onContactAdded }) => {
   const [openSection, setOpenSection] = useState<string | null>(null);
-  const totalContacts = mockWholesaleData.reduce((sum, region) => sum + region.contacts.length, 0);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newContact, setNewContact] = useState<Omit<Contact, 'id'>& { region: string }>({ name: '', role: '', phone: '', email: '', specialization: '', region: 'Your Vendor State' });
+
   const toggleSection = (sectionId: string) => {
     setOpenSection(prev => (prev === sectionId ? null : sectionId));
   };
 
+  const handleAddContact = async () => {
+    if (!newContact.name || !newContact.phone) {
+      toast.error('Name and phone number are required.');
+      return;
+    }
+    try {
+      await addContact(storeId, newContact);
+      toast.success('Contact added successfully!');
+      onContactAdded();
+      setShowAddForm(false);
+      setNewContact({ name: '', role: '', phone: '', email: '', specialization: '', region: 'Your Vendor State' });
+    } catch (error) {
+      toast.error('Failed to add contact.');
+      console.error('Error adding contact:', error);
+    }
+  };
+
+  const handleSelectContact = async () => {
+    const nav = navigator as Navigator & { contacts: ContactsManager };
+    if (nav.contacts) {
+      try {
+        const selectedContacts = await nav.contacts.select(['name', 'tel', 'email']);
+        if (selectedContacts && selectedContacts.length > 0) {
+          const { name, tel, email } = selectedContacts[0];
+          setNewContact(prev => ({
+            ...prev,
+            name: name?.[0] || '',
+            phone: tel?.[0] || '',
+            email: email?.[0] || '',
+          }));
+        }
+      } catch (error) {
+        console.error('Error selecting contact from phone directory:', error);
+        toast.error('Could not import contact.');
+      }
+    }
+  };
+
+  const totalContacts = contacts.reduce((sum, region) => sum + (region.contacts?.length || 0), 0);
+
   return (
     <Modal open={true} onClose={handleClose}>
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-400/10 border border-purple-400/20">
@@ -147,9 +98,29 @@ const ContactsModal: React.FC<ContactsModalProps> = ({ handleClose }) => {
           <X size={24} />
         </button>
       </div>
-      {/* Content - Accordions */}
+
       <div className="overflow-y-auto max-h-[70vh] space-y-4">
-        {mockWholesaleData.map(region => (
+
+        <button onClick={() => setShowAddForm(!showAddForm)} className="flex items-center justify-center w-full p-2 mb-4 text-white bg-purple-600 rounded-md hover:bg-purple-700">
+          <Plus className="mr-2" /> {showAddForm ? 'Cancel' : 'Add New Contact'}
+        </button>
+
+        {showAddForm && (
+          <div className="p-4 border rounded-md">
+            <h3 className="text-lg font-semibold mb-2">New Contact</h3>
+            <div className="space-y-2">
+              <input type="text" placeholder="Name" value={newContact.name} onChange={(e) => setNewContact({ ...newContact, name: e.target.value })} className="w-full p-2 border rounded-md" />
+              <input type="text" placeholder="Role" value={newContact.role} onChange={(e) => setNewContact({ ...newContact, role: e.target.value })} className="w-full p-2 border rounded-md" />
+              <input type="text" placeholder="Phone" value={newContact.phone} onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })} className="w-full p-2 border rounded-md" />
+              <input type="text" placeholder="Email" value={newContact.email} onChange={(e) => setNewContact({ ...newContact, email: e.target.value })} className="w-full p-2 border rounded-md" />
+              <input type="text" placeholder="Specialization" value={newContact.specialization} onChange={(e) => setNewContact({ ...newContact, specialization: e.target.value })} className="w-full p-2 border rounded-md" />
+              <button onClick={handleSelectContact} className="w-full p-2 mt-2 text-white bg-blue-500 rounded-md hover:bg-blue-600">Import from Phone</button>
+              <button onClick={handleAddContact} className="w-full p-2 mt-2 text-white bg-green-500 rounded-md hover:bg-green-600">Save Contact</button>
+            </div>
+          </div>
+        )}
+
+        {contacts.map(region => (
           <div key={region.id} className="border border-border-color rounded-md bg-card-background">
             <button
               onClick={() => toggleSection(region.id)}
@@ -162,7 +133,7 @@ const ContactsModal: React.FC<ContactsModalProps> = ({ handleClose }) => {
             </button>
             {openSection === region.id && (
               <div className="p-4 border-t border-border-color space-y-4">
-                {region.contacts.map((contact, index) => (
+                {region.contacts.map((contact: Contact, index: number) => (
                   <div key={index} className="space-y-1">
                     <p className="font-semibold text-text-primary text-lg">{contact.name}</p>
                     <p className="text-sm text-text-secondary">

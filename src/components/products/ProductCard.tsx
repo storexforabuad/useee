@@ -17,24 +17,24 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, storeId }: ProductCardProps) {
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imgSrc, setImgSrc] = useState(product.images?.[0] || DEFAULT_IMAGES.medium);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  useIntersectionObserver(cardRef as React.RefObject<Element>, (entries) => {
+    if (entries[0].isIntersecting) setIsVisible(true);
+  }, { threshold: 0.2 });
+  useProductDetailPrefetch(storeId, product.id, isVisible || isHovered);
+
   // Defensive: multi-vendor check
   if (!storeId || !product.id) {
     console.error('Missing storeId or product id in ProductCard', { storeId, product });
     return null;
   }
 
-  const [imageLoading, setImageLoading] = useState(true);
-  const [imgSrc, setImgSrc] = useState(product.images?.[0] || DEFAULT_IMAGES.medium);
   const discount = calculateDiscount(product.price, product.originalPrice);
-
-  // Use a ref that is compatible with both the hook and the div
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  useIntersectionObserver(cardRef as React.RefObject<Element>, (entries) => {
-    if (entries[0].isIntersecting) setIsVisible(true);
-  }, { threshold: 0.2 });
-  useProductDetailPrefetch(product.id, isVisible || isHovered);
 
   const handleImageError = () => {
     // Try fallback order: medium, small, large

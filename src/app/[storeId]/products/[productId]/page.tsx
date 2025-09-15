@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { getProductById, incrementProductViews, getStoreMeta } from '../../../../lib/db';
-import { CirclePlus, ShoppingCart, Clock, Check, ArrowLeft } from 'lucide-react';
+import { CirclePlus, ShoppingCart, Clock, Check } from 'lucide-react';
 import { useCart } from '../../../../lib/cartContext';
 import { Product } from '../../../../types/product';
 import { calculateDiscount, formatPrice } from '../../../../utils/price';
@@ -30,7 +30,6 @@ export default function ProductDetail() {
   const [isAdding, setIsAdding] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
   const { state, dispatch } = useCart();
-  const router = useRouter();
   const [storeMeta, setStoreMeta] = useState<{ whatsapp?: string } | null>(null);
 
   const [imageLoading, setImageLoading] = useState(true); // Add this state

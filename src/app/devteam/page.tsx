@@ -20,9 +20,7 @@ interface StoreStats {
 export default function DevteamPage() {
   const [stores, setStores] = useState<StoreMeta[]>([]);
   const [selectedStore, setSelectedStore] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [storeStats, setStoreStats] = useState<StoreStats[]>([]);
-  const [loadingStats, setLoadingStats] = useState(false);
   const [newStoreId, setNewStoreId] = useState('');
   const [newStoreName, setNewStoreName] = useState('');
   const [newStoreWhatsapp, setNewStoreWhatsapp] = useState('');
@@ -54,7 +52,7 @@ export default function DevteamPage() {
       // Refresh stores
       const data = await getStores();
       setStores(data);
-    } catch (e) {
+    } catch {
       setError('Failed to create store');
       setCreating(false);
     }
@@ -62,17 +60,14 @@ export default function DevteamPage() {
 
   useEffect(() => {
     async function fetchStores() {
-      setLoading(true);
       const data = await getStores();
       setStores(data);
-      setLoading(false);
     }
     fetchStores();
   }, []);
 
   useEffect(() => {
     async function fetchStats() {
-      setLoadingStats(true);
       const stores = await getStores();
       const stats = await Promise.all(stores.map(async (store) => {
         const products = await getProducts(store.id);
@@ -96,7 +91,6 @@ export default function DevteamPage() {
       stats.sort((a, b) => b.totalViews - a.totalViews);
       stats.forEach((s, i) => s.rank = i + 1);
       setStoreStats(stats);
-      setLoadingStats(false);
     }
     fetchStats();
   }, []);
@@ -144,7 +138,7 @@ export default function DevteamPage() {
       <section className="mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">Select Store</label>
         <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
-          {stores.map((store: any) => (
+          {stores.map((store: StoreMeta) => (
             <button
               key={store.id}
               className={`px-4 py-2 rounded-lg border text-sm font-semibold transition-colors duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${selectedStore === store.id ? 'bg-blue-600 text-white' : 'bg-white text-blue-700 border-blue-200'}`}

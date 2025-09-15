@@ -6,6 +6,7 @@ import { Product } from '../../types/product';
 import { motion, LayoutGroup, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { getStoreMeta } from '../../lib/db';
+import { StoreMeta } from '../../types/store';
 
 const ProductCard = dynamic(() => import('./ProductCard'), {
   loading: () => (
@@ -58,7 +59,7 @@ function GlassAboutButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function BusinessCardModal({ open, onClose, storeMeta }: { open: boolean; onClose: () => void; storeMeta?: { name?: string; businessName?: string; whatsapp?: string; phone?: string; specialization?: string; ceo?: { name?: string; image?: string }; rating?: number; reviews?: number; certified?: boolean; years?: number; delivery?: string; countryFlag?: string; businessHours?: string; responseTime?: string; instagram?: string; facebook?: string; } }) {
+function BusinessCardModal({ open, onClose, storeMeta }: { open: boolean; onClose: () => void; storeMeta?: StoreMeta }) {
   const b = {
     ...DUMMY_BUSINESS,
     ...storeMeta,
@@ -284,7 +285,7 @@ interface ProductGridProps {
 const ProductGrid = memo(function ProductGrid({ products, containerRef, storeId }: ProductGridProps) {
   const [isSingleColumn, setIsSingleColumn] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
-  const [storeMeta, setStoreMeta] = useState<any>(null);
+  const [storeMeta, setStoreMeta] = useState<StoreMeta | null>(null);
 
   useEffect(() => {
     async function fetchStoreMeta() {
@@ -341,7 +342,7 @@ const ProductGrid = memo(function ProductGrid({ products, containerRef, storeId 
         </div>
       </div>
       
-      <BusinessCardModal open={aboutOpen} onClose={() => setAboutOpen(false)} storeMeta={storeMeta} />
+      <BusinessCardModal open={aboutOpen} onClose={() => setAboutOpen(false)} storeMeta={storeMeta || undefined} />
       
       <motion.div
         ref={containerRef}

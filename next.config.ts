@@ -1,20 +1,32 @@
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
+import withBundleAnalyzer from '@next/bundle-analyzer';
+import withPWA from '@ducanh2912/next-pwa';
+import TerserPlugin from 'terser-webpack-plugin';
+import path from 'path';
+import { Configuration } from 'webpack';
+import type { NextConfig } from 'next';
+
+const bundleAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
-const withPWA = require('next-pwa')({
+const pwa = withPWA({
   dest: 'public',
   register: true,
-  skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
-  buildExcludes: [/middleware-manifest\.json$/],
   fallbacks: {
-    image: '/static/images/fallback.png'
+    document: '/offline',
+    image: '/static/images/fallback.png',
+    audio: '',
+    video: '',
+    font: ''
+  },
+  workboxOptions: {
+    skipWaiting: true,
+    exclude: [/middleware-manifest\.json$/],
   }
 });
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
@@ -39,12 +51,9 @@ const nextConfig = {
   experimental: {
     optimizeCss: true, // Enable CSS optimization
     optimizePackageImports: ['@firebase/firestore', '@firebase/auth', 'lucide-react', 'framer-motion'],
-    craCompat: false,
-    gzipSize: true,
   },
   // Webpack configuration for better optimization
-  webpack: (config: any, { dev, isServer }: { dev: boolean; isServer: boolean }) => {
-    // Production optimizations
+  webpack: (config: Configuration, { dev, isServer }: { dev: boolean; isServer: boolean }) => {
     if (!dev) {
       config.optimization = {
         ...config.optimization,
@@ -56,23 +65,73 @@ const nextConfig = {
         concatenateModules: true,
         providedExports: true,
         innerGraph: true,
-      }
+      };
 
-      // Tree shaking for CSS
       if (!isServer) {
-        config.optimization.splitChunks.cacheGroups.styles = {
-          name: 'styles',
-          test: /\.css$/,
+        config.optimization.splitChunks = {
           chunks: 'all',
-          enforce: true,
-          priority: 20,
+          minSize: 20000,
+          maxSize: 244000,
+          minChunks: 1,
+          maxAsyncRequests: 30,
+          maxInitialRequests: 30,
+          enforceSizeThreshold: 50000,
+          cacheGroups: {
+            firebase: {
+              test: /[\\/]node_modules[\\/](@firebase|firebase)[\\/]/,
+              name: 'firebase',
+              chunks: 'all',
+              priority: 10,
+              reuseExistingChunk: true,
+              enforce: true
+            },
+            framework: {
+              test: /[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-subscription)[\\/]/,
+              name: 'framework',
+              chunks: 'all',
+              priority: 40,
+              enforce: true,
+            },
+            commons: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'commons',
+              chunks: 'all',
+              minChunks: 2,
+              priority: -10,
+              reuseExistingChunk: true,
+              enforce: true
+            },
+            shared: {
+              test: /[\\/]node_modules[\\/](framer-motion|lucide-react|@headlessui)[\\/]/,
+              name: 'shared',
+              chunks: 'async',
+              priority: 15,
+              reuseExistingChunk: true
+            },
+            vendors: {
+              test: /[\\/]node_modules[\\/]/,
+              name(module: { context: string | undefined }) {
+                const packagePath = module.context?.replace(/\\/g, '/').match(/[\\/]node_modules[\\/](.*?)(?:[\\/]|$)/);
+                const packageName = packagePath ? packagePath[1] : 'vendors';
+                return `vendor.${packageName.replace('@', '').replace(/\//g, '.')}`;
+              },
+              priority: -20,
+              reuseExistingChunk: true
+            },
+            styles: {
+              name: 'styles',
+              test: /\.css$/,
+              chunks: 'all',
+              enforce: true,
+              priority: 20,
+            }
+          },
         };
       }
 
-      // Add Terser for better minification
       config.optimization.minimizer = config.optimization.minimizer || [];
       config.optimization.minimizer.push(
-        new (require('terser-webpack-plugin'))({
+        new TerserPlugin({
           parallel: true,
           terserOptions: {
             compress: {
@@ -99,81 +158,22 @@ const nextConfig = {
         })
       );
 
-      // Cache configuration
       config.cache = {
         type: 'filesystem',
         version: '1.0.0',
         store: 'pack',
         hashAlgorithm: 'xxhash64',
         compression: 'brotli',
-        cacheDirectory: require('path').resolve(__dirname, '.next/cache/webpack')
-      };
-    }
-
-    // Split chunks optimization
-    if (!isServer) {
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        minSize: 20000,
-        maxSize: 244000,
-        minChunks: 1,
-        maxAsyncRequests: 30,
-        maxInitialRequests: 30,
-        enforceSizeThreshold: 50000,
-        cacheGroups: {
-          firebase: {
-            test: /[\\/]node_modules[\\/](@firebase|firebase)[\\/]/,
-            name: 'firebase',
-            chunks: 'all',
-            priority: 10,
-            reuseExistingChunk: true,
-            enforce: true
-          },
-          framework: {
-            test: /[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-subscription)[\\/]/,
-            name: 'framework',
-            chunks: 'all',
-            priority: 40,
-            enforce: true,
-          },
-          commons: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'commons',
-            chunks: 'all',
-            minChunks: 2,
-            priority: -10,
-            reuseExistingChunk: true,
-            enforce: true
-          },
-          shared: {
-            test: /[\\/]node_modules[\\/](framer-motion|lucide-react|@headlessui)[\\/]/,
-            name: 'shared',
-            chunks: 'async',
-            priority: 15,
-            reuseExistingChunk: true
-          },
-          vendors: {
-            test: /[\\/]node_modules[\\/]/,
-            name(module: { context: string | undefined }) {
-              // Get the name of the package from the path segment after node_modules
-              const packagePath = module.context?.replace(/\\/g, '/').match(/[\\/]node_modules[\\/](.*?)(?:[\\/]|$)/);
-              const packageName = packagePath ? packagePath[1] : 'vendors';
-              return `vendor.${packageName.replace('@', '').replace(/\//g, '.')}`;
-            },
-            priority: -20,
-            reuseExistingChunk: true
-          }
-        },
+        cacheDirectory: path.resolve(__dirname, '.next/cache/webpack')
       };
     }
 
     return config;
   },
-  // Performance budgets
   onDemandEntries: {
     maxInactiveAge: 60 * 60 * 1000,
     pagesBufferLength: 2,
   },
 }
 
-module.exports = withBundleAnalyzer(withPWA(nextConfig));
+export default pwa(bundleAnalyzer(nextConfig));

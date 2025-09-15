@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
-import { getProducts, getCategories, updateProduct, deleteProduct } from '../../../lib/db';
+import { getProducts, getCategories, updateProduct, deleteProduct, getContacts, WholesaleData } from '../../../lib/db';
 import { Product } from '../../../types/product';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import AdminSkeleton from '../../../components/admin/AdminSkeleton';
@@ -20,6 +20,7 @@ export default function AdminStorePage() {
   const storeId = typeof params?.storeId === 'string' ? params.storeId : Array.isArray(params?.storeId) ? params.storeId[0] : '';
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [contacts, setContacts] = useState<WholesaleData[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('home');
   const [isManageProductsOpen, setIsManageProductsOpen] = useState(false);
@@ -37,13 +38,15 @@ export default function AdminStorePage() {
   async function fetchData(showRefresh = false) {
     if (showRefresh) setIsRefreshing(true);
     try {
-      const [fetchedProducts, fetchedCategories] = await Promise.all([
+      const [fetchedProducts, fetchedCategories, fetchedContacts] = await Promise.all([
         getProducts(storeId),
         getCategories(storeId),
+        getContacts(storeId)
       ]);
       setProducts(fetchedProducts);
       setCategories(fetchedCategories);
-    } catch (error) {
+      setContacts(fetchedContacts);
+    } catch {
       // handle error
     } finally {
       if (showRefresh) setIsRefreshing(false);
@@ -73,6 +76,7 @@ export default function AdminStorePage() {
               <AdminHomeCards
                 products={products}
                 categories={categories}
+                contacts={contacts}
                 setActiveSection={setActiveSection}
                 storeLink={`/${storeId}`}
                 setManageTab={setViewMode}
@@ -88,7 +92,8 @@ export default function AdminStorePage() {
                 subscriptionStatus={"Active"}
                 referrals={0}
                 soldOut={products.filter(p => (typeof p.inStock === 'number' && p.inStock === 0) || p.soldOut === true).length}
-                totalContacts={0}
+                totalContacts={contacts.reduce((sum, region) => sum + (region.contacts?.length || 0), 0)}
+                storeId={storeId}
               />
             </div>
           )}

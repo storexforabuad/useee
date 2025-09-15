@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getCategories, addCategory, updateCategory, deleteCategory } from '../lib/db';
 import { CategoryCache } from '../lib/categoryCache';
 import { toast } from 'react-hot-toast';
@@ -14,16 +14,16 @@ const CategoryManagement = ({ storeId }: CategoryManagementProps) => {
   const [isAdding, setIsAdding] = useState(false);
 
   // Helper to fetch vendor categories only
-  const fetchVendorCategories = async () => {
+  const fetchVendorCategories = useCallback(async () => {
     if (!storeId) return;
     const allCategories = await getCategories(storeId);
     const vendorCategories = allCategories.filter(c => c.name !== 'Promo' && c.name !== '' && c.name !== 'New Arrivals' && c.name !== 'Back in Stock');
     setCategories(vendorCategories);
-  };
+  }, [storeId]);
 
   useEffect(() => {
     fetchVendorCategories();
-  }, [storeId]);
+  }, [storeId, fetchVendorCategories]);
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) {

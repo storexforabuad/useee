@@ -5,9 +5,14 @@ import PopularProducts from '../components/PopularProducts';
 interface PopularProductsSectionProps {
   isPopularProductsOpen: boolean;
   setIsPopularProductsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  storeId: string; // Added storeId
 }
 
-const PopularProductsSection: React.FC<PopularProductsSectionProps> = ({ isPopularProductsOpen, setIsPopularProductsOpen }) => {
+const PopularProductsSection: React.FC<PopularProductsSectionProps> = ({ 
+  isPopularProductsOpen, 
+  setIsPopularProductsOpen, 
+  storeId 
+}) => {
   return (
     <section className="mb-8 bg-card-background p-4 sm:p-6 rounded-xl shadow-sm transition-all">
       <div 
@@ -24,7 +29,7 @@ const PopularProductsSection: React.FC<PopularProductsSectionProps> = ({ isPopul
       </div>
       {isPopularProductsOpen && (
         <div className="mt-4">
-          <PopularProducts />
+          <PopularProducts storeId={storeId} />
         </div>
       )}
     </section>

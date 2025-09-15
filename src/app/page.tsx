@@ -40,6 +40,7 @@ const LoadingGrid = () => (
 );
 
 const PRODUCTS_PAGE_SIZE = 24;
+const STORE_ID = 'alaniq'; // Define the storeId once
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -66,9 +67,8 @@ export default function Home() {
         console.log('Using cached products');
         fetchedProducts = cached;
       } else {
-        // Debug: Log category and all products for this category
         if (category && category !== 'Promo' && category !== 'Back in Stock' && category !== '') {
-          const allProducts = await getProducts();
+          const allProducts = await getProducts(STORE_ID);
           console.log('DEBUG: Category selected:', category);
           console.log('DEBUG: All products:', allProducts.map(p => ({id: p.id, name: p.name, category: p.category})));
           const filtered = allProducts.filter(p => p.category === category);
@@ -76,7 +76,7 @@ export default function Home() {
         }
         switch (category) {
           case 'Promo': {
-            const promoProducts = await getProducts();
+            const promoProducts = await getProducts(STORE_ID);
             fetchedProducts = promoProducts.filter(product =>
               product.soldOut ||
               (product.originalPrice && product.originalPrice > product.price)
@@ -84,18 +84,18 @@ export default function Home() {
             break;
           }
           case 'Back in Stock': {
-            const allProducts = await getProducts();
+            const allProducts = await getProducts(STORE_ID);
             fetchedProducts = allProducts.filter(product =>
               !product.soldOut && product.backInStock
             );
             break;
           }
           case '': {
-            fetchedProducts = await getProducts();
+            fetchedProducts = await getProducts(STORE_ID);
             break;
           }
           default: {
-            fetchedProducts = await getProductsByCategory(category);
+            fetchedProducts = await getProductsByCategory(STORE_ID, category);
             // Debug: Log what getProductsByCategory returns
             console.log('DEBUG: getProductsByCategory returned:', fetchedProducts);
           }
@@ -129,7 +129,7 @@ export default function Home() {
           fetchedCategories = cachedCategories;
         } else {
           // Only get categories from getCategories, not getProducts
-          fetchedCategories = await getCategories();
+          fetchedCategories = await getCategories(STORE_ID);
           CategoryCache.save(fetchedCategories);
         }
         setCategories(fetchedCategories);
@@ -220,7 +220,7 @@ export default function Home() {
         } else {
           switch (activeCategory) {
             case 'Promo': {
-              const promoProducts = await getProducts();
+              const promoProducts = await getProducts(STORE_ID);
               fetchedProducts = promoProducts.filter(product =>
                 product.soldOut ||
                 (product.originalPrice && product.originalPrice > product.price)
@@ -228,18 +228,18 @@ export default function Home() {
               break;
             }
             case 'Back in Stock': {
-              const allProducts = await getProducts();
+              const allProducts = await getProducts(STORE_ID);
               fetchedProducts = allProducts.filter(product =>
                 !product.soldOut && product.backInStock
               );
               break;
             }
             case '': {
-              fetchedProducts = await getProducts();
+              fetchedProducts = await getProducts(STORE_ID);
               break;
             }
             default: {
-              fetchedProducts = await getProductsByCategory(activeCategory);
+              fetchedProducts = await getProductsByCategory(STORE_ID, activeCategory);
             }
           }
           // Sort by createdAt descending
@@ -288,9 +288,10 @@ export default function Home() {
               {loading ? (
                 <LoadingGrid />
               ) : products.length === 0 ? (
-                <ProductGrid products={[]} containerRef={productGridRef} />
+                <ProductGrid storeId={STORE_ID} products={[]} containerRef={productGridRef} />
               ) : (
                 <ProductGrid 
+                  storeId={STORE_ID}
                   products={products}
                   containerRef={productGridRef}
                 />
