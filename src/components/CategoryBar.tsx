@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
-import { db } from '../../lib/db';
-import { ProductCategory } from '../../types/store';
+import { db } from '../lib/firebase';
+import { Category } from '../types/category';
 
 interface CategoryBarProps {
   storeId: string;
@@ -15,7 +15,7 @@ interface CategoryBarProps {
 const SYSTEM_CATEGORIES = ["New Arrivals", "Promo"];
 
 export default function CategoryBar({ storeId, selectedCategory, onSelectCategory }: CategoryBarProps) {
-  const [vendorCategories, setVendorCategories] = useState<ProductCategory[]>([]);
+  const [vendorCategories, setVendorCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,12 +28,12 @@ export default function CategoryBar({ storeId, selectedCategory, onSelectCategor
     const q = query(collection(db, `stores/${storeId}/categories`), orderBy("name"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedCategories: ProductCategory[] = [];
+      const fetchedCategories: Category[] = [];
       snapshot.forEach(doc => {
         // We only fetch vendor-defined categories from Firestore
         const name = doc.data().name;
         if (!SYSTEM_CATEGORIES.includes(name)) {
-          fetchedCategories.push({ id: doc.id, ...doc.data() } as ProductCategory);
+          fetchedCategories.push({ id: doc.id, ...doc.data() } as Category);
         }
       });
       setVendorCategories(fetchedCategories);

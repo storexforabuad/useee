@@ -14,6 +14,9 @@ import dynamic from 'next/dynamic';
 
 const ManageProductsSection = dynamic(() => import('../../../components/ManageProductsSection'));
 const CategoryManagementSection = dynamic(() => import('../../../components/CategoryManagementSection'));
+const InstallPrompt = dynamic(() => import('../../../components/InstallPrompt'), { ssr: false });
+
+type AdminSection = 'home' | 'add' | 'manage' | 'categories' | 'store';
 
 export default function AdminStorePage() {
   const params = useParams();
@@ -22,7 +25,7 @@ export default function AdminStorePage() {
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [contacts, setContacts] = useState<WholesaleData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState('home');
+  const [activeSection, setActiveSection] = useState<AdminSection>('home');
   const [isManageProductsOpen, setIsManageProductsOpen] = useState(false);
   const [isCategoryManagementOpen, setIsCategoryManagementOpen] = useState(true);
   const [isAddProductOpen, setIsAddProductOpen] = useState(true);
@@ -68,7 +71,8 @@ export default function AdminStorePage() {
   if (loading) return <AdminSkeleton screen="home" />;
 
   return (
-    <div className="min-h-screen bg-background pb-16 md:pb-0 transition-colors">
+    <div className="min-h-screen bg-background pb-24 md:pb-0 transition-colors">
+      <InstallPrompt />
       <AdminHeader onLogout={async () => {}} isRefreshing={false} />
       <main className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
         <Suspense fallback={<AdminSkeleton isNavigation={true} />}>
@@ -111,7 +115,7 @@ export default function AdminStorePage() {
                 viewMode={viewMode}
                 setViewMode={setViewMode}
                 categories={categories}
-                storeId={storeId} // Pass storeId to ManageProductsSection
+                storeId={storeId}
               />
             </div>
           )}
@@ -133,6 +137,15 @@ export default function AdminStorePage() {
                 categories={categories}
                 onProductAdded={() => { fetchData(true) }}
                 storeId={storeId}
+              />
+            </div>
+          )}
+          {activeSection === 'store' && (
+            <div className="h-[calc(100vh-150px)]">
+              <iframe
+                src={`/${storeId}`}
+                className="w-full h-full border-none rounded-lg shadow-lg"
+                title="Live Store Preview"
               />
             </div>
           )}

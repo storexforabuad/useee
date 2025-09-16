@@ -2,7 +2,7 @@
 
 import { useState, ChangeEvent, FormEvent, useRef } from "react";
 import { StoreMeta } from "../../../types/store";
-import { geography, Country, State } from "../../../config/geography";
+import { geography } from "../../../config/geography";
 import { categorySuggestions } from "../../../config/categories";
 import { db } from "../../../lib/firebase";
 import { uploadImageToCloudinary } from "../../../lib/cloudinary";
@@ -214,7 +214,7 @@ export default function CreateStoreModal({
             {step === 2 && (
               <div className="space-y-4 animate-fade-in">
                  <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">Business Info</h2>
-                 <p className="text-sm text-center text-gray-500 dark:text-gray-400">Tell us about the business and where it's located</p>
+                 <p className="text-sm text-center text-gray-500 dark:text-gray-400">Tell us about the business and where it&apos;s located</p>
                  <input name="name" value={formData.name} onChange={handleInputChange} placeholder="Business Name *" className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-lg" required />
                  <div className="flex flex-col sm:flex-row gap-4">
                      <input name="whatsapp" value={formData.whatsapp} onChange={handleInputChange} placeholder="WhatsApp *" className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-lg" required />
@@ -269,7 +269,7 @@ export default function CreateStoreModal({
                                {categories.map(c => <li key={c}>{c}</li>)}
                             </ul>
                         ) : (
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">No categories selected yet. System categories 'Promo' and 'New Arrivals' will be available by default.</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">No categories selected yet. System categories &apos;Promo&apos; and &apos;New Arrivals&apos; will be available by default.</p>
                         )}
                     </div>
                  </div>

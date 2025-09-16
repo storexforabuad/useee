@@ -1,7 +1,25 @@
 "use client";
 
+import React from "react";
+import Image from "next/image";
+
+const SignIn = () => {
+  return (
+    <div className="flex flex-col items-center justify-center p-4">
+      <Image src="/next.svg" alt="Logo" width={100} height={100} className="mb-8 dark:invert" />
+      <h1 className="text-3xl font-bold mb-6 text-text-primary">Sign In</h1>
+      <p className="text-text-secondary">Sign-in is temporarily disabled. We are working on it and will have it back up and running shortly.</p>
+    </div>
+  );
+};
+
+export default SignIn;
+
+/*
+"use client";
+
 import React, { useState } from "react";
-import { signInWithEmailAndPassword, /* signInWithPopup, GoogleAuthProvider */ } from "firebase/auth";
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -31,7 +49,7 @@ const SignIn = () => {
     }
   };
 
-  /*
+  
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
@@ -48,7 +66,7 @@ const SignIn = () => {
       setLoading(false);
     }
   };
-  */
+  
 
   return (
     <div className="flex flex-col items-center justify-center p-4">
@@ -93,7 +111,7 @@ const SignIn = () => {
             {loading ? <SpinnerCircle /> : "Sign In with Email"}
           </button>
         </div>
-        {/* Corrected JSX comment syntax
+        
         <div className="flex items-center justify-between mt-4">
           <button
             type="button"
@@ -104,10 +122,11 @@ const SignIn = () => {
             {loading ? <SpinnerCircle /> : "Sign In with Google"}
           </button>
         </div>
-        */}
+        
       </form>
     </div>
   );
 };
 
 export default SignIn;
+*/

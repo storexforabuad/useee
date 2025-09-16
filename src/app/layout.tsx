@@ -5,6 +5,7 @@ import { CartProvider } from '../lib/cartContext'
 import { ThemeProvider } from '../lib/themeContext'
 import Navbar from '../components/layout/navbar'
 import ClientProviders from '../components/ClientProviders'
+import DynamicManifest from '../components/DynamicManifest';
 
 const poppins = Poppins({ 
   subsets: ['latin'],
@@ -12,12 +13,9 @@ const poppins = Poppins({
   display: 'swap',
 })
 
-const manifest = process.env.NODE_ENV === 'production' ? '/manifest.json' : undefined;
-
 export const metadata: Metadata = {
   title: "Alaniq INT.",
   description: "Discover Beautiful RTW, Perfumes, Incense & More",
-  manifest: manifest,
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -42,6 +40,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <DynamicManifest />
+      </head>
       <body className={poppins.className}>
         <ThemeProvider>
           <CartProvider>

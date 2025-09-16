@@ -1,6 +1,6 @@
 export interface StoreMeta {
   name: string;
-  whatsapp: string;
+  whatsapp?: string;
   instagram?: string; // Optional field
   ceoName?: string;
   ceoImage?: string;

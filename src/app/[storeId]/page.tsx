@@ -18,6 +18,10 @@ const ProductGrid = dynamic(
   { ssr: false }
 );
 
+const InstallPrompt = dynamic(() => import('../../components/InstallPrompt'), {
+  ssr: false,
+});
+
 const ProductGridSkeleton = () => (
   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 gap-3 sm:gap-4 px-4">
     {Array.from({ length: 3 }).map((_, index) => (
@@ -232,6 +236,7 @@ export default function StorefrontPage() {
 
   return (
     <div className="min-h-screen bg-background overscroll-none">
+      <InstallPrompt />
       <Navbar storeName={storeName} />
       <div className="pt-16 pb-safe-area-inset-bottom">
         <CategoryBar 

@@ -1,7 +1,7 @@
 import { memo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { Grid2X2, LayoutList, Info, Phone, MessageCircle, Shield, Star, Clock, X, MapPin } from 'lucide-react';
+import { Grid2X2, LayoutList, Info, Phone, MessageCircle, Shield, Star, Clock, X } from 'lucide-react';
 import { Product } from '../../types/product';
 import { motion, LayoutGroup, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
@@ -79,7 +79,6 @@ function BusinessCardModal({ open, onClose, storeMeta }: { open: boolean; onClos
     };
   }, [open, onClose]);
   
-  const fullAddress = [b.shopNumber, b.plazaBuildingName, b.streetAddress, b.state, b.country].filter(Boolean).join(', ');
 
   return (
     <AnimatePresence>

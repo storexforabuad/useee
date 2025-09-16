@@ -1,5 +1,21 @@
 'use client';
 
+import React from 'react';
+
+const ReferralsPage = () => {
+  return (
+    <div className="flex flex-col items-center justify-center p-4">
+      <h1 className="text-3xl font-bold mb-6 text-text-primary">Referrals</h1>
+      <p className="text-text-secondary">The referrals page is temporarily disabled.</p>
+    </div>
+  );
+};
+
+export default ReferralsPage;
+
+/*
+'use client';
+
 import { useEffect } from 'react';
 import ProtectedRoute from '../../../components/ProtectedRoute';
 import AdminHeader from '../../../components/admin/AdminHeader';
@@ -51,3 +67,4 @@ export default function ReferralsPage() {
     </ProtectedRoute>
   );
 }
+*/
