@@ -21,6 +21,8 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Product } from '../types/product';
 
+export { db };
+
 // Store metadata type
 export interface StoreMeta {
   id: string;

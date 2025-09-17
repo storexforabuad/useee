@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getStores, StoreMeta, getProducts, getPopularProducts } from '../../lib/db';
 import CategoryManagement from '../../components/CategoryManagement';
 import Link from 'next/link';
-import { ShoppingBag, ClipboardListIcon, Sun, PlusCircle } from 'lucide-react';
+import { ShoppingBag, ClipboardListIcon, PlusCircle } from 'lucide-react';
 import CreateStoreModal from '../../components/admin/modals/CreateStoreModal';
 import { motion } from 'framer-motion';
 
@@ -21,7 +21,7 @@ interface StoreStats {
 
 export default function DevteamPage() {
   const [stores, setStores] = useState<StoreMeta[]>([]);
-  const [selectedStore, setSelectedStore] = useState<string | null>([]);
+  const [selectedStore, setSelectedStore] = useState<string | null>(null);
   const [storeStats, setStoreStats] = useState<StoreStats[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 

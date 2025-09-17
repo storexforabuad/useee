@@ -1,6 +1,6 @@
 export interface StoreMeta {
   name: string;
-  whatsapp: string;
+  whatsapp?: string;
   instagram?: string; // Optional field
   ceoName?: string;
   ceoImage?: string;
@@ -16,4 +16,9 @@ export interface StoreMeta {
   state?: string;
   businessInstagram?: string;
   storeId?: string; // This is the document ID in Firestore
+}
+
+export interface ProductCategory {
+    id: string;
+    name: string;
 }

@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
-import { collection, addDoc, onSnapshot, deleteDoc, doc, WriteBatch, writeBatch, serverTimestamp, query, getDocs } from "firebase/firestore";
-import { db } from '../../lib/db';
-import { ProductCategory } from '../../types/store';
+import { useState, useEffect } from 'react';
+import { collection, onSnapshot, deleteDoc, doc, query } from "firebase/firestore";
+import { db } from '../lib/db';
+import { ProductCategory } from '../types/store';
 import { Trash2 } from 'lucide-react';
 
 interface CategoryManagementProps {
@@ -14,7 +14,6 @@ const SYSTEM_CATEGORIES = ["Promo", "New Arrivals"];
 
 export default function CategoryManagement({ storeId }: CategoryManagementProps) {
   const [categories, setCategories] = useState<ProductCategory[]>([]);
-  const [newCategory, setNewCategory] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,7 +63,7 @@ export default function CategoryManagement({ storeId }: CategoryManagementProps)
     <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
       <h3 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">Manage Categories</h3>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-        These are the categories for your products. System categories like 'Promo' and 'New Arrivals' are managed automatically.
+        These are the categories for your products. System categories like &apos;Promo&apos; and &apos;New Arrivals&apos; are managed automatically.
       </p>
       <div className="space-y-2">
         {categories.map((category) => (
@@ -80,7 +79,7 @@ export default function CategoryManagement({ storeId }: CategoryManagementProps)
         ))}
       </div>
       {categories.length === 0 && (
-          <p className="text-sm text-center text-gray-500 dark:text-gray-400 py-4">You haven't added any custom product categories yet.</p>
+          <p className="text-sm text-center text-gray-500 dark:text-gray-400 py-4">You haven&apos;t added any custom product categories yet.</p>
       )}
     </div>
   );

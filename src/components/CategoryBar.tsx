@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
-import { db } from '../../lib/db';
-import { ProductCategory } from '../../types/store';
+import { db } from '../lib/db';
+import { ProductCategory } from '../types/store';
 
 interface CategoryBarProps {
   storeId: string;
