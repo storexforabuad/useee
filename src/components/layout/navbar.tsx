@@ -62,11 +62,18 @@ export default function Navbar({ storeName }: NavbarProps) {
                   {storeName || 'Alaniq INT.'}
                 </span>
               </>
-            ) : (
-              <Link href={isAdminRoute ? '/admin' : '/'} className="flex items-center gap-2">
+            ) : storeName ? (
+              <div className="flex items-center gap-2">
                 <ShoppingBag className="h-8 w-8 text-text-primary" />
                 <span className="text-xl font-semibold text-text-primary flex items-center gap-2">
-                  {isAdminRoute ? 'Admin' : (storeName || 'Alaniq INT.')}
+                  {storeName}
+                </span>
+              </div>
+            ) : (
+              <Link href="/" className="flex items-center gap-2">
+                <ShoppingBag className="h-8 w-8 text-text-primary" />
+                <span className="text-xl font-semibold text-text-primary flex items-center gap-2">
+                  {storeName || 'Alaniq INT.'}
                 </span>
               </Link>
             )}

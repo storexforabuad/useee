@@ -3,9 +3,9 @@
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { getProducts, updateProduct, deleteProduct, getCategories, getContacts } from '../../lib/db';
 import { Product } from '../../types/product';
-import ProtectedRoute from '../../components/ProtectedRoute';
+// import ProtectedRoute from '../../components/ProtectedRoute';
 import dynamic from 'next/dynamic';
-import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import AdminHeader from '../../components/admin/AdminHeader';
 import AdminSkeleton from '../../components/admin/AdminSkeleton';
@@ -57,15 +57,16 @@ const AdminDashboard = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setStoreId(user.uid);
-      } else {
-        console.log('no store id');
-        router.push('/signin');
-      }
-    });
-    return () => unsubscribe();
+    // const unsubscribe = onAuthStateChanged(auth, (user) => {
+    //   if (user) {
+    //     setStoreId(user.uid);
+    //   } else {
+    //     console.log('no store id');
+    //     router.push('/signin');
+    //   }
+    // });
+    // return () => unsubscribe();
+    setStoreId("default");
   }, [auth, router]);
 
   const fetchData = useCallback(async (showRefresh = false) => {
@@ -163,7 +164,7 @@ const AdminDashboard = () => {
   }
 
   return (
-    <ProtectedRoute>
+    // <ProtectedRoute>
       <div className="min-h-screen bg-background pb-16 md:pb-0 transition-colors">
         <AdminHeader onLogout={handleLogout} isRefreshing={isRefreshing} />
         <main className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
@@ -253,7 +254,7 @@ const AdminDashboard = () => {
           isModalOpen={isModalOpen} 
         />
       </div>
-    </ProtectedRoute>
+    // </ProtectedRoute>
   );
 };
 
