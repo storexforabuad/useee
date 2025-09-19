@@ -14,7 +14,7 @@ export default function SubscriptionBanner() {
         <div className="flex-grow">
           <h3 className="font-semibold text-gray-800 dark:text-white">You are on free trial</h3>
           <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-            Upgrade now for <span className="font-bold text-gray-900 dark:text-white">50% off</span> — pay <span className="font-bold text-gray-900 dark:text-white">₦900</span> instead of <s className="opacity-70">₦1800</s>.
+            Upgrade now for <span className="font-bold text-gray-900 dark:text-white">50% off</span> — pay <span className="font-bold text-gray-900 dark:text-white">₦900</span> instead of <s className="opacity-70">₦2000</s>.
           </p>
         </div>
         <div className="flex-shrink-0 w-full sm:w-auto">
