@@ -12,6 +12,7 @@ import AdminHomeCards from '../../../components/admin/AdminHomeCards';
 import AddProductSection from '../../../components/AddProductSection';
 import dynamic from 'next/dynamic';
 import PreviewSkeleton from '../../../components/admin/PreviewSkeleton';
+import SubscriptionBanner from '../../../components/admin/SubscriptionBanner';
 
 const ManageProductsSection = dynamic(() => import('../../../components/ManageProductsSection'));
 const CategoryManagementSection = dynamic(() => import('../../../components/CategoryManagementSection'));
@@ -83,6 +84,7 @@ export default function AdminStorePage() {
           <Suspense fallback={<AdminSkeleton isNavigation={true} />}>
             {activeSection === 'home' && (
               <div className="mb-8">
+                <SubscriptionBanner />
                 <AdminHomeCards
                   products={products}
                   categories={categories}
