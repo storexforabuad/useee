@@ -30,7 +30,7 @@ export default function ProductDetail() {
   const [isAdding, setIsAdding] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
   const { state, dispatch } = useCart();
-  const [storeMeta, setStoreMeta] = useState<{ whatsapp?: string } | null>(null);
+  const [storeMeta, setStoreMeta] = useState<{ name?: string, whatsapp?: string } | null>(null);
 
   const [imageLoading, setImageLoading] = useState(true); // Add this state
 
@@ -75,7 +75,7 @@ export default function ProductDetail() {
     async function fetchMeta() {
       if (!storeId) return;
       const meta = await getStoreMeta(storeId);
-      setStoreMeta(meta && meta.whatsapp ? { whatsapp: meta.whatsapp } : null);
+      setStoreMeta(meta);
     }
     fetchMeta();
   }, [storeId]);
@@ -145,7 +145,7 @@ export default function ProductDetail() {
 
 return (
   <>
-    <Navbar storeName={storeId || 'Alaniq INT.'} />
+    <Navbar storeName={storeMeta?.name || storeId || 'Alaniq INT.'} />
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 pt-[calc(var(--navbar-height)+1rem)] lg:pt-[calc(var(--navbar-height)+2rem)]">
       <div className="flex flex-col lg:flex lg:flex-row gap-6 lg:gap-x-8">
         {/* Image Section */}

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, deleteDoc, doc, query } from "firebase/firestore";
+import { collection, onSnapshot, deleteDoc, doc, query, addDoc } from "firebase/firestore";
 import { db } from '../lib/db';
 import { ProductCategory } from '../types/store';
-import { Trash2 } from 'lucide-react';
+import { Trash2, PlusCircle } from 'lucide-react';
 
 interface CategoryManagementProps {
   storeId: string;
@@ -14,6 +14,7 @@ const SYSTEM_CATEGORIES = ["Promo", "New Arrivals"];
 
 export default function CategoryManagement({ storeId }: CategoryManagementProps) {
   const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +42,17 @@ export default function CategoryManagement({ storeId }: CategoryManagementProps)
     return () => unsubscribe();
   }, [storeId]);
 
+  const handleAddCategory = async () => {
+    if (!storeId || !newCategoryName.trim()) return;
+    try {
+      await addDoc(collection(db, `stores/${storeId}/categories`), { name: newCategoryName });
+      setNewCategoryName('');
+    } catch (err) {
+      console.error("Error adding category:", err);
+      setError("Failed to add category.");
+    }
+  };
+
   const handleDeleteCategory = async (categoryId: string) => {
     if (!storeId) return;
     try {
@@ -65,6 +77,22 @@ export default function CategoryManagement({ storeId }: CategoryManagementProps)
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
         These are the categories for your products. System categories like &apos;Promo&apos; and &apos;New Arrivals&apos; are managed automatically.
       </p>
+      <div className="flex gap-2 mb-4">
+        <input
+          type="text"
+          value={newCategoryName}
+          onChange={(e) => setNewCategoryName(e.target.value)}
+          placeholder="Enter new category name"
+          className="flex-grow p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+        />
+        <button
+          onClick={handleAddCategory}
+          className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 flex items-center gap-2"
+        >
+          <PlusCircle size={18} />
+          <span>Add</span>
+        </button>
+      </div>
       <div className="space-y-2">
         {categories.map((category) => (
           <div key={category.id} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 p-2 rounded-lg">
