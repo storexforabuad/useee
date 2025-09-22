@@ -5,6 +5,7 @@ import { useCart } from '../../lib/cartContext';
 import { ShoppingCart } from 'lucide-react';
 import { getStoreMeta } from '../../lib/db';
 import { useState, useEffect } from 'react';
+import { incrementOrderCount } from '../../app/actions/orderActions';
 
 const CartItem = dynamic(
   () => import('../../components/cart/CartItem'),
@@ -44,7 +45,9 @@ export default function CartPage() {
     dispatch({ type: 'REMOVE_ITEM', payload: id });
   };
   
-  const createWhatsAppMessage = () => {
+  const createWhatsAppMessage = async () => {
+    if (!storeId) return;
+    await incrementOrderCount(storeId, state.items.length);
     const itemsList = state.items
       .map((item, index) => 
         `${index + 1}. *${item.name}*\n` +

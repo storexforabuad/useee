@@ -16,6 +16,7 @@ export interface StoreMeta {
   state?: string;
   businessInstagram?: string;
   storeId?: string; // This is the document ID in Firestore
+  totalOrders?: number;
 }
 
 export interface ProductCategory {

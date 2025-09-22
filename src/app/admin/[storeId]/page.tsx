@@ -2,8 +2,9 @@
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
-import { getProducts, getCategories, updateProduct, deleteProduct, getContacts, WholesaleData } from '../../../lib/db';
+import { getProducts, getCategories, updateProduct, deleteProduct, getContacts, WholesaleData, getStoreMeta } from '../../../lib/db';
 import { Product } from '../../../types/product';
+import { StoreMeta } from '../../../types/store';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import AdminSkeleton from '../../../components/admin/AdminSkeleton';
 import MobileNav from '../../../components/admin/MobileNav';
@@ -23,6 +24,7 @@ export default function AdminStorePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [contacts, setContacts] = useState<WholesaleData[]>([]);
+  const [storeMeta, setStoreMeta] = useState<StoreMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('home');
   const [isManageProductsOpen, setIsManageProductsOpen] = useState(false);
@@ -47,14 +49,16 @@ export default function AdminStorePage() {
   async function fetchData(showRefresh = false) {
     if (showRefresh) setIsRefreshing(true);
     try {
-      const [fetchedProducts, fetchedCategories, fetchedContacts] = await Promise.all([
+      const [fetchedProducts, fetchedCategories, fetchedContacts, fetchedStoreMeta] = await Promise.all([
         getProducts(storeId),
         getCategories(storeId),
-        getContacts(storeId)
+        getContacts(storeId),
+        getStoreMeta(storeId)
       ]);
       setProducts(fetchedProducts);
       setCategories(fetchedCategories);
       setContacts(fetchedContacts);
+      setStoreMeta(fetchedStoreMeta as StoreMeta);
     } catch {
       // handle error
     } finally {
@@ -106,6 +110,7 @@ export default function AdminStorePage() {
                   soldOut={products.filter(p => (typeof p.inStock === 'number' && p.inStock === 0) || p.soldOut === true).length}
                   totalContacts={contacts.reduce((sum, region) => sum + (region.contacts?.length || 0), 0)}
                   storeId={storeId}
+                  totalOrders={storeMeta?.totalOrders || 0}
                 />
               </div>
             )}

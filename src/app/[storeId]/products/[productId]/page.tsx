@@ -12,6 +12,7 @@ import { calculateDiscount, formatPrice } from '../../../../utils/price';
 import { ViewHistoryCache } from '../../../../lib/viewHistoryCache';
 import { ProductDetailCache } from '../../../../lib/productDetailCache';
 import Navbar from '../../../../components/layout/navbar';
+import { incrementOrderCount } from '../../../../app/actions/orderActions';
 
 // Dynamic imports
 const ProductDetailSkeleton = dynamic(() => import('../../../../components/ProductDetailSkeleton'), {
@@ -95,7 +96,9 @@ export default function ProductDetail() {
     return <div className="p-4">Product not found</div>;
   }
 
-  const createWhatsAppMessage = () => {
+  const createWhatsAppMessage = async () => {
+    if (!storeId) return;
+    await incrementOrderCount(storeId, 1);
     const message = 
       `🛍️ *New Order Request*\n\n` +
       `Hello! I would like to order this item:\n\n` +

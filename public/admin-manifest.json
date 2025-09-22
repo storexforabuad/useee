@@ -1,5 +1,5 @@
 {
-  "name": "Alaniq INT. Admin Dashboard",
+  "name": "Admin Dashboard",
   "short_name": "Admin Dashboard",
   "description": "Manage your store, products, and orders.",
   "start_url": "/admin",

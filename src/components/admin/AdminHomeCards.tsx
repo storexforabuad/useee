@@ -1,4 +1,4 @@
-import { Tag, Star, AlertTriangle, Eye, Layers, CheckCircle, Link2, Gift, XCircle, RefreshCw, Archive, Handshake } from 'lucide-react';
+import { Tag, Star, AlertTriangle, Eye, Layers, CheckCircle, Link2, Gift, XCircle, RefreshCw, Archive, Handshake, ShoppingCart } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 
@@ -14,6 +14,7 @@ import SubscriptionModal from './modals/SubscriptionModal';
 import ReferralsModal from './modals/ReferralsModal';
 import SoldOutModal from './modals/SoldOutModal';
 import ContactsModal from './modals/ContactsModal'; // Updated import
+import OrdersModal from './modals/OrdersModal';
 import { Product } from '../../types/product';
 import { WholesaleData } from '../../lib/db';
 
@@ -39,9 +40,19 @@ interface AdminHomeCardsProps {
   isRefreshing: boolean;
   totalContacts: number;
   storeId: string; // Added storeId
+  totalOrders: number;
 }
 
 const cardData = [
+    {
+      label: 'Orders',
+      valueKey: 'totalOrders',
+      icon: ShoppingCart,
+      gradient: 'from-teal-400 via-cyan-500 to-sky-600',
+      text: 'text-white',
+      component: OrdersModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(20,184,166,0.5)]',
+    },
     {
       label: 'Contacts',
       valueKey: 'totalContacts',
