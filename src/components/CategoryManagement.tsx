@@ -4,15 +4,17 @@ import { useState, useEffect } from 'react';
 import { collection, onSnapshot, deleteDoc, doc, query, addDoc } from "firebase/firestore";
 import { db } from '../lib/db';
 import { ProductCategory } from '../types/store';
+import { updateStoreMeta } from '../lib/db';
 import { Trash2, PlusCircle } from 'lucide-react';
 
 interface CategoryManagementProps {
   storeId: string;
+  onCategoryCreated?: () => void;
 }
 
 const SYSTEM_CATEGORIES = ["Promo", "New Arrivals"];
 
-export default function CategoryManagement({ storeId }: CategoryManagementProps) {
+export default function CategoryManagement({ storeId, onCategoryCreated }: CategoryManagementProps) {
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -46,7 +48,20 @@ export default function CategoryManagement({ storeId }: CategoryManagementProps)
     if (!storeId || !newCategoryName.trim()) return;
     try {
       await addDoc(collection(db, `stores/${storeId}/categories`), { name: newCategoryName });
+
+      // Update the store metadata to mark that user has created a category
+      await updateStoreMeta(storeId, {
+        onboardingTasks: {
+          hasCreatedCategory: true
+        }
+      } as any);
+
       setNewCategoryName('');
+
+      // Notify parent component that a category was created
+      if (onCategoryCreated) {
+        onCategoryCreated();
+      }
     } catch (err) {
       console.error("Error adding category:", err);
       setError("Failed to add category.");

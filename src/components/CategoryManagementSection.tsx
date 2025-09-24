@@ -19,12 +19,14 @@ interface CategoryManagementSectionProps {
   isCategoryManagementOpen: boolean;
   setIsCategoryManagementOpen: React.Dispatch<React.SetStateAction<boolean>>;
   storeId: string;
+  onCategoryCreated?: () => void;
 }
 
 const CategoryManagementSection: React.FC<CategoryManagementSectionProps> = ({
   isCategoryManagementOpen,
   setIsCategoryManagementOpen,
   storeId,
+  onCategoryCreated,
 }) => {
   return (
     <section className="bg-card-background p-4 sm:p-6 rounded-xl shadow-sm transition-all">
@@ -49,7 +51,7 @@ const CategoryManagementSection: React.FC<CategoryManagementSectionProps> = ({
 
       {isCategoryManagementOpen && (
         <div className="mt-4">
-          <CategoryManagement storeId={storeId} />
+          <CategoryManagement storeId={storeId} onCategoryCreated={onCategoryCreated} />
         </div>
       )}
 

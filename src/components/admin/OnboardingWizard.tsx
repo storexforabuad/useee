@@ -43,8 +43,10 @@ const TaskItem = ({ isComplete, icon, title, description, buttonText, onAction }
 
 const WelcomeStep = ({ onNext }: { onNext: () => void }) => (
   <div className="text-center p-4">
-    <Gift size={64} className="block mx-auto text-blue-500 mb-6 animate-bounce" />
-    <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Welcome to Your New Store!</h1>
+    <div className="mb-12">
+      <Gift size={60} className="block mx-auto text-blue-500 animate-bounce" />
+    </div>
+    <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white mt-20">Welcome to Your New Store!</h1>
     <p className="mt-4 max-w-xl mx-auto text-lg text-gray-600 dark:text-gray-300">You're just a few steps away from unlocking your dashboard and starting a 1-month free trial.</p>
     <button 
       onClick={onNext}
@@ -144,7 +146,7 @@ const OnboardingWizard = ({ storeMeta, onComplete, onTaskClick }: OnboardingWiza
                     isComplete={tasks.hasUploaded20Products}
                     icon={ShoppingBag}
                     title={`Upload at least ${ONBOARDING_TASKS_GOALS.PRODUCT_COUNT} products`}
-                    description={`${storeMeta.onboardingTasks.productUploads} / ${ONBOARDING_TASKS_GOALS.PRODUCT_COUNT} products uploaded.`}
+                    description={`${storeMeta.onboardingTasks.productUploads || 0} / ${ONBOARDING_TASKS_GOALS.PRODUCT_COUNT} products uploaded.`}
                     buttonText="Add Products"
                     onAction={() => handleAction('add')}
                 />

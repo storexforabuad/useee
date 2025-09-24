@@ -6,7 +6,8 @@ import { useParams } from 'next/navigation';
 import { StoreMeta } from '../../../types/store';
 import { getStoreMeta, updateStoreMeta } from '../../../lib/db'; // Assuming db functions are in this path
 import { ONBOARDING_WINDOW_HOURS, SUBSCRIPTION_WARNING_DAYS, TRIAL_DURATION_DAYS } from '../../../config/business';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../../../lib/firebase';
 
 // Component Imports
 import AdminSkeleton from '../AdminSkeleton';
@@ -29,6 +30,7 @@ export default function Gatekeeper() {
     const [storeMeta, setStoreMeta] = useState<StoreMeta | null>(null);
     const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
     const [isOnboarding, setIsOnboarding] = useState(false);
+    const [onboardingDismissed, setOnboardingDismissed] = useState(false);
 
     const checkAccess = useCallback(async () => {
         if (!storeId) return;
@@ -87,6 +89,49 @@ export default function Gatekeeper() {
         checkAccess();
     }, [checkAccess]);
 
+    // Real-time listener for store metadata changes
+    useEffect(() => {
+        if (!storeId) return;
+
+        const storeRef = doc(db, 'stores', storeId);
+        const unsubscribe = onSnapshot(storeRef, (doc) => {
+            if (doc.exists()) {
+                const data = doc.data();
+                const updatedMeta: StoreMeta = {
+                    id: doc.id,
+                    name: data.name || '',
+                    isSubscriptionActive: data.isSubscriptionActive || false,
+                    createdAt: data.createdAt || Timestamp.now(),
+                    subscriptionStatus: data.subscriptionStatus || 'prospect',
+                    onboardingTasks: data.onboardingTasks || {
+                        productUploads: 0,
+                        views: 0,
+                        hasCreatedCategory: false
+                    },
+                    ...data
+                } as StoreMeta;
+
+                setStoreMeta(updatedMeta);
+
+                // Recalculate onboarding status if needed
+                // Only re-enable onboarding if it hasn't been manually dismissed
+                if (updatedMeta.subscriptionStatus === 'prospect') {
+                    const elapsedHours = (Date.now() - updatedMeta.createdAt.toDate().getTime()) / (1000 * 60 * 60);
+                    if (elapsedHours < ONBOARDING_WINDOW_HOURS && !onboardingDismissed) {
+                        setIsOnboarding(true);
+                    }
+                } else if (updatedMeta.subscriptionStatus === 'trial' || updatedMeta.isSubscriptionActive) {
+                    setIsOnboarding(false);
+                    setOnboardingDismissed(false); // Reset when status changes to non-prospect
+                }
+            }
+        }, (error) => {
+            console.error('Error listening to store metadata changes:', error);
+        });
+
+        return () => unsubscribe();
+    }, [storeId]);
+
     const handleCompleteOnboarding = async () => {
         if (!storeId) return;
         const trialEndDate = new Date();
@@ -98,6 +143,7 @@ export default function Gatekeeper() {
         checkAccess();
     };
 
+
     if (viewState === 'loading') {
         return <AdminSkeleton screen="home" />;
     }
@@ -107,13 +153,19 @@ export default function Gatekeeper() {
     }
 
     if (viewState === 'dashboard' && storeMeta) {
-        return <AdminDashboard 
-                  storeId={storeId} 
-                  storeMeta={storeMeta} 
-                  daysRemaining={daysRemaining} 
-                  isOnboarding={isOnboarding} 
-                  onOnboardingComplete={handleCompleteOnboarding} 
-                />;
+        return (
+            <AdminDashboard
+              storeId={storeId}
+              storeMeta={storeMeta}
+              daysRemaining={daysRemaining}
+              isOnboarding={isOnboarding}
+              onOnboardingComplete={handleCompleteOnboarding}
+              onDismissOnboarding={() => {
+                setIsOnboarding(false);
+                setOnboardingDismissed(true);
+              }}
+            />
+        );
     }
 
     return <AdminSkeleton screen="home" />;

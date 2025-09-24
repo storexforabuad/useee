@@ -51,6 +51,13 @@ export async function createStore(store: { id: string; name: string; whatsapp?: 
       name: store.name,
       createdAt: serverTimestamp(),
       whatsapp: store.whatsapp || '',
+      isSubscriptionActive: false,
+      subscriptionStatus: 'prospect',
+      onboardingTasks: {
+        productUploads: 0,
+        views: 0,
+        hasCreatedCategory: false
+      }
     });
     // Seed default categories if not present
     const categoriesRef = collection(db, 'stores', store.id, 'categories');
@@ -322,6 +329,13 @@ export async function addProduct(storeId: string, product: Omit<Product, 'id'>):
       views: 0
     });
     await updateDoc(docRef, { id: docRef.id });
+
+    // Update the store metadata to increment productUploads count
+    const storeRef = doc(db, 'stores', storeId);
+    await updateDoc(storeRef, {
+      'onboardingTasks.productUploads': increment(1)
+    });
+
     return docRef.id;
   } catch (error) {
     console.error('Error adding product:', error);

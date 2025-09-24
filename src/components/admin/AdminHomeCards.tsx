@@ -41,6 +41,8 @@ interface AdminHomeCardsProps {
   totalContacts: number;
   storeId: string; // Added storeId
   totalOrders: number;
+  onShowWhatsApp?: () => void; // Add this for onboarding
+  isOnboarding?: boolean; // Add this to check onboarding state
 }
 
 const cardData = [
@@ -158,7 +160,7 @@ const cardData = [
 export default function AdminHomeCards(props: AdminHomeCardsProps) {
   const [openModal, setOpenModal] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const { setIsModalOpen, onRefresh } = props;
+  const { setIsModalOpen, onRefresh, onShowWhatsApp, isOnboarding } = props;
 
   useEffect(() => {
     if (openModal !== null) {
@@ -178,6 +180,12 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
   }, [openModal, setIsModalOpen]);
 
   const handleOpenModal = (idx: number) => {
+    // Check if it's the Store Link card during onboarding
+    if (idx === 10 && isOnboarding && onShowWhatsApp) {
+      onShowWhatsApp();
+      return;
+    }
+
     setOpenModal(idx);
     if (props.setIsModalOpen) props.setIsModalOpen(true);
   };
