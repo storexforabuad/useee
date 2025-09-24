@@ -11,6 +11,7 @@ import {
   setDoc,
   writeBatch,
   serverTimestamp,
+  Timestamp,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Image from "next/image";
@@ -21,40 +22,40 @@ interface CreateStoreModalProps {
 }
 
 const ProgressBar = ({ step }: { step: number }) => (
-  <div className="w-full px-4 sm:px-8">
-    <div className="relative w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full">
-      <div
-        className="absolute top-0 left-0 h-1 bg-blue-500 rounded-full transition-all duration-500 ease-in-out"
-        style={{ width: `${((step - 1) / 2) * 100}%` }}
-      />
-      <div className="absolute w-full flex justify-between top-1/2 -translate-y-1/2">
-        {[1, 2, 3].map((s) => (
-          <div key={s} className="relative">
+    <div className="w-full px-4 sm:px-8">
+        <div className="relative w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-                step >= s
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300"
-              }`}
-            >
-              {step > s ? "✓" : s}
+                className="absolute top-0 left-0 h-1 bg-blue-500 rounded-full transition-all duration-500 ease-in-out"
+                style={{ width: `${((step - 1) / 2) * 100}%` }}
+            />
+            <div className="absolute w-full flex justify-between top-1/2 -translate-y-1/2">
+                {[1, 2, 3].map((s) => (
+                    <div key={s} className="relative">
+                        <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                                step >= s
+                                    ? "bg-blue-500 text-white"
+                                    : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300"
+                                }`}
+                        >
+                            {step > s ? "✓" : s}
+                        </div>
+                        <p
+                            className={`absolute top-10 left-1/2 -translate-x-1/2 text-xs text-center w-24 ${
+                                step >= s
+                                    ? "text-gray-800 dark:text-gray-200 font-semibold"
+                                    : "text-gray-500 dark:text-gray-400"
+                                }`}
+                        >
+                            {s === 1 && "CEO Details"}
+                            {s === 2 && "Business Info"}
+                            {s === 3 && "Categories"}
+                        </p>
+                    </div>
+                ))}
             </div>
-            <p
-              className={`absolute top-10 left-1/2 -translate-x-1/2 text-xs text-center w-24 ${
-                step >= s
-                  ? "text-gray-800 dark:text-gray-200 font-semibold"
-                  : "text-gray-500 dark:text-gray-400"
-              }`}
-            >
-              {s === 1 && "CEO Details"}
-              {s === 2 && "Business Info"}
-              {s === 3 && "Categories"}
-            </p>
-          </div>
-        ))}
-      </div>
+        </div>
     </div>
-  </div>
 );
 
 export default function CreateStoreModal({
@@ -142,24 +143,31 @@ export default function CreateStoreModal({
             ceoImageUrl = await getDownloadURL(storageRef);
         }
 
-        const storeId = formData.name?.toLowerCase().replace(/\s+/g, "-") ?? "";
+        const storeId = formData.name?.toLowerCase().replace(/\s+/g, "-").trim() ?? "";
         if (!storeId) throw new Error("Store name is required to generate an ID");
 
         const storeRef = doc(db, "stores", storeId);
 
-        const finalFormData: StoreMeta = {
+        const finalFormData = {
             ...formData,
             storeId,
             ceoImage: ceoImageUrl,
             name: formData.name ?? "Default Store Name",
-            whatsapp: formData.whatsapp ?? "",
+
+            // --- NEW --- Initialize Onboarding and Subscription Fields
+            isSubscriptionActive: false,
+            createdAt: serverTimestamp(),
+            subscriptionStatus: 'prospect' as const,
+            onboardingTasks: {
+                productUploads: 0,
+                views: 0,
+                hasCreatedCategory: false,
+            },
         };
 
         await setDoc(storeRef, finalFormData);
 
         const batch = writeBatch(db);
-        // Only commit the categories the user has explicitly added.
-        // System categories like "Promo" and "New Arrivals" will be handled at the display layer.
         const allCategories = [...new Set(categories)];
         
         allCategories.forEach((categoryName) => {
@@ -169,10 +177,11 @@ export default function CreateStoreModal({
 
         await batch.commit();
 
-        console.log("Store and categories created successfully!");
+        alert("Store and categories created successfully!");
         onClose();
     } catch (error) {
         console.error("Error creating store:", error);
+        alert(`Error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`)
     } finally {
         setIsLoading(false);
     }

@@ -1,39 +1,19 @@
-export interface BusinessConfig {
-    name: string;
-    shortName: string;
-    description: string;
-    contact: {
-      whatsapp: string;
-      support: string;
-      payment: {
-        accountName: string;
-        accountNumber: string;
-        bankName: string;
-      }
-    };
-    theme: {
-      primaryColor: string;
-      secondaryColor: string;
-      backgroundColor: string;
-    };
-  }
-  
-  export const businessConfig: BusinessConfig = {
-    name: "Alaniq INT.",
-    shortName: "Alaniq INT. App",
-    description: "Your one-stop shop for all your fashion needs",
-    contact: {
-      whatsapp: "+2347032905036",
-      support: "+2347032905036",
-      payment: {
-        accountName: "Aisha Ibrahim Lame",
-        accountNumber: "0057360918",
-        bankName: "Access Bank"
-      }
-    },
-    theme: {
-      primaryColor: "blue-800",
-      secondaryColor: "green-500",
-      backgroundColor: "gray-50"
-    }
-  };
+
+// src/config/business.ts
+export const ONBOARDING_WINDOW_HOURS = 48;
+export const TRIAL_DURATION_DAYS = 30;
+export const GRACE_PERIOD_DAYS = 3;
+export const SUBSCRIPTION_WARNING_DAYS = 7;
+
+export const ONBOARDING_TASKS_GOALS = {
+  PRODUCT_COUNT: 20,
+  VIEW_COUNT: 100,
+  CATEGORY_COUNT: 1,
+};
+
+export const businessConfig = {
+  contact: {
+    whatsapp: "+1234567890", // Add a placeholder WhatsApp number
+    support: "support@example.com", // Add a placeholder support email
+  },
+};

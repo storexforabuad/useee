@@ -20,17 +20,9 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Product } from '../types/product';
+import { StoreMeta } from '../types/store'; // Correctly import StoreMeta
 
 export { db };
-
-// Store metadata type
-export interface StoreMeta {
-  id: string;
-  name: string;
-  createdAt?: Timestamp;
-  whatsapp?: string;
-  // Add more fields as needed (e.g., description, contact, etc.)
-}
 
 // Define types for the contact data
 export interface Contact {
@@ -79,8 +71,8 @@ export async function getStores(): Promise<StoreMeta[]> {
     const storesRef = collection(db, 'stores');
     const snapshot = await getDocs(storesRef);
     return snapshot.docs.map(doc => ({
-      id: doc.id,
       ...doc.data(),
+      id: doc.id,
     })) as StoreMeta[];
   } catch (error) {
     console.error('Error fetching stores:', error);
@@ -111,6 +103,21 @@ export async function getStoreMeta(storeId: string): Promise<StoreMeta | null> {
     return null;
   }
 }
+
+// --- NEWLY ADDED ---
+// Update store metadata
+export async function updateStoreMeta(storeId: string, data: Partial<StoreMeta>): Promise<void> {
+  try {
+    if (!storeId) throw new Error("Store ID is required to update metadata.");
+    const storeRef = doc(db, 'stores', storeId);
+    await updateDoc(storeRef, data);
+  } catch (error) {
+    console.error('Error updating store metadata:', error);
+    throw error;
+  }
+}
+// --------------------
+
 
 // Update updateProduct to require storeId
 export async function updateProduct(storeId: string, productId: string, data: Partial<Product>): Promise<void> {

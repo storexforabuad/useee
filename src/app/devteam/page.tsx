@@ -1,12 +1,16 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { getStores, StoreMeta, getProducts, getPopularProducts } from '../../lib/db';
-import CategoryManagement from '../../components/CategoryManagement';
+import { getStores, getProducts, getPopularProducts } from '../../lib/db';
+import { StoreMeta } from '../../types/store';
 import Link from 'next/link';
 import { ShoppingBag, ClipboardListIcon, PlusCircle } from 'lucide-react';
-import CreateStoreModal from '../../components/admin/modals/CreateStoreModal';
 import { motion } from 'framer-motion';
+
+// Component Imports
+import CreateStoreModal from '../../components/admin/modals/CreateStoreModal';
+import SubscriptionManager from '../../components/admin/SubscriptionManager';
+import CategoryManagement from '../../components/CategoryManagement';
 
 interface StoreStats {
   id: string;
@@ -25,27 +29,25 @@ export default function DevteamPage() {
   const [storeStats, setStoreStats] = useState<StoreStats[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchStores = useCallback(async () => {
-    const data = await getStores();
-    setStores(data);
-  }, []);
-
-  const fetchStats = useCallback(async () => {
+  const fetchStoresAndStats = useCallback(async () => {
     const storesData = await getStores();
+    setStores(storesData);
+
     const statsPromises = storesData.map(async (store) => {
-      const products = await getProducts(store.id);
-      const popularProducts = await getPopularProducts(store.id, 6);
-      const totalViews = products.reduce((sum, p) => sum + (p.views || 0), 0);
-      return {
-        id: store.id,
-        name: store.name,
-        totalProducts: products.length,
-        limitedStock: products.filter(p => p.limitedStock).length,
-        soldOut: products.filter(p => p.soldOut).length,
-        popularCount: popularProducts.length,
-        totalViews,
-        rank: 0, // will be set after sorting
-      };
+        // These fetches might be heavy; consider optimizing if performance is an issue
+        const products = await getProducts(store.id!);
+        const popularProducts = await getPopularProducts(store.id!, 6);
+        const totalViews = products.reduce((sum, p) => sum + (p.views || 0), 0);
+        return {
+            id: store.id!,
+            name: store.name,
+            totalProducts: products.length,
+            limitedStock: products.filter(p => p.limitedStock).length,
+            soldOut: products.filter(p => p.soldOut).length,
+            popularCount: popularProducts.length,
+            totalViews,
+            rank: 0, // will be set after sorting
+        };
     });
     const stats = await Promise.all(statsPromises);
     stats.sort((a, b) => b.totalViews - a.totalViews);
@@ -54,15 +56,18 @@ export default function DevteamPage() {
   }, []);
 
   useEffect(() => {
-    fetchStores();
-    fetchStats();
-  }, [fetchStores, fetchStats]);
+    fetchStoresAndStats();
+  }, [fetchStoresAndStats]);
   
   const handleModalClose = () => {
       setIsModalOpen(false);
-      // Refresh data after modal closes, in case a new store was added
-      fetchStores();
-      fetchStats();
+      // Refresh data after modal closes
+      fetchStoresAndStats();
+  }
+
+  const handleSubscriptionUpdate = () => {
+      // Refetch all data to ensure UI is consistent
+      fetchStoresAndStats();
   }
 
   const selectedStoreMeta = stores.find(s => s.id === selectedStore);
@@ -97,7 +102,7 @@ export default function DevteamPage() {
                     <button
                     key={store.id}
                     className={`px-4 py-2 rounded-lg border text-sm font-semibold transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${selectedStore === store.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-800 text-blue-700 dark:text-blue-300 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-                    onClick={() => setSelectedStore(store.id)}
+                    onClick={() => setSelectedStore(store.id!)}
                     >
                     {store.name}
                     </button>
@@ -112,37 +117,42 @@ export default function DevteamPage() {
                     transition={{ duration: 0.5 }}
                     className="mb-6 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-4"
                 >
-                <div className="flex items-center justify-between mb-3">
-                    <h2 className="font-bold text-lg text-blue-700 dark:text-blue-300">{selectedStoreStats.name}</h2>
-                    <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">{selectedStoreStats.id}</span>
-                </div>
-                <div className="flex gap-2 mb-4">
-                    <a href={`/admin/${selectedStoreStats.id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition">Admin Panel</a>
-                    <a href={`/${selectedStoreStats.id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-md bg-green-50 text-green-700 text-xs font-semibold hover:bg-green-100 transition">Live Store</a>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-center">
-                    <div className="p-2 bg-blue-50 dark:bg-blue-900/50 rounded-lg"><span className="font-bold text-blue-800 dark:text-blue-200">{selectedStoreStats.totalProducts}</span><p className="text-xs text-blue-600 dark:text-blue-300">Products</p></div>
-                    <div className="p-2 bg-yellow-50 dark:bg-yellow-900/50 rounded-lg"><span className="font-bold text-yellow-800 dark:text-yellow-200">{selectedStoreStats.limitedStock}</span><p className="text-xs text-yellow-600 dark:text-yellow-300">Limited</p></div>
-                    <div className="p-2 bg-red-50 dark:bg-red-900/50 rounded-lg"><span className="font-bold text-red-800 dark:text-red-200">{selectedStoreStats.soldOut}</span><p className="text-xs text-red-600 dark:text-red-300">Sold Out</p></div>
-                    <div className="p-2 bg-green-50 dark:bg-green-900/50 rounded-lg"><span className="font-bold text-green-800 dark:text-green-200">{selectedStoreStats.popularCount}</span><p className="text-xs text-green-600 dark:text-green-300">Popular</p></div>
-                    <div className="p-2 bg-purple-50 dark:bg-purple-900/50 rounded-lg"><span className="font-bold text-purple-800 dark:text-purple-200">{selectedStoreStats.totalViews.toLocaleString()}</span><p className="text-xs text-purple-600 dark:text-purple-300">Views</p></div>
-                    <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg"><span className="font-bold text-gray-800 dark:text-gray-200">#{selectedStoreStats.rank}</span><p className="text-xs text-gray-600 dark:text-gray-400">Rank</p></div>
-                </div>
-                <div className="mt-4">
-                  <CategoryManagement storeId={selectedStore} />
-                </div>
+                    <div className="flex items-center justify-between mb-3">
+                        <h2 className="font-bold text-lg text-blue-700 dark:text-blue-300">{selectedStoreStats.name}</h2>
+                        <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">{selectedStoreStats.id}</span>
+                    </div>
+                    <div className="flex gap-2 mb-4">
+                        <a href={`/admin/${selectedStoreStats.id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition">Admin Panel</a>
+                        <a href={`/${selectedStoreStats.id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-md bg-green-50 text-green-700 text-xs font-semibold hover:bg-green-100 transition">Live Store</a>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-center">
+                        <div className="p-2 bg-blue-50 dark:bg-blue-900/50 rounded-lg"><span className="font-bold text-blue-800 dark:text-blue-200">{selectedStoreStats.totalProducts}</span><p className="text-xs text-blue-600 dark:text-blue-300">Products</p></div>
+                        <div className="p-2 bg-yellow-50 dark:bg-yellow-900/50 rounded-lg"><span className="font-bold text-yellow-800 dark:text-yellow-200">{selectedStoreStats.limitedStock}</span><p className="text-xs text-yellow-600 dark:text-yellow-300">Limited</p></div>
+                        <div className="p-2 bg-red-50 dark:bg-red-900/50 rounded-lg"><span className="font-bold text-red-800 dark:text-red-200">{selectedStoreStats.soldOut}</span><p className="text-xs text-red-600 dark:text-red-300">Sold Out</p></div>
+                        <div className="p-2 bg-green-50 dark:bg-green-900/50 rounded-lg"><span className="font-bold text-green-800 dark:text-green-200">{selectedStoreStats.popularCount}</span><p className="text-xs text-green-600 dark:text-green-300">Popular</p></div>
+                        <div className="p-2 bg-purple-50 dark:bg-purple-900/50 rounded-lg"><span className="font-bold text-purple-800 dark:text-purple-200">{selectedStoreStats.totalViews.toLocaleString()}</span><p className="text-xs text-purple-600 dark:text-purple-300">Views</p></div>
+                        <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg"><span className="font-bold text-gray-800 dark:text-gray-200">#{selectedStoreStats.rank}</span><p className="text-xs text-gray-600 dark:text-gray-400">Rank</p></div>
+                    </div>
+                    
+                    {/* --- NEWLY ADDED --- */}
+                    <SubscriptionManager storeMeta={selectedStoreMeta} onUpdate={handleSubscriptionUpdate} />
+                    
+                    <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                        <CategoryManagement storeId={selectedStore} />
+                    </div>
+
                 </motion.section>
             )}
         </div>
 
         <nav className="fixed bottom-0 left-0 w-full z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 shadow-lg flex sm:hidden justify-around py-2">
             <Link href="/devteam" className="flex flex-col items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs font-semibold">
-            <ShoppingBag className="w-6 h-6 mb-1" />
-            Dashboard
+                <ShoppingBag className="w-6 h-6 mb-1" />
+                Dashboard
             </Link>
             <Link href="/admin" className="flex flex-col items-center text-gray-600 dark:text-gray-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs font-semibold">
-            <ClipboardListIcon className="w-6 h-6 mb-1" />
-            Admin
+                <ClipboardListIcon className="w-6 h-6 mb-1" />
+                Admin
             </Link>
         </nav>
       </div>

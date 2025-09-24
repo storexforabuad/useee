@@ -1,7 +1,10 @@
+import { Timestamp } from 'firebase/firestore';
+
 export interface StoreMeta {
+  // Original fields
   name: string;
   whatsapp?: string;
-  instagram?: string; // Optional field
+  instagram?: string;
   ceoName?: string;
   ceoImage?: string;
   ceoPhone?: string;
@@ -15,8 +18,19 @@ export interface StoreMeta {
   country?: string;
   state?: string;
   businessInstagram?: string;
-  storeId?: string; // This is the document ID in Firestore
+  storeId?: string; 
   totalOrders?: number;
+
+  // New Subscription and Onboarding Fields
+  isSubscriptionActive: boolean;
+  createdAt: Timestamp;
+  subscriptionStatus: 'prospect' | 'trial' | 'grace_period' | 'locked';
+  subscriptionEndDate?: Timestamp;
+  onboardingTasks: {
+    productUploads: number;
+    views: number;
+    hasCreatedCategory: boolean;
+  };
 }
 
 export interface ProductCategory {
