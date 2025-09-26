@@ -37,6 +37,7 @@ export default function AdminStorePage() {
   const [isPreviewLoading, setIsPreviewLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
   const [uiVisible, setUiVisible] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     if (!storeId) return;
@@ -64,13 +65,10 @@ export default function AdminStorePage() {
       setContacts(fetchedContacts);
       setStoreMeta(fetchedStoreMeta as StoreMeta);
 
-      // Corrected Onboarding Check
       if (fetchedStoreMeta?.hasCompletedOnboarding) {
-        // User has completed onboarding
         setShowOnboarding(false);
         setUiVisible(true);
       } else {
-        // User has NOT completed onboarding (or flag is missing)
         setShowOnboarding(true);
         setUiVisible(false);
       }
@@ -83,13 +81,19 @@ export default function AdminStorePage() {
     }
   }
 
-  async function handleOnboardingComplete() {
+  function handleOnboardingComplete() {
+    // Stop showing the onboarding flow AND start the transition
     setShowOnboarding(false);
-    await markOnboardingAsCompleted(storeId);
-    // Delay showing the UI to allow for exit animations
+    setIsTransitioning(true);
+
+    // Fire-and-forget the database update
+    markOnboardingAsCompleted(storeId);
+
+    // After a delay, end the transition and show the main UI
     setTimeout(() => {
+      setIsTransitioning(false);
       setUiVisible(true);
-    }, 500); // Match this with your exit animation duration
+    }, 800); // Increased delay for a smoother feel
   }
 
   async function handleUpdateProduct(id: string, updatedProduct: Partial<Product>) {
@@ -104,6 +108,12 @@ export default function AdminStorePage() {
 
   if (loading || showOnboarding === null) return <AdminSkeleton screen="home" />;
 
+  // Check for the transition state FIRST
+  if (isTransitioning) {
+    return <AdminSkeleton screen="home" />;
+  }
+
+  // THEN, check if we need to show the onboarding
   if (showOnboarding) {
     return <OnboardingFlow onComplete={handleOnboardingComplete} storeName={storeMeta?.name || ''} />;
   }
@@ -142,6 +152,7 @@ export default function AdminStorePage() {
                   totalOrders={storeMeta?.totalOrders || 0}
                   promoCaption={storeMeta?.promoCaption}
                   uiVisible={uiVisible}
+                  storeName={storeMeta?.name}
                 />
               </div>
             )}

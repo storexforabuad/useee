@@ -27,8 +27,8 @@ export default function OnboardingFlow({ onComplete, storeName }: OnboardingFlow
       props: { 
         onNext: handleNext, 
         onBack: handleBack, 
-        title: 'Organize Your Inventory', 
-        description: 'Use Categories to help customers find exactly what they are looking for. You can manage them anytime from the navbar at the bottom of your screen.',
+        title: 'Get Organized, Sell More 🗂️', 
+        description: "Use Categories to group your products (e.g., 'T-Shirts', 'Accessories'). An organized store is an easy-to-shop store.",
         icon: <Tag className="w-16 h-16" />,
         showHint: true,
         hintPosition: 'bottom',
@@ -39,8 +39,8 @@ export default function OnboardingFlow({ onComplete, storeName }: OnboardingFlow
       props: { 
         onNext: handleNext, 
         onBack: handleBack, 
-        title: 'Upload Products with Ease', 
-        description: "Adding new items is just a tap away. Use the '+' button to add products, photos, and prices directly from your device.",
+        title: 'Stock Your Shelves 📦', 
+        description: "Tap the '+' button anytime to add products. Pro tip: Clear photos and good prices are the keys to catching a customer\'s eye.",
         icon: <Plus className="w-16 h-16" />,
         showHint: true,
         hintPosition: 'bottom-right',
@@ -51,18 +51,18 @@ export default function OnboardingFlow({ onComplete, storeName }: OnboardingFlow
       props: { 
         onNext: handleNext, 
         onBack: handleBack, 
-        title: 'Share and Go Viral', 
-        description: "Your 'Store Link' card creates a ready-to-share message with a custom caption. Post it everywhere to drive traffic and sales.",
+        title: 'Spread the Word! 📣', 
+        description: "No customers? No sales. Use the 'Share Store' card to post your link on WhatsApp, Instagram, and Facebook. Go get your first visitor!",
         icon: <Share2 className="w-16 h-16" /> 
       },
     },
     {
       component: FeatureScreen,
       props: { 
-        onNext: onComplete, // This is the last step
+        onNext: onComplete, // The final step simply calls onComplete
         onBack: handleBack, 
-        title: 'Watch Your Audience Grow', 
-        description: 'Track your store views in real-time. Share screenshots of your stats along with your store link to create buzz and show off your popularity!',
+        title: 'Watch Your Store Come to Life 👀', 
+        description: 'The \'Views\' card shows your traffic. The more you share, the more this number will climb. More views lead to more orders. Now, go make it happen!',
         icon: <Eye className="w-16 h-16" />,
         isLastStep: true,
       },

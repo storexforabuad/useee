@@ -1,4 +1,5 @@
-import { Tag, Star, AlertTriangle, Eye, Layers, CheckCircle, Link2, Gift, XCircle, RefreshCw, Archive, Handshake, ShoppingCart } from 'lucide-react';
+'use client';
+import { Tag, Star, AlertTriangle, Eye, Layers, CheckCircle, Link2, Gift, XCircle, RefreshCw, Archive, Handshake, ShoppingCart, Share2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
@@ -43,6 +44,7 @@ interface AdminHomeCardsProps {
   totalOrders: number;
   promoCaption?: string;
   uiVisible: boolean;
+  storeName?: string;
 }
 
 const cardData = [
@@ -137,9 +139,9 @@ const cardData = [
       glowClass: 'shadow-[0_0_25px_-5px_rgba(22,163,74,0.5)]',
     },
     {
-      label: 'Store Items',
+      label: 'Share',
       valueKey: 'storeLink',
-      icon: Link2,
+      icon: Share2,
       gradient: 'from-gray-200 to-gray-400',
       text: 'text-gray-800',
       component: StoreLinkModal,
@@ -193,14 +195,21 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.05,
+        staggerChildren: 0.1,
       },
     },
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut"
+      }
+    },
   };
 
   return (
@@ -264,8 +273,8 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
                     </div>
                     <div className="flex flex-col items-center min-w-0 z-10 w-full">
                       <div className="text-lg sm:text-xl md:text-2xl font-bold drop-shadow">
-                        {card.label === 'Store Items'
-                          ? 'Share'
+                        {card.label === 'Share'
+                          ? 'Caption'
                           : card.label === 'Contacts'
                             ? props.totalContacts
                             : card.label === 'Sold Out'
@@ -309,6 +318,8 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
                 handleClose: handleCloseModal,
                 setIsManageProductsOpen: props.setIsManageProductsOpen || (() => {}),
                 onContactAdded: () => props.onRefresh(true),
+                storeName: props.storeName,
+                categories: props.categories,
               };
               return <ModalComponent {...modalProps} />;
               

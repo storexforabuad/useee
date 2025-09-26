@@ -11,27 +11,29 @@ const FloatingContactButton = () => {
     window.location.href = `tel:${phoneNumber}`;
   };
 
-  const handleWhatsApp = () => {
+  const handleChat = () => {
     window.location.href = `https://wa.me/${phoneNumber}`;
   };
 
   return (
     <div className="fixed bottom-20 right-4 md:bottom-8 md:right-8 z-60">
       {isOpen && (
-        <div className="flex flex-col gap-3 mb-4 animate-fade-in">
+        <div className="flex flex-col items-end gap-3 mb-4 animate-fade-in">
+          <button
+            onClick={handleChat}
+            className="flex items-center gap-2 bg-blue-500 text-white font-medium px-4 py-3 rounded-full shadow-lg hover:bg-blue-600 transition-colors duration-200"
+            aria-label="Chat with support"
+          >
+            <ChatBubbleLeftIcon className="h-6 w-6" />
+            Chat
+          </button>
           <button
             onClick={handleCall}
-            className="bg-green-500 text-white p-3 rounded-full shadow-lg hover:bg-green-600 transition-colors duration-200"
+            className="flex items-center gap-2 bg-pink-500 text-white font-medium px-4 py-3 rounded-full shadow-lg hover:bg-pink-600 transition-colors duration-200"
             aria-label="Call support"
           >
             <PhoneIcon className="h-6 w-6" />
-          </button>
-          <button
-            onClick={handleWhatsApp}
-            className="bg-[#25D366] text-white p-3 rounded-full shadow-lg hover:bg-[#128C7E] transition-colors duration-200"
-            aria-label="Contact on WhatsApp"
-          >
-            <ChatBubbleLeftIcon className="h-6 w-6" />
+            Call
           </button>
         </div>
       )}
