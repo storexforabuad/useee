@@ -23,8 +23,8 @@ export interface BusinessConfig {
     shortName: "Alaniq INT. App",
     description: "Your one-stop shop for all your fashion needs",
     contact: {
-      whatsapp: "+2347032905036",
-      support: "+2347032905036",
+      whatsapp: "+2348119772223",
+      support: "+2348119772223",
       payment: {
         accountName: "Aisha Ibrahim Lame",
         accountNumber: "0057360918",

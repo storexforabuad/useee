@@ -4,7 +4,8 @@ import {
   CubeIcon as CubeIconOutline, 
   TagIcon as TagIconOutline, 
   EyeIcon as EyeIconOutline, 
-  ArrowUpTrayIcon 
+  PlusIcon
+
 } from '@heroicons/react/24/outline';
 import { 
   HomeIcon as HomeIconSolid, 
@@ -22,7 +23,7 @@ interface MobileNavProps {
 const navItems = [
   { id: 'home', iconOutline: HomeIconOutline, iconSolid: HomeIconSolid, label: 'Home' },
   { id: 'preview', iconOutline: EyeIconOutline, iconSolid: EyeIconSolid, label: 'Store' },
-  { id: 'add', iconOutline: ArrowUpTrayIcon, label: 'Upload' },
+  { id: 'add', iconOutline: PlusIcon, label: 'Upload' },
   { id: 'manage', iconOutline: CubeIconOutline, iconSolid: CubeIconSolid, label: 'Products' },
   { id: 'categories', iconOutline: TagIconOutline, iconSolid: TagIconSolid, label: 'Categories' },
 ];
@@ -65,7 +66,7 @@ const MobileNav = ({ activeSection, setActiveSection, isModalOpen }: MobileNavPr
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
                 className={`flex flex-col items-center justify-center h-14 w-16 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-offset-0 focus:ring-blue-400/50 ${
-                  isActive ? 'text-neutral-800 dark:text-neutral-100' : 'text-gray-500 dark:text-gray-400'
+                  isActive ? 'text-neutral-800 dark:text-neutral-100' : 'text-gray-600 dark:text-gray-500'
                 }`}
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >

@@ -5,7 +5,7 @@ import { PhoneIcon, ChatBubbleLeftIcon, XMarkIcon } from '@heroicons/react/24/so
 
 const FloatingContactButton = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const phoneNumber = '+2349099933360';
+  const phoneNumber = '+2348119772223';
 
   const handleCall = () => {
     window.location.href = `tel:${phoneNumber}`;
@@ -16,7 +16,7 @@ const FloatingContactButton = () => {
   };
 
   return (
-    <div className="fixed bottom-20 right-4 md:bottom-8 md:right-8 z-50">
+    <div className="fixed bottom-20 right-4 md:bottom-8 md:right-8 z-60">
       {isOpen && (
         <div className="flex flex-col gap-3 mb-4 animate-fade-in">
           <button
