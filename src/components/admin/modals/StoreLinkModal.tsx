@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Modal from '../../Modal';
 import { Link2, Copy, ExternalLink, Share2, Download, QrCode, X } from 'lucide-react';
@@ -6,6 +6,7 @@ import { Link2, Copy, ExternalLink, Share2, Download, QrCode, X } from 'lucide-r
 interface StoreLinkModalProps {
   storeLink: string;
   handleClose: () => void;
+  promoCaption?: string;
 }
 
 // Social Icons
@@ -19,19 +20,32 @@ const FacebookIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" he
 const InstagramIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.012 3.584-.07 4.85c-.148 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.584-.012-4.85-.07c-3.252-.148-4.771-1.691-4.919-4.919-.058-1.265-.07-1.645-.07-4.85s.012-3.584.07-4.85c.148-3.225 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.85-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072s3.667-.014 4.947-.072c4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.947s-.014-3.667-.072-4.947c-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.79 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>;
 const TwitterIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616v.064c0 2.298 1.634 4.212 3.793 4.649-.562.152-1.158.22-1.778.085.617 1.954 2.408 3.377 4.533 3.419-1.625 1.278-3.673 2.03-5.894 2.03-.382 0-.76-.022-1.13-.066 2.099 1.354 4.602 2.149 7.29 2.149 8.749 0 13.529-7.252 13.529-13.529 0-.206-.005-.412-.013-.617.928-.67 1.734-1.503 2.37-2.45z"/></svg>;
 
-const StoreLinkModal: React.FC<StoreLinkModalProps> = ({ storeLink, handleClose }) => {
+const StoreLinkModal: React.FC<StoreLinkModalProps> = ({ storeLink, handleClose, promoCaption }) => {
   const [copySuccess, setCopySuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<'link' | 'qr' | 'screen' | 'message'>('link');
-  
-  const storeLinkValue = storeLink?.trim() ? storeLink : 'Store link not available';
+  const [fullUrl, setFullUrl] = useState('');
+
+  useEffect(() => {
+    // Ensure the link is a full URL
+    if (storeLink) {
+      const newFullUrl = storeLink.startsWith('http') ? storeLink : `${window.location.origin}${storeLink}`;
+      setFullUrl(newFullUrl);
+    }
+  }, [storeLink]);
+
   const qrCodeUrl = '/store-qr-code.png';
   const screenshotUrl = '/arewamodescreen.png';
-  const shareMessage =
-    '🌟 Discover authentic products at the new Alaniq INT. Online Store! 🛒 Enjoy exclusive discounts 🎉 A beautiful selection of RTW, Perfumes, Incense & More ✨ Nationwide delivery 🚚 🇳🇬. Shop now: https://tinyurl.com/alaniqint';
+
+  const defaultCaption = '🌟 Discover authentic products at my Online Store! 🛒 Nationwide delivery 🚚 🇳🇬. Shop now:';
+  
+  // Use promoCaption if available, otherwise use default. Append the full URL.
+  const shareMessage = `${promoCaption ? promoCaption.replace(/\n/g, '\n') : defaultCaption}\n${fullUrl}`;
+  
   const [copyMsgSuccess, setCopyMsgSuccess] = useState(false);
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(storeLinkValue).then(() => {
+    if (!fullUrl) return;
+    navigator.clipboard.writeText(fullUrl).then(() => {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     }, () => {
@@ -67,10 +81,10 @@ const StoreLinkModal: React.FC<StoreLinkModalProps> = ({ storeLink, handleClose 
   };
 
   const socialPlatforms = [
-    { name: 'WhatsApp', icon: WhatsAppIcon, url: `https://wa.me/?text=${encodeURIComponent('🌟 Discover authentic products at the new Alaniq INT. Online Store! 🛒 Enjoy exclusive discounts 🎉 A beautiful selection of RTW, Perfumes, Incense & More ✨ Nationwide delivery 🚚 🇳🇬. Shop now: https://tinyurl.com/alaniqint')}`, color: 'hover:text-[#25D366]' },
-    { name: 'Facebook', icon: FacebookIcon, url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(storeLinkValue)}`, color: 'hover:text-[#1877F2]' },
+    { name: 'WhatsApp', icon: WhatsAppIcon, url: `https://wa.me/?text=${encodeURIComponent(shareMessage)}`, color: 'hover:text-[#25D366]' },
+    { name: 'Facebook', icon: FacebookIcon, url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(fullUrl)}&quote=${encodeURIComponent(promoCaption || defaultCaption)}`, color: 'hover:text-[#1877F2]' },
     { name: 'Instagram', icon: InstagramIcon, url: `https://www.instagram.com`, color: 'hover:text-[#E4405F]' },
-    { name: 'Twitter', icon: TwitterIcon, url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(storeLinkValue)}`, color: 'hover:text-[#1DA1F2]' },
+    { name: 'Twitter', icon: TwitterIcon, url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`, color: 'hover:text-[#1DA1F2]' },
   ];
 
   return (
@@ -116,14 +130,14 @@ const StoreLinkModal: React.FC<StoreLinkModalProps> = ({ storeLink, handleClose 
           {activeTab === 'link' && (
             <div className="animate-fadeIn space-y-4">
               <div className="w-full px-3 py-2.5 rounded-lg bg-background-alt text-text-primary font-mono text-sm break-all border border-border-color">
-                {storeLinkValue}
+                {fullUrl || 'Generating link...'}
               </div>
               <div className="flex gap-3 w-full">
-                <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-muted text-muted-foreground font-semibold hover:bg-muted/80 transition-all shadow-sm active:scale-95" onClick={handleCopyLink}>
+                <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-muted text-muted-foreground font-semibold hover:bg-muted/80 transition-all shadow-sm active:scale-95 disabled:opacity-50" onClick={handleCopyLink} disabled={!fullUrl}>
                   <Copy className="w-4 h-4" />
                   {copySuccess ? 'Copied!' : 'Copy'}
                 </button>
-                <a href={storeLinkValue.startsWith('http') ? storeLinkValue : `https://${storeLinkValue}`} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-95">
+                <a href={fullUrl} target="_blank" rel="noopener noreferrer" className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-95 ${!fullUrl ? 'pointer-events-none opacity-50' : ''}`}>
                   <ExternalLink className="w-4 h-4" />
                   Visit
                 </a>
@@ -162,7 +176,7 @@ const StoreLinkModal: React.FC<StoreLinkModalProps> = ({ storeLink, handleClose 
           )}
           {activeTab === 'message' && (
             <div className="animate-fadeIn space-y-4 flex flex-col items-center">
-              <div className="w-full px-3 py-2.5 rounded-lg bg-background-alt text-text-primary font-mono text-sm break-words border border-border-color select-text">
+              <div className="w-full px-3 py-2.5 rounded-lg bg-background-alt text-text-primary whitespace-pre-wrap text-sm break-words border border-border-color select-text">
                 {shareMessage}
               </div>
               <button
@@ -189,7 +203,7 @@ const StoreLinkModal: React.FC<StoreLinkModalProps> = ({ storeLink, handleClose 
             href={socialPlatforms[0].url}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full max-w-xs mb-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#25D366] text-white font-semibold shadow hover:bg-[#1DA851] transition-all active:scale-95"
+            className={`w-full max-w-xs mb-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#25D366] text-white font-semibold shadow hover:bg-[#1DA851] transition-all active:scale-95 ${!fullUrl ? 'pointer-events-none opacity-50' : ''}`}
             title="Share on WhatsApp"
           >
             <WhatsAppIcon />
@@ -197,7 +211,7 @@ const StoreLinkModal: React.FC<StoreLinkModalProps> = ({ storeLink, handleClose 
           </a>
           <div className="flex gap-3 justify-center pt-2">
             {socialPlatforms.slice(1).map((platform) => (
-              <a href={platform.url} target="_blank" rel="noopener noreferrer" key={platform.name} className={`p-3 rounded-full bg-background-alt text-text-secondary ${platform.color} transition-all duration-200 ease-in-out transform hover:scale-110 focus:outline-none`} title={`Share on ${platform.name}`}>
+              <a href={platform.url} target="_blank" rel="noopener noreferrer" key={platform.name} className={`p-3 rounded-full bg-background-alt text-text-secondary ${platform.color} transition-all duration-200 ease-in-out transform hover:scale-110 focus:outline-none ${!fullUrl ? 'pointer-events-none opacity-50' : ''}`} title={`Share on ${platform.name}`}>
                 <platform.icon />
               </a>
             ))}

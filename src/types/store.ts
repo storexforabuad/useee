@@ -1,25 +1,16 @@
-export interface StoreMeta {
-  name: string;
-  whatsapp?: string;
-  instagram?: string; // Optional field
-  ceoName?: string;
-  ceoImage?: string;
-  ceoPhone?: string;
-  ceoEmail?: string;
-  ceoInstagram?: string;
-  businessDescription?: string;
-  hasPhysicalShop?: boolean;
-  shopNumber?: string;
-  plazaBuildingName?: string;
-  streetAddress?: string;
-  country?: string;
-  state?: string;
-  businessInstagram?: string;
-  storeId?: string; // This is the document ID in Firestore
-  totalOrders?: number;
-}
+import { Timestamp } from 'firebase/firestore';
 
-export interface ProductCategory {
-    id: string;
-    name: string;
+export interface StoreMeta {
+  id: string;
+  name: string;
+  logo: string;
+  category: string[];
+  followers: number;
+  views: number;
+  createdAt: Timestamp;
+  owner: string;
+  products: string[];
+  totalOrders?: number;
+  promoCaption?: string;
+  hasCompletedOnboarding?: boolean;
 }

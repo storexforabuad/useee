@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getStores, StoreMeta, getProducts, getPopularProducts } from '../../lib/db';
+import { getStoreCaption, updateStoreCaption } from '../actions/devActions';
 import CategoryManagement from '../../components/CategoryManagement';
 import Link from 'next/link';
-import { ShoppingBag, ClipboardListIcon, PlusCircle } from 'lucide-react';
+import { ShoppingBag, ClipboardListIcon, PlusCircle, Save } from 'lucide-react';
 import CreateStoreModal from '../../components/admin/modals/CreateStoreModal';
 import { motion } from 'framer-motion';
 
@@ -24,6 +25,8 @@ export default function DevteamPage() {
   const [selectedStore, setSelectedStore] = useState<string | null>(null);
   const [storeStats, setStoreStats] = useState<StoreStats[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [promoCaption, setPromoCaption] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const fetchStores = useCallback(async () => {
     const data = await getStores();
@@ -57,6 +60,25 @@ export default function DevteamPage() {
     fetchStores();
     fetchStats();
   }, [fetchStores, fetchStats]);
+
+  useEffect(() => {
+    if (selectedStore) {
+      getStoreCaption(selectedStore).then(caption => {
+        setPromoCaption(caption || '');
+      });
+    } else {
+      setPromoCaption('');
+    }
+  }, [selectedStore]);
+
+  const handleSaveCaption = async () => {
+    if (selectedStore) {
+      setIsSaving(true);
+      await updateStoreCaption(selectedStore, promoCaption);
+      setIsSaving(false);
+      alert('Caption saved!');
+    }
+  };
   
   const handleModalClose = () => {
       setIsModalOpen(false);
@@ -127,6 +149,33 @@ export default function DevteamPage() {
                     <div className="p-2 bg-green-50 dark:bg-green-900/50 rounded-lg"><span className="font-bold text-green-800 dark:text-green-200">{selectedStoreStats.popularCount}</span><p className="text-xs text-green-600 dark:text-green-300">Popular</p></div>
                     <div className="p-2 bg-purple-50 dark:bg-purple-900/50 rounded-lg"><span className="font-bold text-purple-800 dark:text-purple-200">{selectedStoreStats.totalViews.toLocaleString()}</span><p className="text-xs text-purple-600 dark:text-purple-300">Views</p></div>
                     <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg"><span className="font-bold text-gray-800 dark:text-gray-200">#{selectedStoreStats.rank}</span><p className="text-xs text-gray-600 dark:text-gray-400">Rank</p></div>
+                </div>
+                 <div className="mt-4">
+                    <h3 className="text-md font-semibold text-gray-800 dark:text-white mb-2">Promo Caption</h3>
+                    <textarea
+                        className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:text-white"
+                        rows={3}
+                        value={promoCaption}
+                        onChange={(e) => setPromoCaption(e.target.value)}
+                        placeholder="Enter a promotional caption for this store's share link..."
+                    />
+                    <button
+                        onClick={handleSaveCaption}
+                        disabled={isSaving}
+                        className="mt-2 flex items-center justify-center gap-2 w-full bg-green-600 text-white px-4 py-2 rounded-lg font-semibold shadow-md hover:bg-green-700 transition-colors disabled:bg-gray-400"
+                    >
+                        {isSaving ? (
+                            <>
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                Saving...
+                            </>
+                        ) : (
+                           <>
+                                <Save className="w-5 h-5" />
+                                Save Caption
+                           </>
+                        )}
+                    </button>
                 </div>
                 <div className="mt-4">
                   <CategoryManagement storeId={selectedStore} />

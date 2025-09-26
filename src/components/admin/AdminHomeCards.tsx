@@ -1,6 +1,6 @@
 import { Tag, Star, AlertTriangle, Eye, Layers, CheckCircle, Link2, Gift, XCircle, RefreshCw, Archive, Handshake, ShoppingCart } from 'lucide-react';
 import { useEffect, useState } from 'react';
-
+import { motion } from 'framer-motion';
 
 // Import the new modal components
 import TotalProductsModal from './modals/TotalProductsModal';
@@ -41,6 +41,8 @@ interface AdminHomeCardsProps {
   totalContacts: number;
   storeId: string; // Added storeId
   totalOrders: number;
+  promoCaption?: string;
+  uiVisible: boolean;
 }
 
 const cardData = [
@@ -135,7 +137,7 @@ const cardData = [
       glowClass: 'shadow-[0_0_25px_-5px_rgba(22,163,74,0.5)]',
     },
     {
-      label: 'Store Link',
+      label: 'Store Items',
       valueKey: 'storeLink',
       icon: Link2,
       gradient: 'from-gray-200 to-gray-400',
@@ -158,7 +160,7 @@ const cardData = [
 export default function AdminHomeCards(props: AdminHomeCardsProps) {
   const [openModal, setOpenModal] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const { setIsModalOpen, onRefresh } = props;
+  const { setIsModalOpen, onRefresh, uiVisible } = props;
 
   useEffect(() => {
     if (openModal !== null) {
@@ -186,6 +188,21 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
     if (props.setIsModalOpen) props.setIsModalOpen(false);
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
+
   return (
     <section className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 overflow-x-hidden">
         <div className="mb-4">
@@ -202,7 +219,12 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
                 {refreshing ? 'Refreshing...' : 'Refresh'}
             </button>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
+        <motion.div 
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4"
+            variants={containerVariants}
+            initial="hidden"
+            animate={uiVisible ? 'visible' : 'hidden'}
+        >
             <style jsx>{`
               .card-blob {
                 position: absolute;
@@ -229,39 +251,40 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
             {cardData.map((card, idx) => {
               const Icon = card.icon;
               return (
-                <button
-                  key={card.label}
-                  className={`dashboard-card relative flex flex-col items-center justify-center rounded-2xl p-2 sm:p-3 md:p-4 shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] focus:outline-none overflow-hidden bg-gradient-to-br ${card.gradient} ${card.text} ${card.glowClass}`}
-                  tabIndex={0}
-                  type="button"
-                  onClick={() => handleOpenModal(idx)}
-                >
-                  <span className="card-blob" />
-                  <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-white bg-opacity-20 mb-1 sm:mb-2 shadow">
-                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 drop-shadow" />
-                  </div>
-                  <div className="flex flex-col items-center min-w-0 z-10 w-full">
-                    <div className="text-lg sm:text-xl md:text-2xl font-bold drop-shadow">
-                      {card.label === 'Store Link'
-                        ? 'Your'
-                        : card.label === 'Contacts'
-                          ? props.totalContacts
-                          : card.label === 'Sold Out'
-                            ? props.soldOut
-                            : (() => {
-                                const value = props[card.valueKey as keyof AdminHomeCardsProps];
-                                if (typeof value === 'number' || typeof value === 'string') return value;
-                                return '';
-                              })()}
+                <motion.div key={card.label} variants={itemVariants}>
+                  <button
+                    className={`dashboard-card relative flex flex-col items-center justify-center rounded-2xl p-2 sm:p-3 md:p-4 shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] focus:outline-none overflow-hidden bg-gradient-to-br ${card.gradient} ${card.text} ${card.glowClass} w-full h-full`}
+                    tabIndex={0}
+                    type="button"
+                    onClick={() => handleOpenModal(idx)}
+                  >
+                    <span className="card-blob" />
+                    <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-white bg-opacity-20 mb-1 sm:mb-2 shadow">
+                      <Icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 drop-shadow" />
                     </div>
-                    <div className="text-xs sm:text-sm font-medium opacity-90 text-center px-1 leading-tight">
-                      {card.label}
+                    <div className="flex flex-col items-center min-w-0 z-10 w-full">
+                      <div className="text-lg sm:text-xl md:text-2xl font-bold drop-shadow">
+                        {card.label === 'Store Items'
+                          ? 'Share'
+                          : card.label === 'Contacts'
+                            ? props.totalContacts
+                            : card.label === 'Sold Out'
+                              ? props.soldOut
+                              : (() => {
+                                  const value = props[card.valueKey as keyof AdminHomeCardsProps];
+                                  if (typeof value === 'number' || typeof value === 'string') return value;
+                                  return '';
+                                })()}
+                      </div>
+                      <div className="text-xs sm:text-sm font-medium opacity-90 text-center px-1 leading-tight">
+                        {card.label}
+                      </div>
                     </div>
-                  </div>
-                </button>
+                  </button>
+                </motion.div>
               );
             })}
-        </div>
+        </motion.div>
       {openModal !== null && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md"

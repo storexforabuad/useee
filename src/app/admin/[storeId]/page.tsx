@@ -14,9 +14,11 @@ import AddProductSection from '../../../components/AddProductSection';
 import dynamic from 'next/dynamic';
 import PreviewSkeleton from '../../../components/admin/PreviewSkeleton';
 import SubscriptionBanner from '../../../components/admin/SubscriptionBanner';
+import { markOnboardingAsCompleted } from '../../../app/actions/onboardingActions';
 
 const ManageProductsSection = dynamic(() => import('../../../components/ManageProductsSection'));
 const CategoryManagementSection = dynamic(() => import('../../../components/CategoryManagementSection'));
+const OnboardingFlow = dynamic(() => import('../../../components/admin/onboarding/OnboardingFlow'));
 
 export default function AdminStorePage() {
   const params = useParams();
@@ -33,6 +35,8 @@ export default function AdminStorePage() {
   const [viewMode, setViewMode] = useState<'all' | 'popular' | 'limited' | 'soldout'>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPreviewLoading, setIsPreviewLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
+  const [uiVisible, setUiVisible] = useState(false);
 
   useEffect(() => {
     if (!storeId) return;
@@ -59,12 +63,33 @@ export default function AdminStorePage() {
       setCategories(fetchedCategories);
       setContacts(fetchedContacts);
       setStoreMeta(fetchedStoreMeta as StoreMeta);
+
+      // Corrected Onboarding Check
+      if (fetchedStoreMeta?.hasCompletedOnboarding) {
+        // User has completed onboarding
+        setShowOnboarding(false);
+        setUiVisible(true);
+      } else {
+        // User has NOT completed onboarding (or flag is missing)
+        setShowOnboarding(true);
+        setUiVisible(false);
+      }
+
     } catch {
       // handle error
     } finally {
       if (showRefresh) setIsRefreshing(false);
       setLoading(false);
     }
+  }
+
+  async function handleOnboardingComplete() {
+    setShowOnboarding(false);
+    await markOnboardingAsCompleted(storeId);
+    // Delay showing the UI to allow for exit animations
+    setTimeout(() => {
+      setUiVisible(true);
+    }, 500); // Match this with your exit animation duration
   }
 
   async function handleUpdateProduct(id: string, updatedProduct: Partial<Product>) {
@@ -77,7 +102,11 @@ export default function AdminStorePage() {
     fetchData();
   }
 
-  if (loading) return <AdminSkeleton screen="home" />;
+  if (loading || showOnboarding === null) return <AdminSkeleton screen="home" />;
+
+  if (showOnboarding) {
+    return <OnboardingFlow onComplete={handleOnboardingComplete} storeName={storeMeta?.name || ''} />;
+  }
 
   return (
     <div className="min-h-screen bg-background pb-16 md:pb-0 transition-colors">
@@ -87,7 +116,7 @@ export default function AdminStorePage() {
         <main className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
           <Suspense fallback={<AdminSkeleton isNavigation={true} />}>
             {activeSection === 'home' && (
-              <div className="mb-8">
+              <div className={`mb-8 transition-opacity duration-500 ${uiVisible ? 'opacity-100' : 'opacity-0'}`}>
                 <SubscriptionBanner />
                 <AdminHomeCards
                   products={products}
@@ -111,6 +140,8 @@ export default function AdminStorePage() {
                   totalContacts={contacts.reduce((sum, region) => sum + (region.contacts?.length || 0), 0)}
                   storeId={storeId}
                   totalOrders={storeMeta?.totalOrders || 0}
+                  promoCaption={storeMeta?.promoCaption}
+                  uiVisible={uiVisible}
                 />
               </div>
             )}
@@ -166,9 +197,10 @@ export default function AdminStorePage() {
         </div>
       )}
 
-      {activeSection !== 'preview' && <FloatingActionButton />}
-
-      <MobileNav activeSection={activeSection} setActiveSection={setActiveSection} />
+      <div className={`transition-opacity duration-500 ${uiVisible ? 'opacity-100' : 'opacity-0'}`}>
+        {activeSection !== 'preview' && <FloatingActionButton />}
+        <MobileNav activeSection={activeSection} setActiveSection={setActiveSection} />
+      </div>
     </div>
   );
 }
