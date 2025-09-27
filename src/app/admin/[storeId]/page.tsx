@@ -106,6 +106,8 @@ export default function AdminStorePage() {
     fetchData();
   }
 
+  const totalRevenue = products.reduce((sum, p) => sum + (Number(p.currentPrice) || 0), 0);
+
   if (loading || showOnboarding === null) return <AdminSkeleton screen="home" />;
 
   // Check for the transition state FIRST
@@ -153,6 +155,7 @@ export default function AdminStorePage() {
                   promoCaption={storeMeta?.promoCaption}
                   uiVisible={uiVisible}
                   storeName={storeMeta?.name}
+                  totalRevenue={totalRevenue}
                 />
               </div>
             )}

@@ -1,5 +1,5 @@
 'use client';
-import { Tag, Star, AlertTriangle, Eye, Layers, CheckCircle, Link2, Gift, XCircle, RefreshCw, Archive, Handshake, ShoppingCart, Share2 } from 'lucide-react';
+import { Tag, Star, AlertTriangle, Eye, Layers, CheckCircle, Gift, XCircle, RefreshCw, Archive, Handshake, ShoppingCart, Share2, BadgeDollarSign } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
@@ -16,6 +16,7 @@ import ReferralsModal from './modals/ReferralsModal';
 import SoldOutModal from './modals/SoldOutModal';
 import ContactsModal from './modals/ContactsModal'; // Updated import
 import OrdersModal from './modals/OrdersModal';
+import RevenueModal from './modals/RevenueModal';
 import { Product } from '../../types/product';
 import { WholesaleData } from '../../lib/db';
 
@@ -45,9 +46,19 @@ interface AdminHomeCardsProps {
   promoCaption?: string;
   uiVisible: boolean;
   storeName?: string;
+  totalRevenue: number;
 }
 
 const cardData = [
+    {
+      label: 'Revenue',
+      valueKey: 'totalRevenue',
+      icon: BadgeDollarSign,
+      gradient: 'from-green-500 to-emerald-600',
+      text: 'text-white',
+      component: RevenueModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(22,163,74,0.5)]',
+    },
     {
       label: 'Orders',
       valueKey: 'totalOrders',
@@ -58,85 +69,13 @@ const cardData = [
       glowClass: 'shadow-[0_0_25px_-5px_rgba(20,184,166,0.5)]',
     },
     {
-      label: 'Contacts',
-      valueKey: 'totalContacts',
-      icon: Handshake,
-      gradient: 'from-purple-400 via-indigo-500 to-blue-600',
-      text: 'text-white',
-      component: ContactsModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(168,85,247,0.5)]',
-    },
-    {
-      label: 'Products',
-      valueKey: 'totalProducts',
-      icon: Archive,
-      gradient: 'from-blue-400 via-blue-500 to-blue-600',
-      text: 'text-white',
-      component: TotalProductsModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(59,130,246,0.5)]',
-    },
-    {
-      label: 'Categories',
-      valueKey: 'totalCategories',
-      icon: Tag,
-      gradient: 'from-pink-400 via-pink-500 to-pink-600',
-      text: 'text-white',
-      component: CategoriesModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(236,72,153,0.5)]',
-    },
-    {
-      label: 'Popular',
-      valueKey: 'popularProducts',
-      icon: Star,
-      gradient: 'from-yellow-400 via-yellow-500 to-yellow-600',
-      text: 'text-white',
-      component: PopularProductsModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(234,179,8,0.5)]',
-    },
-    {
-      label: 'Limited',
-      valueKey: 'limitedStock',
-      icon: AlertTriangle,
-      gradient: 'from-orange-400 via-orange-500 to-orange-600',
-      text: 'text-white',
-      component: LimitedStockModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(249,115,22,0.5)]',
-    },
-    {
-      label: 'Sold Out',
-      valueKey: 'soldOut',
-      icon: XCircle,
-      gradient: 'from-red-400 via-red-500 to-red-600',
-      text: 'text-white',
-      component: SoldOutModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(239,68,68,0.5)]',
-    },
-    {
       label: 'Views',
       valueKey: 'totalViews',
       icon: Eye,
-      gradient: 'from-green-400 via-green-500 to-green-600',
+      gradient: 'from-blue-400 via-blue-500 to-blue-600',
       text: 'text-white',
       component: TotalViewsModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(34,197,94,0.5)]',
-    },
-    {
-      label: 'Debtors',
-      valueKey: 'debtors',
-      icon: Layers,
-      gradient: 'from-fuchsia-400 via-fuchsia-500 to-fuchsia-600',
-      text: 'text-white',
-      component: DebtorsModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(217,70,239,0.5)]',
-    },
-    {
-      label: 'Subscription',
-      valueKey: 'subscriptionStatus',
-      icon: CheckCircle,
-      gradient: 'from-cyan-100 to-cyan-300',
-      text: 'text-gray-800',
-      component: SubscriptionModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(22,163,74,0.5)]',
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(59,130,246,0.5)]',
     },
     {
       label: 'Share',
@@ -156,8 +95,89 @@ const cardData = [
       component: ReferralsModal,
       glowClass: 'shadow-[0_0_25px_-5px_rgba(244,63,94,0.5)]',
     },
-    
+    {
+      label: 'Sold Out',
+      valueKey: 'soldOut',
+      icon: XCircle,
+      gradient: 'from-red-400 via-red-500 to-red-600',
+      text: 'text-white',
+      component: SoldOutModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(239,68,68,0.5)]',
+    },
+    {
+      label: 'Limited',
+      valueKey: 'limitedStock',
+      icon: AlertTriangle,
+      gradient: 'from-orange-400 via-orange-500 to-orange-600',
+      text: 'text-white',
+      component: LimitedStockModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(249,115,22,0.5)]',
+    },
+    {
+      label: 'Products',
+      valueKey: 'totalProducts',
+      icon: Archive,
+      gradient: 'from-blue-400 via-blue-500 to-blue-600',
+      text: 'text-white',
+      component: TotalProductsModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(59,130,246,0.5)]',
+    },
+    {
+      label: 'Popular',
+      valueKey: 'popularProducts',
+      icon: Star,
+      gradient: 'from-yellow-400 via-yellow-500 to-yellow-600',
+      text: 'text-white',
+      component: PopularProductsModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(234,179,8,0.5)]',
+    },
+    {
+      label: 'Categories',
+      valueKey: 'totalCategories',
+      icon: Tag,
+      gradient: 'from-pink-400 via-pink-500 to-pink-600',
+      text: 'text-white',
+      component: CategoriesModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(236,72,153,0.5)]',
+    },
+    {
+      label: 'Contacts',
+      valueKey: 'totalContacts',
+      icon: Handshake,
+      gradient: 'from-purple-400 via-indigo-500 to-blue-600',
+      text: 'text-white',
+      component: ContactsModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(168,85,247,0.5)]',
+    },
+    {
+      label: 'Debtors',
+      valueKey: 'debtors',
+      icon: Layers,
+      gradient: 'from-fuchsia-400 via-fuchsia-500 to-fuchsia-600',
+      text: 'text-white',
+      component: DebtorsModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(217,70,239,0.5)]',
+    },
+    {
+      label: 'Subscription',
+      valueKey: 'subscriptionStatus',
+      icon: CheckCircle,
+      gradient: 'from-cyan-100 to-cyan-300',
+      text: 'text-gray-800',
+      component: SubscriptionModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(22,163,74,0.5)]',
+    },
   ];
+
+const formatCurrencyForCard = (amount: number) => {
+    if (amount >= 1000000) {
+      return `${(amount / 1000000).toFixed(1)}M`;
+    }
+    if (amount >= 1000) {
+      return `${(amount / 1000).toFixed(0)}K`;
+    }
+    return amount.toString();
+  };
 
 export default function AdminHomeCards(props: AdminHomeCardsProps) {
   const [openModal, setOpenModal] = useState<number | null>(null);
@@ -275,15 +295,17 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
                       <div className="text-lg sm:text-xl md:text-2xl font-bold drop-shadow">
                         {card.label === 'Share'
                           ? 'Caption'
-                          : card.label === 'Contacts'
-                            ? props.totalContacts
-                            : card.label === 'Sold Out'
-                              ? props.soldOut
-                              : (() => {
-                                  const value = props[card.valueKey as keyof AdminHomeCardsProps];
-                                  if (typeof value === 'number' || typeof value === 'string') return value;
-                                  return '';
-                                })()}
+                          : card.label === 'Revenue'
+                            ? formatCurrencyForCard(props.totalRevenue)
+                            : card.label === 'Contacts'
+                              ? props.totalContacts
+                              : card.label === 'Sold Out'
+                                ? props.soldOut
+                                : (() => {
+                                    const value = props[card.valueKey as keyof AdminHomeCardsProps];
+                                    if (typeof value === 'number' || typeof value === 'string') return value;
+                                    return '';
+                                  })()}
                       </div>
                       <div className="text-xs sm:text-sm font-medium opacity-90 text-center px-1 leading-tight">
                         {card.label}
