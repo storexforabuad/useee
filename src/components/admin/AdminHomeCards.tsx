@@ -51,22 +51,13 @@ interface AdminHomeCardsProps {
 
 const cardData = [
     {
-      label: 'Revenue',
-      valueKey: 'totalRevenue',
-      icon: BadgeDollarSign,
-      gradient: 'from-green-500 to-emerald-600',
+      label: 'Share',
+      valueKey: 'storeLink',
+      icon: Share2,
+      gradient: 'from-purple-500 to-indigo-600',
       text: 'text-white',
-      component: RevenueModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(22,163,74,0.5)]',
-    },
-    {
-      label: 'Orders',
-      valueKey: 'totalOrders',
-      icon: ShoppingCart,
-      gradient: 'from-teal-400 via-cyan-500 to-sky-600',
-      text: 'text-white',
-      component: OrdersModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(20,184,166,0.5)]',
+      component: StoreLinkModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(168,85,247,0.5)]',
     },
     {
       label: 'Views',
@@ -78,49 +69,22 @@ const cardData = [
       glowClass: 'shadow-[0_0_25px_-5px_rgba(59,130,246,0.5)]',
     },
     {
-      label: 'Share',
-      valueKey: 'storeLink',
-      icon: Share2,
-      gradient: 'from-gray-200 to-gray-400',
-      text: 'text-gray-800',
-      component: StoreLinkModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(156,163,175,0.5)]',
-    },
-    {
-      label: 'Referrals',
-      valueKey: 'referrals',
-      icon: Gift,
-      gradient: 'from-orange-400 via-red-400 to-pink-500',
+      label: 'Categories',
+      valueKey: 'totalCategories',
+      icon: Tag,
+      gradient: 'from-teal-400 via-cyan-500 to-sky-600',
       text: 'text-white',
-      component: ReferralsModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(244,63,94,0.5)]',
-    },
-    {
-      label: 'Sold Out',
-      valueKey: 'soldOut',
-      icon: XCircle,
-      gradient: 'from-red-400 via-red-500 to-red-600',
-      text: 'text-white',
-      component: SoldOutModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(239,68,68,0.5)]',
-    },
-    {
-      label: 'Limited',
-      valueKey: 'limitedStock',
-      icon: AlertTriangle,
-      gradient: 'from-orange-400 via-orange-500 to-orange-600',
-      text: 'text-white',
-      component: LimitedStockModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(249,115,22,0.5)]',
+      component: CategoriesModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(20,184,166,0.5)]',
     },
     {
       label: 'Products',
       valueKey: 'totalProducts',
       icon: Archive,
-      gradient: 'from-blue-400 via-blue-500 to-blue-600',
+      gradient: 'from-pink-400 via-pink-500 to-pink-600',
       text: 'text-white',
       component: TotalProductsModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(59,130,246,0.5)]',
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(236,72,153,0.5)]',
     },
     {
       label: 'Popular',
@@ -132,31 +96,40 @@ const cardData = [
       glowClass: 'shadow-[0_0_25px_-5px_rgba(234,179,8,0.5)]',
     },
     {
-      label: 'Categories',
-      valueKey: 'totalCategories',
-      icon: Tag,
-      gradient: 'from-pink-400 via-pink-500 to-pink-600',
+      label: 'Limited',
+      valueKey: 'limitedStock',
+      icon: AlertTriangle,
+      gradient: 'from-orange-400 via-orange-500 to-orange-600',
       text: 'text-white',
-      component: CategoriesModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(236,72,153,0.5)]',
+      component: LimitedStockModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(249,115,22,0.5)]',
     },
     {
-      label: 'Contacts',
-      valueKey: 'totalContacts',
-      icon: Handshake,
-      gradient: 'from-purple-400 via-indigo-500 to-blue-600',
+      label: 'Sold Out',
+      valueKey: 'soldOut',
+      icon: XCircle,
+      gradient: 'from-red-400 via-red-500 to-red-600',
       text: 'text-white',
-      component: ContactsModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(168,85,247,0.5)]',
+      component: SoldOutModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(239,68,68,0.5)]',
     },
     {
-      label: 'Debtors',
-      valueKey: 'debtors',
-      icon: Layers,
-      gradient: 'from-fuchsia-400 via-fuchsia-500 to-fuchsia-600',
+      label: 'Orders',
+      valueKey: 'totalOrders',
+      icon: ShoppingCart,
+      gradient: 'from-blue-400 via-blue-500 to-blue-600',
       text: 'text-white',
-      component: DebtorsModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(217,70,239,0.5)]',
+      component: OrdersModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(59,130,246,0.5)]',
+    },
+    {
+      label: 'Revenue',
+      valueKey: 'totalRevenue',
+      icon: BadgeDollarSign,
+      gradient: 'from-green-500 to-emerald-600',
+      text: 'text-white',
+      component: RevenueModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(22,163,74,0.5)]',
     },
     {
       label: 'Subscription',
@@ -166,6 +139,15 @@ const cardData = [
       text: 'text-gray-800',
       component: SubscriptionModal,
       glowClass: 'shadow-[0_0_25px_-5px_rgba(22,163,74,0.5)]',
+    },
+    {
+      label: 'Referrals',
+      valueKey: 'referrals',
+      icon: Gift,
+      gradient: 'from-orange-400 via-red-400 to-pink-500',
+      text: 'text-white',
+      component: ReferralsModal,
+      glowClass: 'shadow-[0_0_25px_-5px_rgba(244,63,94,0.5)]',
     },
   ];
 
@@ -294,7 +276,7 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
                     <div className="flex flex-col items-center min-w-0 z-10 w-full">
                       <div className="text-lg sm:text-xl md:text-2xl font-bold drop-shadow">
                         {card.label === 'Share'
-                          ? 'Caption'
+                          ? 'Share'
                           : card.label === 'Revenue'
                             ? formatCurrencyForCard(props.totalRevenue)
                             : card.label === 'Contacts'
@@ -308,7 +290,7 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
                                   })()}
                       </div>
                       <div className="text-xs sm:text-sm font-medium opacity-90 text-center px-1 leading-tight">
-                        {card.label}
+                        {card.label === 'Share' ? 'Caption' : card.label}
                       </div>
                     </div>
                   </button>

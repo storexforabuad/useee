@@ -254,6 +254,16 @@ export async function getProducts(storeId: string): Promise<Product[]> {
       return {
         ...data,
         id: doc.id,
+        name: data.name || '',
+        description: data.description || '',
+        currentPrice: data.currentPrice || 0,
+        slashedPrice: data.slashedPrice || 0,
+        inStock: typeof data.inStock === 'number' ? data.inStock : 1,
+        soldOut: data.soldOut || false,
+        limitedStock: data.limitedStock || false,
+        category: data.category || '',
+        image: data.image || '',
+        views: data.views || 0,
       } as Product;
     });
   } catch (error) {

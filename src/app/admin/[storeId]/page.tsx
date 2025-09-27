@@ -106,7 +106,7 @@ export default function AdminStorePage() {
     fetchData();
   }
 
-  const totalRevenue = products.reduce((sum, p) => sum + (Number(p.currentPrice) || 0), 0);
+  const totalRevenue = products.reduce((sum, p) => sum + (Number(p.price) || 0), 0);
 
   if (loading || showOnboarding === null) return <AdminSkeleton screen="home" />;
 
