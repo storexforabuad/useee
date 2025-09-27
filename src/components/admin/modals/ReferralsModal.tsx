@@ -29,6 +29,7 @@ const ReferralsModal: React.FC<ReferralsModalProps> = ({ storeId, handleClose, o
       const response = await fetch(`/api/stores/${storeId}/referrals`);
       if (!response.ok) throw new Error('Failed to fetch referrals');
       const data: Referral[] = await response.json();
+      console.log('Fetched referrals data:', data);
       setSubmittedReferrals(data.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');

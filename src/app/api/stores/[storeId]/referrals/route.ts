@@ -44,7 +44,20 @@ export async function GET(req: NextRequest, { params }: { params: { storeId: str
     const referralsCollectionRef = collection(db, 'stores', storeId, 'referrals');
     const querySnapshot = await getDocs(referralsCollectionRef);
 
-    const referrals = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const referrals = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      // Safely handle the timestamp, providing a default if it's missing
+      const createdAt = (data.createdAt && data.createdAt.seconds !== undefined)
+        ? { seconds: data.createdAt.seconds, nanoseconds: data.createdAt.nanoseconds }
+        : { seconds: 0, nanoseconds: 0 };
+
+      return {
+        id: doc.id,
+        businessName: data.businessName,
+        businessNumber: data.businessNumber,
+        createdAt: createdAt,
+      };
+    });
 
     return NextResponse.json(referrals, { status: 200 });
   } catch (error) {

@@ -20,18 +20,28 @@ export async function GET(req: NextRequest) {
     const referralsByStore: { [key: string]: Referral[] } = {};
 
     querySnapshot.docs.forEach(doc => {
-      const referral = doc.data() as Omit<Referral, 'id' | 'storeId'>;
+      const referralData = doc.data();
       const storeId = doc.ref.parent.parent?.id;
 
       if (storeId) {
         if (!referralsByStore[storeId]) {
           referralsByStore[storeId] = [];
         }
-        referralsByStore[storeId].push({
+
+        // Safely handle the timestamp
+        const createdAt = (referralData.createdAt && referralData.createdAt.seconds !== undefined)
+          ? { seconds: referralData.createdAt.seconds, nanoseconds: referralData.createdAt.nanoseconds }
+          : { seconds: 0, nanoseconds: 0 };
+
+        const referral: Referral = {
           id: doc.id,
           storeId: storeId,
-          ...referral
-        });
+          businessName: referralData.businessName,
+          businessNumber: referralData.businessNumber,
+          createdAt: createdAt,
+        };
+        
+        referralsByStore[storeId].push(referral);
       }
     });
 
@@ -39,6 +49,15 @@ export async function GET(req: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching all referrals:', error);
+    if (error instanceof Error && error.message.includes('requires an index')) {
+        return NextResponse.json(
+            { 
+                error: 'Firestore index required', 
+                message: 'A Firestore index is required to complete this query. Please create the index in your Firebase console.' 
+            }, 
+            { status: 500 }
+        );
+    }
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
