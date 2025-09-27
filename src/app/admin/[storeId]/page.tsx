@@ -20,12 +20,34 @@ const ManageProductsSection = dynamic(() => import('../../../components/ManagePr
 const CategoryManagementSection = dynamic(() => import('../../../components/CategoryManagementSection'));
 const OnboardingFlow = dynamic(() => import('../../../components/admin/onboarding/OnboardingFlow'));
 
+interface Referral {
+  id: string;
+  businessName: string;
+  businessNumber: string;
+}
+
+async function getReferrals(storeId: string): Promise<Referral[]> {
+    if (!storeId) return [];
+    try {
+      const response = await fetch(`/api/stores/${storeId}/referrals`);
+      if (!response.ok) {
+        console.error("Failed to fetch referrals");
+        return [];
+      }
+      return response.json();
+    } catch (error) {
+      console.error("Error in getReferrals:", error);
+      return [];
+    }
+}
+
 export default function AdminStorePage() {
   const params = useParams();
   const storeId = typeof params?.storeId === 'string' ? params.storeId : Array.isArray(params?.storeId) ? params.storeId[0] : '';
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [contacts, setContacts] = useState<WholesaleData[]>([]);
+  const [referrals, setReferrals] = useState<Referral[]>([]);
   const [storeMeta, setStoreMeta] = useState<StoreMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('home');
@@ -54,16 +76,18 @@ export default function AdminStorePage() {
   async function fetchData(showRefresh = false) {
     if (showRefresh) setIsRefreshing(true);
     try {
-      const [fetchedProducts, fetchedCategories, fetchedContacts, fetchedStoreMeta] = await Promise.all([
+      const [fetchedProducts, fetchedCategories, fetchedContacts, fetchedStoreMeta, fetchedReferrals] = await Promise.all([
         getProducts(storeId),
         getCategories(storeId),
         getContacts(storeId),
-        getStoreMeta(storeId)
+        getStoreMeta(storeId),
+        getReferrals(storeId)
       ]);
       setProducts(fetchedProducts);
       setCategories(fetchedCategories);
       setContacts(fetchedContacts);
       setStoreMeta(fetchedStoreMeta as StoreMeta);
+      setReferrals(fetchedReferrals);
 
       if (fetchedStoreMeta?.hasCompletedOnboarding) {
         setShowOnboarding(false);
@@ -147,7 +171,8 @@ export default function AdminStorePage() {
                   totalViews={products.reduce((sum, p) => sum + (p.views || 0), 0)}
                   debtors={0}
                   subscriptionStatus={"Active"}
-                  referrals={0}
+                  referrals={referrals.length}
+                  onReferralAdded={() => fetchData()}
                   soldOut={products.filter(p => (typeof p.inStock === 'number' && p.inStock === 0) || p.soldOut === true).length}
                   totalContacts={contacts.reduce((sum, region) => sum + (region.contacts?.length || 0), 0)}
                   storeId={storeId}

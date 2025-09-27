@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { getStores, StoreMeta, getProducts, getPopularProducts } from '../../lib/db';
@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { ShoppingBag, ClipboardListIcon, PlusCircle, Save } from 'lucide-react';
 import CreateStoreModal from '../../components/admin/modals/CreateStoreModal';
 import { motion } from 'framer-motion';
+import DevTeamReferrals from '../../components/devteam/DevTeamReferrals';
 
 interface StoreStats {
   id: string;
@@ -182,6 +183,11 @@ export default function DevteamPage() {
                 </div>
                 </motion.section>
             )}
+
+            <section className="mt-8">
+              <DevTeamReferrals />
+            </section>
+
         </div>
 
         <nav className="fixed bottom-0 left-0 w-full z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 shadow-lg flex sm:hidden justify-around py-2">

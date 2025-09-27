@@ -34,6 +34,7 @@ interface AdminHomeCardsProps {
   setActiveSection: (section: string) => void;
   storeLink: string;
   referrals: number;
+  onReferralAdded?: () => void;
   setIsModalOpen?: (open: boolean) => void;
   soldOut: number;
   setManageTab: (tab: 'all' | 'popular' | 'limited' | 'soldout') => void;
@@ -304,16 +305,9 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
           onClick={handleCloseModal}
         >
           <div
-            className="relative w-full max-w-sm sm:max-w-md md:max-w-lg mx-2 sm:mx-auto bg-white rounded-2xl border border-gray-200 shadow-2xl flex flex-col items-center animate-fadeIn overflow-y-auto"
+            className="relative w-full max-w-sm sm:max-w-md md:max-w-lg mx-2 sm:mx-auto bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-2xl flex flex-col items-center animate-fadeIn"
             onClick={e => e.stopPropagation()}
           >
-            <button
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 bg-transparent p-2 rounded-full focus:outline-none transition-colors duration-200"
-              onClick={handleCloseModal}
-              aria-label="Close"
-            >
-              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
             {(() => {
               const card = cardData[openModal];
               const ModalComponent = card.component;
