@@ -1,70 +1,50 @@
 'use client';
-
+import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { ArrowDown } from 'lucide-react';
+import React from 'react';
 
 interface FeatureScreenProps {
   onNext: () => void;
-  onBack: () => void;
+  icon?: React.ReactNode;
   title: string;
   description: string;
-  icon: React.ReactNode;
-  showHint?: boolean;
-  hintPosition?: 'bottom' | 'bottom-right';
-  isLastStep?: boolean;
+  buttonText?: string;
 }
 
-export default function FeatureScreen({ onNext, onBack, title, description, icon, showHint, hintPosition, isLastStep }: FeatureScreenProps) {
+export default function FeatureScreen({ onNext, icon, title, description, buttonText = "Next" }: FeatureScreenProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 300 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -300 }}
-      transition={{ duration: 0.4, ease: "easeInOut" }}
-      className="w-full h-full flex flex-col items-center justify-center text-center p-8 relative"
-    >
-      <div className="mb-8 flex items-center justify-center text-primary">
+    <div className="w-full h-full flex flex-col items-center justify-center text-center p-4 sm:p-6">
+      
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8, y: 50 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="flex items-center justify-center mb-6 sm:mb-8"
+      >
         {icon}
-      </div>
-      <h2 className="text-2xl md:text-3xl font-bold text-text-primary mb-3">{title}</h2>
-      <p className="text-md md:text-lg text-text-secondary mb-10 max-w-sm">{description}</p>
+      </motion.div>
 
-      {showHint && hintPosition === 'bottom' && (
-        <motion.div 
-          className="absolute bottom-24 left-1/2 -translate-x-1/2"
-          animate={{ y: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-        >
-          <ArrowDown className="w-8 h-8 text-primary" />
-        </motion.div>
-      )}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+      >
+        <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white tracking-tight">
+          {title}
+        </h2>
+        <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-sm mx-auto" dangerouslySetInnerHTML={{ __html: description }} />
+      </motion.div>
 
-      {showHint && hintPosition === 'bottom-right' && (
-        <motion.div 
-          className="absolute bottom-28 right-12 transform -translate-x-1/2"
-          animate={{ y: [0, 10, 0], x: [0, 5, 0] }}
-          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-        >
-          <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-            <div className="w-6 h-6 bg-primary rounded-full" />
-          </div>
-        </motion.div>
-      )}
-
-      <div className="absolute bottom-10 flex gap-4">
-        <button onClick={onBack} className="px-6 py-3 bg-muted text-muted-foreground rounded-full font-semibold hover:bg-muted/80 transition-all">
-          Back
-        </button>
-        {isLastStep ? (
-           <button onClick={onNext} className="px-8 py-3 bg-green-500 text-white rounded-full font-semibold shadow-lg hover:bg-green-600 transition-all">
-            Start Selling
-          </button>
-        ) : (
-          <button onClick={onNext} className="px-8 py-3 bg-primary text-primary-foreground rounded-full font-semibold shadow-lg hover:bg-primary/90 transition-all">
-            Next
-          </button>
-        )}
-      </div>
-    </motion.div>
+      <motion.button
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.8, ease: "easeOut" }}
+        onClick={onNext}
+        className="mt-8 sm:mt-10 flex items-center justify-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-full shadow-lg hover:bg-indigo-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+      >
+        {buttonText}
+        <ArrowRight className="ml-2 h-5 w-5" />
+      </motion.button>
+    </div>
   );
 }

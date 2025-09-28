@@ -1,99 +1,110 @@
 'use client';
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { X } from 'lucide-react';
 import WelcomeScreen from './screens/WelcomeScreen';
 import FeatureScreen from './screens/FeatureScreen';
-import { Tag, Plus, Share2, Eye } from 'lucide-react';
-import MiniShareCard from './MiniShareCard';
+import { Lightbulb } from 'lucide-react';
+import AnimatedDashboardIcons from './AnimatedDashboardIcons';
 
 interface OnboardingFlowProps {
-  onComplete: () => void;
   storeName: string;
+  onComplete: () => void;
 }
 
-export default function OnboardingFlow({ onComplete, storeName }: OnboardingFlowProps) {
+export default function OnboardingFlow({ storeName, onComplete }: OnboardingFlowProps) {
   const [step, setStep] = useState(0);
-
-  const handleNext = () => setStep(prev => prev + 1);
-  const handleBack = () => setStep(prev => prev - 1);
 
   const steps = [
     {
       component: WelcomeScreen,
-      props: { onNext: handleNext, storeName },
-    },
-    {
-      component: FeatureScreen,
       props: { 
-        onNext: handleNext, 
-        onBack: handleBack, 
-        title: 'Get Organized, Sell More 🗂️', 
-        description: "Use Categories to group your products (e.g., 'T-Shirts', 'Accessories'). An organized store is an easy-to-shop store.",
-        icon: <Tag className="w-16 h-16" />,
+        storeName: storeName,
+        showConfetti: true,
       },
     },
     {
       component: FeatureScreen,
-      props: { 
-        onNext: handleNext, 
-        onBack: handleBack, 
-        title: 'Upload Your Products 📦', 
-        description: "Tap the '+' button anytime to add products. Pro tip: Clear photos and good prices are the keys to catching a customer\'s eye.",
-        icon: (
-          <div className="w-32 h-32 bg-black rounded-full flex items-center justify-center">
-            <Plus className="w-16 h-16 text-white" />
-          </div>
-        ),
-        showHint: true,
-        hintPosition: 'bottom-right',
+      props: {
+        icon: <AnimatedDashboardIcons />,
+        title: 'Your Toolkit for Success',
+        description: 'Your dashboard is packed with powerful tools. From tracking views to managing revenue, everything you need to grow your business is now at your fingertips.',
       },
     },
     {
       component: FeatureScreen,
-      props: { 
-        onNext: handleNext, 
-        onBack: handleBack, 
-        title: 'Spread the Word! 📣', 
-        description: "No customers? No sales. Use the 'Share Store' card to post your link on WhatsApp, Instagram, and Facebook. Go get your first visitor!",
-        icon: <MiniShareCard />
-      },
-    },
-    {
-      component: FeatureScreen,
-      props: { 
-        onNext: onComplete, // The final step simply calls onComplete
-        onBack: handleBack, 
-        title: 'Watch Your Store Come to Life 👀', 
-        description: 'The \'Views\' card shows your traffic. The more you share, the more this number will climb. More views lead to more orders. Now, go make it happen!',
-        icon: <Eye className="w-16 h-16" />,
-        isLastStep: true,
+      props: {
+        icon: <Lightbulb className="w-24 h-24 sm:w-32 sm:h-32 text-yellow-400 drop-shadow-lg" />,
+        title: 'Ready for Liftoff!',
+        description: "You're all set. Your first mission: visit the <strong>'Tips'</strong> card on your dashboard. It's your personal guide to delighting customers and growing your empire.",
+        buttonText: 'Enter Command Center',
       },
     },
   ];
 
-  const CurrentScreen = steps[step].component;
+  const CurrentStep = steps[step].component;
+
+  const handleNext = () => {
+    if (step < steps.length - 1) {
+      setStep(step + 1);
+    } else {
+      onComplete();
+    }
+  };
+
+  const variants = {
+    enter: {
+      opacity: 0,
+      y: 30,
+      scale: 0.98,
+    },
+    center: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+    },
+    exit: {
+      opacity: 0,
+      y: -30,
+      scale: 0.98,
+    },
+  };
 
   return (
-    <motion.div 
-        className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0, transition: { duration: 0.5 } }}
-    >
-        <AnimatePresence mode="wait">
-            <CurrentScreen key={step} {...steps[step].props} />
-        </AnimatePresence>
-        <div className="absolute bottom-4 flex gap-2 p-4">
-            {steps.map((_, i) => (
-                <motion.div 
-                    key={i} 
-                    className={`w-2 h-2 rounded-full ${i === step ? 'bg-primary' : 'bg-muted'}`}
-                    animate={{ scale: i === step ? 1.5 : 1 }}
-                    transition={{ duration: 0.3 }}
-                />
-            ))}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md">
+      <div className="relative w-full h-full sm:max-w-md sm:max-h-[90vh] sm:rounded-2xl bg-slate-50 dark:bg-slate-900 shadow-2xl flex flex-col overflow-hidden">
+        <div className="absolute top-3 right-3 z-10">
+          <button onClick={onComplete} className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+            <X size={20} />
+          </button>
         </div>
-    </motion.div>
+
+        <div className="flex-grow flex flex-col justify-center items-center">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="w-full h-full"
+            >
+              <CurrentStep {...steps[step].props} onNext={handleNext} />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <div className="p-4 flex justify-center space-x-2">
+          {steps.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setStep(i)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${i === step ? 'bg-indigo-600 scale-125' : 'bg-slate-300 dark:bg-slate-600 hover:bg-slate-400'}`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
