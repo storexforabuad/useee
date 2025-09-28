@@ -23,7 +23,7 @@ export default function FeatureScreen({ onNext, onBack, title, description, icon
       transition={{ duration: 0.4, ease: "easeInOut" }}
       className="w-full h-full flex flex-col items-center justify-center text-center p-8 relative"
     >
-      <div className="w-24 h-24 mb-8 flex items-center justify-center text-primary">
+      <div className="mb-8 flex items-center justify-center text-primary">
         {icon}
       </div>
       <h2 className="text-2xl md:text-3xl font-bold text-text-primary mb-3">{title}</h2>

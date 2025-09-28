@@ -59,7 +59,7 @@ export default function Navbar({ storeName }: NavbarProps) {
                   <ArrowLeft className="h-6 w-6 text-text-primary" />
                 </button>
                 <span className="text-xl font-semibold text-text-primary flex items-center gap-2">
-                  {storeName || 'Alaniq INT.'}
+                  {storeName || 'Store'}
                 </span>
               </>
             ) : storeName ? (
@@ -73,7 +73,7 @@ export default function Navbar({ storeName }: NavbarProps) {
               <Link href="/" className="flex items-center gap-2">
                 <ShoppingBag className="h-8 w-8 text-text-primary" />
                 <span className="text-xl font-semibold text-text-primary flex items-center gap-2">
-                  {storeName || 'Alaniq INT.'}
+                  {storeName || 'Store'}
                 </span>
               </Link>
             )}

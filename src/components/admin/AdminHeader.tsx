@@ -12,7 +12,7 @@ const AdminHeader = ({ onLogout, isRefreshing }: AdminHeaderProps) => {
     <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-950/70 backdrop-blur-lg shadow-sm dark:shadow-md px-4 sm:px-6 lg:px-8 py-4 border-b border-gray-200 dark:border-gray-800 transition-all duration-300">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">Control Center</h1>
           {isRefreshing && <SpinnerCircle className="w-5 h-5 text-blue-500 dark:text-blue-400" />}
         </div>
         <div className="flex items-center gap-2">

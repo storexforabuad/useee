@@ -4,13 +4,13 @@ import { ThemeProvider } from '../../lib/themeContext'
 import ClientProviders from '../../components/ClientProviders'
 
 export const metadata: Metadata = {
-  title: "Alaniq INT. Admin Dashboard",
+  title: "Control Center",
   description: "Manage your store, products, and orders.",
   manifest: "/admin-manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Admin Dashboard",
+    title: "Control Center",
   },
   formatDetection: {
     telephone: false,

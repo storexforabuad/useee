@@ -67,7 +67,7 @@ export default function InstallPrompt() {
           <div className="flex flex-col items-start">
             <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
               <span className="text-xl">📱</span>{' '}
-              {isAdmin ? 'Install Your Store Dashboard' : `Get ${storeName} App`}
+              {isAdmin ? 'Install Control Center ' : `Get ${storeName} App`}
             </h3>
             <p className="mt-2 text-sm text-text-secondary space-y-2 leading-relaxed">
               {isAdmin ? (

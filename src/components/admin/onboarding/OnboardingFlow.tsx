@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import WelcomeScreen from './screens/WelcomeScreen';
 import FeatureScreen from './screens/FeatureScreen';
 import { Tag, Plus, Share2, Eye } from 'lucide-react';
+import MiniShareCard from './MiniShareCard';
 
 interface OnboardingFlowProps {
   onComplete: () => void;
@@ -30,8 +31,6 @@ export default function OnboardingFlow({ onComplete, storeName }: OnboardingFlow
         title: 'Get Organized, Sell More 🗂️', 
         description: "Use Categories to group your products (e.g., 'T-Shirts', 'Accessories'). An organized store is an easy-to-shop store.",
         icon: <Tag className="w-16 h-16" />,
-        showHint: true,
-        hintPosition: 'bottom',
       },
     },
     {
@@ -39,9 +38,13 @@ export default function OnboardingFlow({ onComplete, storeName }: OnboardingFlow
       props: { 
         onNext: handleNext, 
         onBack: handleBack, 
-        title: 'Stock Your Shelves 📦', 
+        title: 'Upload Your Products 📦', 
         description: "Tap the '+' button anytime to add products. Pro tip: Clear photos and good prices are the keys to catching a customer\'s eye.",
-        icon: <Plus className="w-16 h-16" />,
+        icon: (
+          <div className="w-32 h-32 bg-black rounded-full flex items-center justify-center">
+            <Plus className="w-16 h-16 text-white" />
+          </div>
+        ),
         showHint: true,
         hintPosition: 'bottom-right',
       },
@@ -53,7 +56,7 @@ export default function OnboardingFlow({ onComplete, storeName }: OnboardingFlow
         onBack: handleBack, 
         title: 'Spread the Word! 📣', 
         description: "No customers? No sales. Use the 'Share Store' card to post your link on WhatsApp, Instagram, and Facebook. Go get your first visitor!",
-        icon: <Share2 className="w-16 h-16" /> 
+        icon: <MiniShareCard />
       },
     },
     {

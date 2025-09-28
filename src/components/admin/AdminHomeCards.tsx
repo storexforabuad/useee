@@ -1,5 +1,5 @@
 'use client';
-import { Tag, Star, AlertTriangle, Eye, Layers, CheckCircle, Gift, XCircle, RefreshCw, Archive, Handshake, ShoppingCart, Share2, BadgeDollarSign } from 'lucide-react';
+import { Tag, Star, AlertTriangle, Eye, Layers, CheckCircle, Gift, XCircle, RefreshCw, Archive, Handshake, ShoppingCart, Share2, BadgeDollarSign, Lightbulb } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
@@ -17,6 +17,7 @@ import SoldOutModal from './modals/SoldOutModal';
 import ContactsModal from './modals/ContactsModal'; // Updated import
 import OrdersModal from './modals/OrdersModal';
 import RevenueModal from './modals/RevenueModal';
+import TipsModal from './modals/TipsModal';
 import { Product } from '../../types/product';
 import { WholesaleData } from '../../lib/db';
 
@@ -52,7 +53,17 @@ interface AdminHomeCardsProps {
 
 const cardData = [
     {
+        label: 'Tips',
+        subtitle: 'Quick Guide',
+        icon: Lightbulb,
+        gradient: 'from-amber-400 to-yellow-500',
+        text: 'text-white',
+        component: TipsModal,
+        glowClass: 'shadow-[0_0_25px_-5px_rgba(245,158,11,0.5)]',
+    },
+    {
       label: 'Share',
+      subtitle: 'Caption',
       valueKey: 'storeLink',
       icon: Share2,
       gradient: 'from-purple-500 to-indigo-600',
@@ -134,6 +145,7 @@ const cardData = [
     },
     {
       label: 'Subscription',
+      subtitle: 'Subscription',
       valueKey: 'subscriptionStatus',
       icon: CheckCircle,
       gradient: 'from-cyan-100 to-cyan-300',
@@ -262,41 +274,71 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
             `}</style>
             {cardData.map((card, idx) => {
               const Icon = card.icon;
-              return (
-                <motion.div key={card.label} variants={itemVariants}>
-                  <button
-                    className={`dashboard-card relative flex flex-col items-center justify-center rounded-2xl p-2 sm:p-3 md:p-4 shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] focus:outline-none overflow-hidden bg-gradient-to-br ${card.gradient} ${card.text} ${card.glowClass} w-full h-full`}
-                    tabIndex={0}
-                    type="button"
-                    onClick={() => handleOpenModal(idx)}
-                  >
-                    <span className="card-blob" />
-                    <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-white bg-opacity-20 mb-1 sm:mb-2 shadow">
-                      <Icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 drop-shadow" />
-                    </div>
-                    <div className="flex flex-col items-center min-w-0 z-10 w-full">
-                      <div className="text-lg sm:text-xl md:text-2xl font-bold drop-shadow">
-                        {card.label === 'Share'
-                          ? 'Share'
-                          : card.label === 'Revenue'
-                            ? formatCurrencyForCard(props.totalRevenue)
-                            : card.label === 'Contacts'
-                              ? props.totalContacts
-                              : card.label === 'Sold Out'
-                                ? props.soldOut
-                                : (() => {
-                                    const value = props[card.valueKey as keyof AdminHomeCardsProps];
-                                    if (typeof value === 'number' || typeof value === 'string') return value;
-                                    return '';
-                                  })()}
+              const isHorizontal = card.label === 'Share' || card.label === 'Subscription' || card.label === 'Tips';
+
+              if (isHorizontal) {
+                // Horizontal Layout for Share, Subscription, and Tips
+                return (
+                  <motion.div key={card.label} variants={itemVariants}>
+                    <button
+                      className={`dashboard-card relative flex flex-row items-center justify-center rounded-2xl p-3 md:p-4 shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] focus:outline-none overflow-hidden bg-gradient-to-br ${card.gradient} ${card.text} ${card.glowClass} w-full h-full min-h-[7rem]`}
+                      tabIndex={0}
+                      type="button"
+                      onClick={() => handleOpenModal(idx)}
+                    >
+                      <span className="card-blob" />
+                      <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white bg-opacity-20 shadow">
+                        <Icon className="w-5 h-5 sm:w-6 sm:h-6 drop-shadow" />
                       </div>
-                      <div className="text-xs sm:text-sm font-medium opacity-90 text-center px-1 leading-tight">
-                        {card.label === 'Share' ? 'Caption' : card.label}
+                      <div className="flex flex-col items-center ml-3 min-w-0 z-10">
+                        <div className="text-lg sm:text-xl font-bold drop-shadow">
+                          {card.label === 'Subscription'
+                            ? props.subscriptionStatus
+                            : card.label}
+                        </div>
+                        <div className="text-xs sm:text-sm font-medium opacity-90 text-center leading-tight">
+                          {card.subtitle}
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                </motion.div>
-              );
+                    </button>
+                  </motion.div>
+                );
+              } else {
+                // Original Vertical Layout for all other cards
+                return (
+                  <motion.div key={card.label} variants={itemVariants}>
+                    <button
+                      className={`dashboard-card relative flex flex-col items-center justify-center rounded-2xl p-2 sm:p-3 md:p-4 shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] focus:outline-none overflow-hidden bg-gradient-to-br ${card.gradient} ${card.text} ${card.glowClass} w-full h-full min-h-[7rem]`}
+                      tabIndex={0}
+                      type="button"
+                      onClick={() => handleOpenModal(idx)}
+                    >
+                      <span className="card-blob" />
+                      <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-white bg-opacity-20 mb-1 sm:mb-2 shadow">
+                        <Icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 drop-shadow" />
+                      </div>
+                      <div className="flex flex-col items-center min-w-0 z-10 w-full">
+                        <div className="text-lg sm:text-xl md:text-2xl font-bold drop-shadow">
+                          {card.label === 'Revenue'
+                              ? formatCurrencyForCard(props.totalRevenue)
+                              : card.label === 'Contacts'
+                                ? props.totalContacts
+                                : card.label === 'Sold Out'
+                                  ? props.soldOut
+                                  : (() => {
+                                      const value = props[card.valueKey as keyof AdminHomeCardsProps];
+                                      if (typeof value === 'number' || typeof value === 'string') return value;
+                                      return '';
+                                    })()}
+                        </div>
+                        <div className="text-xs sm:text-sm font-medium opacity-90 text-center px-1 leading-tight">
+                          {card.label}
+                        </div>
+                      </div>
+                    </button>
+                  </motion.div>
+                );
+              }
             })}
         </motion.div>
       {openModal !== null && (
