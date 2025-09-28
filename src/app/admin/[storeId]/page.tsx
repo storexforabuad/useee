@@ -15,6 +15,7 @@ import dynamic from 'next/dynamic';
 import PreviewSkeleton from '../../../components/admin/PreviewSkeleton';
 import SubscriptionBanner from '../../../components/admin/SubscriptionBanner';
 import { markOnboardingAsCompleted } from '../../../app/actions/onboardingActions';
+import { useSpotlightContext } from '@/context/SpotlightContext';
 
 const ManageProductsSection = dynamic(() => import('../../../components/ManageProductsSection'));
 const CategoryManagementSection = dynamic(() => import('../../../components/CategoryManagementSection'));
@@ -60,6 +61,8 @@ export default function AdminStorePage() {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
   const [uiVisible, setUiVisible] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const { setIsTipsSpotlightActive } = useSpotlightContext();
+  const [shouldShowSpotlight, setShouldShowSpotlight] = useState(false);
 
   useEffect(() => {
     if (!storeId) return;
@@ -106,19 +109,25 @@ export default function AdminStorePage() {
   }
 
   function handleOnboardingComplete() {
-    // Stop showing the onboarding flow AND start the transition
     setShowOnboarding(false);
     setIsTransitioning(true);
-
-    // Fire-and-forget the database update
+    setShouldShowSpotlight(true); // Signal intent to show spotlight
     markOnboardingAsCompleted(storeId);
 
-    // After a delay, end the transition and show the main UI
     setTimeout(() => {
       setIsTransitioning(false);
       setUiVisible(true);
-    }, 800); // Increased delay for a smoother feel
+    }, 800);
   }
+
+  const handleAnimationComplete = () => {
+    if (shouldShowSpotlight) {
+      setTimeout(() => {
+        setIsTipsSpotlightActive(true);
+      }, 500); // Delay for smoother feel
+      setShouldShowSpotlight(false); // Reset signal to prevent re-triggering
+    }
+  };
 
   async function handleUpdateProduct(id: string, updatedProduct: Partial<Product>) {
     await updateProduct(storeId, id, updatedProduct);
@@ -134,12 +143,10 @@ export default function AdminStorePage() {
 
   if (loading || showOnboarding === null) return <AdminSkeleton screen="home" />;
 
-  // Check for the transition state FIRST
   if (isTransitioning) {
     return <AdminSkeleton screen="home" />;
   }
 
-  // THEN, check if we need to show the onboarding
   if (showOnboarding) {
     return <OnboardingFlow onComplete={handleOnboardingComplete} storeName={storeMeta?.name || ''} />;
   }
@@ -181,6 +188,7 @@ export default function AdminStorePage() {
                   uiVisible={uiVisible}
                   storeName={storeMeta?.name}
                   totalRevenue={totalRevenue}
+                  onAnimationComplete={handleAnimationComplete}
                 />
               </div>
             )}

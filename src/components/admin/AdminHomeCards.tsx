@@ -2,6 +2,7 @@
 import { Tag, Star, AlertTriangle, Eye, Layers, CheckCircle, Gift, XCircle, RefreshCw, Archive, Handshake, ShoppingCart, Share2, BadgeDollarSign, Lightbulb } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useSpotlightContext } from '@/context/SpotlightContext';
 
 // Import the new modal components
 import TotalProductsModal from './modals/TotalProductsModal';
@@ -49,6 +50,7 @@ interface AdminHomeCardsProps {
   uiVisible: boolean;
   storeName?: string;
   totalRevenue: number;
+  onAnimationComplete?: () => void;
 }
 
 const cardData = [
@@ -175,9 +177,10 @@ const formatCurrencyForCard = (amount: number) => {
   };
 
 export default function AdminHomeCards(props: AdminHomeCardsProps) {
+  const { isTipsSpotlightActive, setIsTipsSpotlightActive } = useSpotlightContext();
   const [openModal, setOpenModal] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const { setIsModalOpen, onRefresh, uiVisible } = props;
+  const { setIsModalOpen, onRefresh, uiVisible, onAnimationComplete } = props;
 
   useEffect(() => {
     if (openModal !== null) {
@@ -196,7 +199,10 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
     }
   }, [openModal, setIsModalOpen]);
 
-  const handleOpenModal = (idx: number) => {
+  const handleOpenModal = (idx: number, cardLabel?: string) => {
+    if (cardLabel === 'Tips' && isTipsSpotlightActive) {
+        setIsTipsSpotlightActive(false);
+    }
     setOpenModal(idx);
     if (props.setIsModalOpen) props.setIsModalOpen(true);
   };
@@ -248,6 +254,7 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
             variants={containerVariants}
             initial="hidden"
             animate={uiVisible ? 'visible' : 'hidden'}
+            onAnimationComplete={() => onAnimationComplete?.()}
         >
             <style jsx>{`
               .card-blob {
@@ -275,16 +282,18 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
             {cardData.map((card, idx) => {
               const Icon = card.icon;
               const isHorizontal = card.label === 'Share' || card.label === 'Subscription' || card.label === 'Tips';
+              const isTipsCard = card.label === 'Tips';
+              const spotlightClasses = isTipsSpotlightActive && isTipsCard ? 'relative z-50 pointer-events-auto' : '';
 
               if (isHorizontal) {
                 // Horizontal Layout for Share, Subscription, and Tips
                 return (
-                  <motion.div key={card.label} variants={itemVariants}>
+                  <motion.div key={card.label} variants={itemVariants} className={spotlightClasses}>
                     <button
                       className={`dashboard-card relative flex flex-row items-center justify-center rounded-2xl p-3 md:p-4 shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] focus:outline-none overflow-hidden bg-gradient-to-br ${card.gradient} ${card.text} ${card.glowClass} w-full h-full min-h-[7rem]`}
                       tabIndex={0}
                       type="button"
-                      onClick={() => handleOpenModal(idx)}
+                      onClick={() => handleOpenModal(idx, card.label)}
                     >
                       <span className="card-blob" />
                       <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white bg-opacity-20 shadow">
@@ -311,7 +320,7 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
                       className={`dashboard-card relative flex flex-col items-center justify-center rounded-2xl p-2 sm:p-3 md:p-4 shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] focus:outline-none overflow-hidden bg-gradient-to-br ${card.gradient} ${card.text} ${card.glowClass} w-full h-full min-h-[7rem]`}
                       tabIndex={0}
                       type="button"
-                      onClick={() => handleOpenModal(idx)}
+                      onClick={() => handleOpenModal(idx, card.label)}
                     >
                       <span className="card-blob" />
                       <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-white bg-opacity-20 mb-1 sm:mb-2 shadow">

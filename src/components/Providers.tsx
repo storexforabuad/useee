@@ -1,16 +1,7 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import { SpotlightProvider, useSpotlightContext } from '@/context/SpotlightContext';
 import { AnimatePresence, motion } from 'framer-motion';
-
-const InstallPrompt = dynamic(() => import('../components/InstallPrompt'), {
-  ssr: false
-});
-
-const Toaster = dynamic(() => import('react-hot-toast').then(mod => mod.Toaster), {
-  ssr: false
-});
 
 function SpotlightOverlay() {
   const { isTipsSpotlightActive, setIsTipsSpotlightActive } = useSpotlightContext();
@@ -35,22 +26,10 @@ function SpotlightOverlay() {
   );
 }
 
-export default function ClientProviders({ children }: { children: React.ReactNode }) {
+export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SpotlightProvider>
       {children}
-      <InstallPrompt />
-      <Toaster 
-        position="bottom-center"
-        toastOptions={{
-          className: 'toast',
-          style: {
-            background: 'var(--card-background)',
-            color: 'var(--text-primary)',
-            border: '1px solid var(--border-color)',
-          },
-        }}
-      />
       <SpotlightOverlay />
     </SpotlightProvider>
   );

@@ -13,6 +13,7 @@ import {
   TagIcon as TagIconSolid, 
   EyeIcon as EyeIconSolid 
 } from '@heroicons/react/24/solid';
+import { useSpotlightContext } from '@/context/SpotlightContext';
 
 interface MobileNavProps {
   activeSection: string;
@@ -29,9 +30,11 @@ const navItems = [
 ];
 
 const MobileNav = ({ activeSection, setActiveSection, isModalOpen }: MobileNavProps) => {
+  const { isTipsSpotlightActive } = useSpotlightContext();
+
   return (
     <nav
-      className={`fixed bottom-0 left-0 right-0 z-50 md:hidden transition-all duration-300 ${isModalOpen ? 'opacity-0 transform-gpu translate-y-4 pointer-events-none' : 'opacity-100'}`}
+      className={`fixed bottom-0 left-0 right-0 z-50 md:hidden transition-all duration-300 ${isModalOpen && !isTipsSpotlightActive ? 'opacity-0 transform-gpu translate-y-4 pointer-events-none' : 'opacity-100'} ${isTipsSpotlightActive ? 'z-50' : ''}`}
       style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0))' }}
     >
       <div className="relative w-full max-w-md mx-auto h-16">
