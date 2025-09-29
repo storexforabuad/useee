@@ -21,6 +21,7 @@ import RevenueModal from './modals/RevenueModal';
 import TipsModal from './modals/TipsModal';
 import { Product } from '../../types/product';
 import { WholesaleData } from '../../lib/db';
+import SpotlightTooltip from '../shared/SpotlightTooltip';
 
 interface AdminHomeCardsProps {
   totalProducts: number;
@@ -205,7 +206,6 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
   const handleOpenModal = (idx: number, cardLabel?: string) => {
     if (cardLabel === 'Tips') {
         setIsTipsModalOpen(true);
-        setSpotlightStep('inactive');
     } else {
         setOpenModal(idx);
     }
@@ -219,7 +219,9 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
   
   const handleCloseTipsModal = () => {
     setIsTipsModalOpen(false);
-    setSpotlightStep('nav');
+    if (spotlightStep === 'tips') {
+      setSpotlightStep('nav');
+    }
   };
 
   const containerVariants = {
@@ -299,7 +301,7 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
               if (isHorizontal) {
                 // Horizontal Layout for Share, Subscription, and Tips
                 return (
-                  <motion.div key={card.label} variants={itemVariants} className={spotlightClasses}>
+                  <motion.div key={card.label} variants={itemVariants} className={`relative ${spotlightClasses}`}>
                     <button
                       className={`dashboard-card relative flex flex-row items-center justify-center rounded-2xl p-3 md:p-4 shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] focus:outline-none overflow-hidden bg-gradient-to-br ${card.gradient} ${card.text} ${card.glowClass} w-full h-full min-h-[7rem]`}
                       tabIndex={0}
@@ -321,6 +323,12 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
                         </div>
                       </div>
                     </button>
+                    {spotlightStep === 'tips' && isTipsCard && (
+                      <SpotlightTooltip 
+                        text="Check here for helpful tips and stats about your dashboard."
+                        className="top-full mt-5 left-1/2 -translate-x-1/3"
+                      />
+                    )}
                   </motion.div>
                 );
               } else {

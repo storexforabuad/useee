@@ -74,7 +74,7 @@ const MobileNav = ({ activeSection, setActiveSection, isModalOpen }: MobileNavPr
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
                 className={`flex flex-col items-center justify-center h-14 w-16 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-offset-0 focus:ring-blue-400/50 ${
-                  isActive ? 'text-neutral-800 dark:text-neutral-100' : 'text-gray-600 dark:text-gray-500'
+                  isActive ? 'text-neutral-800 dark:text-gray-500' : 'text-gray-600 dark:text-neutral-100'
                 }`}
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >

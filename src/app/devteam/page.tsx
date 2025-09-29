@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getStores, StoreMeta, getProducts, getPopularProducts } from '../../lib/db';
 import { getStoreCaption, updateStoreCaption } from '../actions/devActions';
+import { resetAllOnboardingStatuses } from '../actions/onboardingActions'; // Import the new server action
 import CategoryManagement from '../../components/CategoryManagement';
 import Link from 'next/link';
-import { ShoppingBag, ClipboardListIcon, PlusCircle, Save } from 'lucide-react';
+import { ShoppingBag, ClipboardListIcon, PlusCircle, Save, RefreshCw } from 'lucide-react';
 import CreateStoreModal from '../../components/admin/modals/CreateStoreModal';
 import { motion } from 'framer-motion';
 import DevTeamReferrals from '../../components/devteam/DevTeamReferrals';
@@ -28,6 +29,7 @@ export default function DevteamPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [promoCaption, setPromoCaption] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isResetting, setIsResetting] = useState(false); // State for the reset button
 
   const fetchStores = useCallback(async () => {
     const data = await getStores();
@@ -88,6 +90,13 @@ export default function DevteamPage() {
       fetchStats();
   }
 
+  const handleResetOnboarding = async () => {
+    setIsResetting(true);
+    const result = await resetAllOnboardingStatuses();
+    setIsResetting(false);
+    alert(result.message);
+  };
+
   const selectedStoreMeta = stores.find(s => s.id === selectedStore);
   const selectedStoreStats = storeStats.find(s => s.id === selectedStore);
 
@@ -103,13 +112,21 @@ export default function DevteamPage() {
         </header>
 
         <div className="max-w-4xl mx-auto">
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center gap-4 mb-6">
                  <button 
                     onClick={() => setIsModalOpen(true)}
                     className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-105"
                 >
                     <PlusCircle className="w-5 h-5" />
                     Add New Store
+                </button>
+                <button 
+                    onClick={handleResetOnboarding}
+                    disabled={isResetting}
+                    className="flex items-center gap-2 bg-red-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-red-700 transition-transform transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                    <RefreshCw className={`w-5 h-5 ${isResetting ? 'animate-spin' : ''}`} />
+                    {isResetting ? 'Resetting...' : 'Reset All Onboarding'}
                 </button>
             </div>
 
