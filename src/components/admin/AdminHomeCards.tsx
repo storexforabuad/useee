@@ -326,7 +326,7 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
                     {spotlightStep === 'tips' && isTipsCard && (
                       <SpotlightTooltip 
                         text="Check here for helpful tips and stats about your dashboard."
-                        className="top-full mt-5 left-1/2 -translate-x-1/3"
+                        className="top-full mt-5 left-1/2 -translate-x-1/2"
                       />
                     )}
                   </motion.div>
