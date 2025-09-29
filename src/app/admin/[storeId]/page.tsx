@@ -61,7 +61,7 @@ export default function AdminStorePage() {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
   const [uiVisible, setUiVisible] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const { setIsTipsSpotlightActive } = useSpotlightContext();
+  const { isTipsSpotlightActive, setIsTipsSpotlightActive } = useSpotlightContext();
   const [shouldShowSpotlight, setShouldShowSpotlight] = useState(false);
 
   useEffect(() => {
@@ -246,7 +246,7 @@ export default function AdminStorePage() {
 
       <div className={`transition-opacity duration-500 ${uiVisible ? 'opacity-100' : 'opacity-0'}`}>
         {activeSection !== 'preview' && <FloatingActionButton />}
-        <MobileNav activeSection={activeSection} setActiveSection={setActiveSection} />
+        { !isTipsSpotlightActive && <MobileNav activeSection={activeSection} setActiveSection={setActiveSection} /> }
       </div>
     </div>
   );
