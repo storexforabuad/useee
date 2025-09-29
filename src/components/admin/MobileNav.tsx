@@ -68,7 +68,7 @@ const MobileNav = ({ activeSection, setActiveSection, isModalOpen }: MobileNavPr
               );
             }
             
-            const IconComponent = isActive && item.iconSolid ? item.iconSolid : item.iconOutline;
+            const IconComponent = isActive ? item.iconOutline : item.iconSolid;
             return (
               <button
                 key={item.id}
@@ -78,7 +78,7 @@ const MobileNav = ({ activeSection, setActiveSection, isModalOpen }: MobileNavPr
                 }`}
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
-                <IconComponent className="h-6 w-6" {...(isActive ? {} : { strokeWidth: 2 })} />
+                <IconComponent className="h-6 w-6" {...(isActive ? { strokeWidth: 2 } : {})} />
                 <span className="text-xs font-medium mt-1 tracking-tight">{item.label}</span>
               </button>
             );
