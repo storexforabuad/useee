@@ -177,16 +177,19 @@ const formatCurrencyForCard = (amount: number) => {
   };
 
 export default function AdminHomeCards(props: AdminHomeCardsProps) {
-  const { isTipsSpotlightActive, setIsTipsSpotlightActive } = useSpotlightContext();
+  const { spotlightStep, setSpotlightStep } = useSpotlightContext();
   const [openModal, setOpenModal] = useState<number | null>(null);
+  const [isTipsModalOpen, setIsTipsModalOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const { setIsModalOpen, onRefresh, uiVisible, onAnimationComplete } = props;
 
   useEffect(() => {
-    if (openModal !== null) {
+    const modalIsOpen = openModal !== null || isTipsModalOpen;
+    if (modalIsOpen) {
       window.history.pushState({ modalOpen: true }, '');
       const handlePopState = () => {
         setOpenModal(null);
+        setIsTipsModalOpen(false);
         if (setIsModalOpen) setIsModalOpen(false);
       };
       window.addEventListener('popstate', handlePopState);
@@ -197,18 +200,26 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
         }
       };
     }
-  }, [openModal, setIsModalOpen]);
+  }, [openModal, isTipsModalOpen, setIsModalOpen]);
 
   const handleOpenModal = (idx: number, cardLabel?: string) => {
-    if (cardLabel === 'Tips' && isTipsSpotlightActive) {
-        setIsTipsSpotlightActive(false);
+    if (cardLabel === 'Tips') {
+        setIsTipsModalOpen(true);
+        setSpotlightStep('inactive');
+    } else {
+        setOpenModal(idx);
     }
-    setOpenModal(idx);
     if (props.setIsModalOpen) props.setIsModalOpen(true);
   };
+
   const handleCloseModal = () => {
     setOpenModal(null);
     if (props.setIsModalOpen) props.setIsModalOpen(false);
+  };
+  
+  const handleCloseTipsModal = () => {
+    setIsTipsModalOpen(false);
+    setSpotlightStep('nav');
   };
 
   const containerVariants = {
@@ -283,7 +294,7 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
               const Icon = card.icon;
               const isHorizontal = card.label === 'Share' || card.label === 'Subscription' || card.label === 'Tips';
               const isTipsCard = card.label === 'Tips';
-              const spotlightClasses = isTipsSpotlightActive && isTipsCard ? 'relative z-50 pointer-events-auto' : '';
+              const spotlightClasses = spotlightStep === 'tips' && isTipsCard ? 'relative z-50 pointer-events-auto' : '';
 
               if (isHorizontal) {
                 // Horizontal Layout for Share, Subscription, and Tips
@@ -350,6 +361,11 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
               }
             })}
         </motion.div>
+
+      {isTipsModalOpen && (
+        <TipsModal {...props} handleClose={handleCloseTipsModal} />
+      )}
+
       {openModal !== null && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md"

@@ -13,15 +13,15 @@ const Toaster = dynamic(() => import('react-hot-toast').then(mod => mod.Toaster)
 });
 
 function SpotlightOverlay() {
-  const { isTipsSpotlightActive, setIsTipsSpotlightActive } = useSpotlightContext();
+  const { spotlightStep, setSpotlightStep } = useSpotlightContext();
 
   const handleOverlayClick = () => {
-    setIsTipsSpotlightActive(false);
+    setSpotlightStep('inactive');
   };
 
   return (
     <AnimatePresence>
-      {isTipsSpotlightActive && (
+      {spotlightStep !== 'inactive' && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

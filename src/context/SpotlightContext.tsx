@@ -2,20 +2,22 @@
 
 import { createContext, useContext, useState, useMemo } from 'react';
 
+export type SpotlightStep = 'inactive' | 'tips' | 'nav';
+
 interface SpotlightContextType {
-  isTipsSpotlightActive: boolean;
-  setIsTipsSpotlightActive: (isActive: boolean) => void;
+  spotlightStep: SpotlightStep;
+  setSpotlightStep: (step: SpotlightStep) => void;
 }
 
 const SpotlightContext = createContext<SpotlightContextType | undefined>(undefined);
 
 export function SpotlightProvider({ children }: { children: React.ReactNode }) {
-  const [isTipsSpotlightActive, setIsTipsSpotlightActive] = useState(false);
+  const [spotlightStep, setSpotlightStep] = useState<SpotlightStep>('inactive');
 
   const contextValue = useMemo(() => ({
-    isTipsSpotlightActive,
-    setIsTipsSpotlightActive,
-  }), [isTipsSpotlightActive]);
+    spotlightStep,
+    setSpotlightStep,
+  }), [spotlightStep]);
 
   return (
     <SpotlightContext.Provider value={contextValue}>

@@ -61,7 +61,7 @@ export default function AdminStorePage() {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
   const [uiVisible, setUiVisible] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const { isTipsSpotlightActive, setIsTipsSpotlightActive } = useSpotlightContext();
+  const { spotlightStep, setSpotlightStep } = useSpotlightContext();
   const [shouldShowSpotlight, setShouldShowSpotlight] = useState(false);
 
   useEffect(() => {
@@ -123,7 +123,7 @@ export default function AdminStorePage() {
   const handleAnimationComplete = () => {
     if (shouldShowSpotlight) {
       setTimeout(() => {
-        setIsTipsSpotlightActive(true);
+        setSpotlightStep('tips');
       }, 500); // Delay for smoother feel
       setShouldShowSpotlight(false); // Reset signal to prevent re-triggering
     }
@@ -246,7 +246,7 @@ export default function AdminStorePage() {
 
       <div className={`transition-opacity duration-500 ${uiVisible ? 'opacity-100' : 'opacity-0'}`}>
         {activeSection !== 'preview' && <FloatingActionButton />}
-        { !isTipsSpotlightActive && <MobileNav activeSection={activeSection} setActiveSection={setActiveSection} /> }
+        { spotlightStep !== 'tips' && <MobileNav activeSection={activeSection} setActiveSection={setActiveSection} /> }
       </div>
     </div>
   );
