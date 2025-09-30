@@ -114,14 +114,7 @@ export default function CategoryBar({ onCategorySelect, activeCategory, categori
   const vendorCategories = categories.filter(c => !systemCategories.some(sc => sc.name === c.name));
 
   return (
-    <div className={`category-bar-container ${isSticky ? 'is-sticky' : ''} relative`}>
-      <div className={`absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r ${
-        isSticky ? 'from-[var(--navbar-bg)]' : 'from-[var(--background)]'
-      } to-transparent z-10 transition-colors duration-300`} />
-      <div className={`absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l ${
-        isSticky ? 'from-[var(--navbar-bg)]' : 'from-[var(--background)]'
-      } to-transparent z-10 transition-colors duration-300`} />
-      <div className="absolute left-0 right-0 top-0 h-px bg-[var(--border-color)] opacity-40 z-20" />
+    <div className={`category-bar-container card-glass ${isSticky ? 'is-sticky' : ''} relative`}>
       <div className="overflow-x-auto scrollbar-hide px-4">
         <div className="flex gap-3 py-3 min-w-min justify-center items-center">
           {/* System Categories */}
