@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { getProductById, getStoreMeta } from '../../../../lib/db';
 import { CirclePlus, ShoppingCart, Clock, Check } from 'lucide-react';
 import { useCart } from '../../../../lib/cartContext';
+import { useOrders } from '../../../../hooks/useOrders'; // Import the hook
 import { Product } from '../../../../types/product';
 import { calculateDiscount, formatPrice } from '../../../../utils/price';
 import { ViewHistoryCache } from '../../../../lib/viewHistoryCache';
@@ -31,6 +32,7 @@ export default function ProductDetail() {
   const [isAdding, setIsAdding] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
   const { state, dispatch } = useCart();
+  const { addOrder } = useOrders(); // Use the hook
   const [storeMeta, setStoreMeta] = useState<{ name?: string, whatsapp?: string } | null>(null);
 
   const [imageLoading, setImageLoading] = useState(true);
@@ -52,7 +54,6 @@ export default function ProductDetail() {
         }
         let fetchedProduct: Product | undefined = ProductDetailCache.get(productId);
         if (!fetchedProduct) {
-          // Use the global getProductById by passing null for the storeId
           fetchedProduct = (await getProductById(null, productId)) || undefined;
         }
         if (!isMounted) return;
@@ -72,7 +73,6 @@ export default function ProductDetail() {
 
   useEffect(() => {
     async function fetchMeta() {
-      // Fetch store meta only after the product (which contains the storeId) is loaded
       if (product?.storeId) {
         const meta = await getStoreMeta(product.storeId);
         setStoreMeta(meta);
@@ -97,8 +97,11 @@ export default function ProductDetail() {
   }
 
   const createWhatsAppMessage = async () => {
-    if (!product?.storeId) return;
+    if (!product?.storeId || !storeMeta) return;
+
+    addOrder(product, storeMeta as any);
     await incrementOrderCount(product.storeId, 1);
+
     const message = 
       `🛍️ *New Order Request*\n\n` +
       `Hello! I would like to order this item:\n\n` +
@@ -108,7 +111,11 @@ export default function ProductDetail() {
       `Thank you! 🙏`;
     
     const encodedMessage = encodeURIComponent(message);
-    const whatsappNumber = storeMeta?.whatsapp || '+2349021067212'; // Fallback number
+    const whatsappNumber = storeMeta?.whatsapp;
+    if (!whatsappNumber) {
+      console.error("Store's WhatsApp number is not available.");
+      return; // Handle this case gracefully, maybe show a message to the user
+    }
     const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${encodedMessage}`;
     window.open(whatsappLink, '_blank');
   };
@@ -148,7 +155,6 @@ export default function ProductDetail() {
 
 return (
   <>
-    {/* Display the original store's name in the navbar, or Bizcon as a fallback */}
     <Navbar storeName={storeMeta?.name || 'Bizcon Marketplace'} />
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 pt-[calc(var(--navbar-height)+1rem)] lg:pt-[calc(var(--navbar-height)+2rem)]">
       <div className="flex flex-col lg:flex lg:flex-row gap-6 lg:gap-x-8">

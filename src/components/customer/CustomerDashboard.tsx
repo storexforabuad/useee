@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, RefreshCw, X, ArrowRight, MessageSquare, Repeat } from 'lucide-react';
 import { Order } from '../../hooks/useOrders';
 import Image from 'next/image';
+import { formatPrice } from '../../utils/price';
 
 interface OrdersCardProps {
   orders: Order[];
@@ -73,7 +74,17 @@ function OrdersModal({ isOpen, onClose, orders }: OrdersModalProps) {
   const handleReorder = (order: Order) => {
     const storePhoneNumber = order.storeMeta.whatsapp;
     const productName = order.product.name;
-    const message = `I would like to reorder ${productName}.`;
+    const productPrice = formatPrice(order.product.price);
+    const productLink = `${window.location.origin}/${order.product.storeId}/products/${order.product.id}`;
+
+    const message = 
+      `Hello! 👋 I'd like to reorder this item:\n\n` +
+      `🛍️ *${productName}*\n` +
+      `*Price:* ${productPrice}\n\n` +
+      `Here is the link for confirmation:\n` +
+      `${productLink}\n\n` +
+      `Thank you! 🙏`;
+
     const whatsappUrl = `https://wa.me/${storePhoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -87,14 +98,14 @@ function OrdersModal({ isOpen, onClose, orders }: OrdersModalProps) {
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-lg"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-lg p-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
         >
           <motion.div
-            className="relative w-full sm:max-w-lg mx-auto bg-slate-50 dark:bg-slate-900 rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] h-full"
+            className="relative w-full sm:max-w-lg mx-auto bg-slate-50 dark:bg-slate-900 rounded-3xl shadow-2xl flex flex-col max-h-[90vh]"
             initial={{ y: '100vh', opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100vh', opacity: 0 }}
