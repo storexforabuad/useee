@@ -1,20 +1,40 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Navbar from '../../../../components/layout/navbar';
+import { useOrders } from '../../../../hooks/useOrders';
+import { OrdersCard } from '../../../../components/customer/CustomerDashboard';
 
 export default function DashboardPage() {
   const params = useParams();
   const { storeId, userId } = params;
+  const { orders, fetchOrders, loading } = useOrders();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    fetchOrders();
+    setIsRefreshing(false);
+  };
 
   return (
-    <div>
+    <div className="bg-slate-50 dark:bg-black min-h-screen">
       <Navbar storeName="My Dashboard" />
-      <div className="p-4 text-center">
-        <h1 className="text-2xl font-bold mt-16">Customer Activity</h1>
-        <p className="text-slate-500 dark:text-slate-400">Store ID: {storeId}</p>
-        <p className="text-slate-500 dark:text-slate-400">User ID: {userId}</p>
-        <p className="mt-4">This page is under construction.</p>
+      <div className="p-4 pt-20 max-w-2xl mx-auto">
+        <h1 className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 mb-2">Your Activity</h1>
+        <p className="text-slate-500 dark:text-slate-400 mb-6">
+          A summary of your recent orders and interactions.
+        </p>
+
+        <div className="mt-8">
+          <OrdersCard 
+            orders={orders}
+            onRefresh={handleRefresh}
+            isRefreshing={isRefreshing || loading}
+          />
+        </div>
       </div>
     </div>
   );

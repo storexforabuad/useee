@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { getProductById, incrementProductViews, getStoreMeta } from '../../../../lib/db';
 import { CirclePlus, ShoppingCart, Clock, Check } from 'lucide-react';
 import { useCart } from '../../../../lib/cartContext';
+import { useOrders } from '../../../../hooks/useOrders'; // Import the new hook
 import { Product } from '../../../../types/product';
 import { calculateDiscount, formatPrice } from '../../../../utils/price';
 import { ViewHistoryCache } from '../../../../lib/viewHistoryCache';
@@ -31,6 +32,7 @@ export default function ProductDetail() {
   const [isAdding, setIsAdding] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
   const { state, dispatch } = useCart();
+  const { addOrder } = useOrders(); // Use the new hook
   const [storeMeta, setStoreMeta] = useState<{ name?: string, whatsapp?: string } | null>(null);
 
   const [imageLoading, setImageLoading] = useState(true); // Add this state
@@ -45,7 +47,6 @@ export default function ProductDetail() {
     let isMounted = true;
     async function fetchProduct() {
       try {
-        // Defensive: If storeId or productId is missing, show error and skip fetch
         if (!storeId || !productId) {
           setProduct(null);
           setIsLoading(false);
@@ -96,8 +97,12 @@ export default function ProductDetail() {
     return <div className="p-4">Product not found</div>;
   }
 
-  const createWhatsAppMessage = async () => {
-    if (!storeId) return;
+  const handleOrderNow = async () => {
+    if (!product || !storeId || !storeMeta) return;
+
+    // Save the order to localStorage
+    addOrder(product, storeMeta as any);
+    
     await incrementOrderCount(storeId, 1);
     const message = 
       `🛍️ *New Order Request*\n\n` +
@@ -306,7 +311,7 @@ return (
               {/* Action Buttons */}
               <div className="flex flex-col gap-3">
                 <button
-                  onClick={createWhatsAppMessage}
+                  onClick={handleOrderNow}
                   className="group relative w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-[980px] bg-[var(--button-success)] text-white font-medium shadow-sm hover:shadow-md transition-all duration-300 hover:bg-[var(--button-success-hover)] transform-gpu active:scale-[0.98] cursor-default disabled:opacity-75 disabled:cursor-not-allowed product-detail-button-success min-h-[48px] text-base"
                   style={{ minHeight: '48px', fontSize: '1rem' }}
                   tabIndex={0}
