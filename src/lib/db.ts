@@ -16,7 +16,8 @@ import {
   serverTimestamp ,
   increment,
   setDoc,
-  Timestamp
+  Timestamp,
+  collectionGroup
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Product } from '../types/product';
@@ -294,13 +295,37 @@ export async function getProductsByCategory(storeId: string, category: string): 
   }
 }
 
-export async function getProductById(storeId: string, id: string): Promise<Product | null> {
+// Overload getProductById: If storeId is null, it will search globally.
+export async function getProductById(storeId: string, id: string): Promise<Product | null>;
+export async function getProductById(storeId: null, id: string): Promise<Product | null>;
+export async function getProductById(storeId: string | null, id: string): Promise<Product | null> {
   assertDb();
-  if (!storeId || !id) {
-    console.error('Missing storeId or product id');
+  if (!id) {
+    console.error('Missing product id');
     return null;
   }
+
   try {
+    // Case 1: Global search (for /bizcon)
+    if (storeId === null) {
+      const productsRef = collectionGroup(db, 'products');
+      const q = query(productsRef, where('id', '==', id), limit(1));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        return null;
+      }
+
+      const productDoc = snapshot.docs[0];
+      const product = { ...productDoc.data(), id: productDoc.id } as Product;
+
+      // Increment views for global discovery
+      await updateDoc(productDoc.ref, { views: increment(1) });
+
+      return product;
+    }
+
+    // Case 2: Store-specific search (original functionality)
     const productRef = doc(db, 'stores', storeId, 'products', id);
     const productSnap = await getDoc(productRef);
     if (!productSnap.exists()) {
@@ -310,11 +335,13 @@ export async function getProductById(storeId: string, id: string): Promise<Produ
       id: productSnap.id,
       ...productSnap.data()
     } as Product;
+
   } catch (error) {
     console.error('Error fetching product:', error);
     return null;
   }
 }
+
 
 export async function addProduct(storeId: string, product: Omit<Product, 'id'>): Promise<string> {
   try {
@@ -489,5 +516,81 @@ export async function incrementProductViews(storeId: string, productId: string):
         productId
       });
     }
+  }
+}
+
+// New Global Marketplace Functions
+
+/**
+ * Fetches promo products from all stores across the platform, sorted by popularity.
+ */
+export async function getGlobalPromoProducts(pageNum = 1, pageSize = 24): Promise<Product[]> {
+  assertDb();
+  try {
+    const productsRef = collectionGroup(db, 'products');
+    const q = query(
+      productsRef,
+      where('originalPrice', '>', 0),
+      orderBy('views', 'desc'),
+      limit(pageSize)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }) as Product);
+  } catch (error) {
+    console.error("Error fetching global promo products:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetches all products for a given category from all stores, sorted by popularity.
+ */
+export async function getAllProductsByCategory(categoryName: string, pageNum = 1, pageSize = 24): Promise<Product[]> {
+  assertDb();
+  try {
+    const productsRef = collectionGroup(db, 'products');
+    const q = query(
+      productsRef,
+      where('category', '==', categoryName),
+      orderBy('views', 'desc'),
+      limit(pageSize)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }) as Product);
+  } catch (error) {
+    console.error(`Error fetching global products for category ${categoryName}:`, error);
+    return [];
+  }
+}
+
+/**
+ * Aggregates all unique categories across all stores and sorts them by popularity (sum of product views).
+ */
+export async function getPopularCategories(): Promise<{ id: string; name: string }[]> {
+  assertDb();
+  try {
+    const productsRef = collectionGroup(db, 'products');
+    const snapshot = await getDocs(productsRef);
+    const products = snapshot.docs.map(doc => doc.data() as Product);
+
+    const categoryViews: { [key: string]: number } = {};
+
+    products.forEach(product => {
+      if (product.category) {
+        if (!categoryViews[product.category]) {
+          categoryViews[product.category] = 0;
+        }
+        categoryViews[product.category] += product.views || 0;
+      }
+    });
+
+    const sortedCategories = Object.entries(categoryViews)
+      .sort(([, viewsA], [, viewsB]) => viewsB - viewsA)
+      .map(([name]) => ({ id: name, name: name }));
+
+    return sortedCategories;
+  } catch (error) {
+    console.error("Error fetching popular categories:", error);
+    return [];
   }
 }
