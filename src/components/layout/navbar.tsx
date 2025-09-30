@@ -20,13 +20,12 @@ export default function Navbar({ storeName }: NavbarProps) {
   const router = useRouter();
   const isAdminRoute = pathname?.startsWith('/admin');
   
-  // Improved route detection for multi-vendor product detail pages
   const pathSegments = pathname?.split('/').filter(Boolean) || [];
-  // Matches /[storeId]/products/[productId]
   const isStoreProductPage = pathSegments.length === 3 && pathSegments[1] === 'products';
   const isProductPage = pathname?.startsWith('/products/');
   const isCartPage = pathname === '/cart' || (pathSegments.length === 2 && pathSegments[1] === 'cart');
-  const showBackButton = isProductPage || isStoreProductPage || isCartPage;
+  const isDashboardPage = pathname?.startsWith('/dashboard/');
+  const showBackButton = isProductPage || isStoreProductPage || isCartPage || isDashboardPage;
 
   useEffect(() => {
     if (state.totalItems > prevTotalItems) {
@@ -92,7 +91,6 @@ export default function Navbar({ storeName }: NavbarProps) {
               )}
             </button>
   
-            {/* Only show cart icon on non-admin routes */}
             {!isAdminRoute && (
               <Link 
                 href="/cart"

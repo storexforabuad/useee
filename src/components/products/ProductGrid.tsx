@@ -1,5 +1,5 @@
-import { memo, useState, useEffect } from 'react';
-import Link from 'next/link';
+import { memo, useState, useEffect, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Grid2X2, LayoutList, Info, Phone, MessageCircle, Star, Clock, X, MapPin, User } from 'lucide-react';
 import { Product } from '../../types/product';
@@ -7,6 +7,7 @@ import { motion, LayoutGroup, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { getStoreMeta } from '../../lib/db';
 import { StoreMeta } from '../../types/store';
+import { useUser } from '../../hooks/useUser';
 
 const ProductCard = dynamic(() => import('./ProductCard'), {
   loading: () => (
@@ -45,30 +46,18 @@ const DUMMY_BUSINESS = {
   specialization: 'Premium Turanrenwuta, Khumras, Oil Perfumes & RTW'
 };
 
-function GlassAboutButton({ onClick }: { onClick: () => void }) {
+function GlassButton({ onClick, children, 'aria-label': ariaLabel, text }: { onClick: () => void; children?: ReactNode; 'aria-label': string; text?: string }) {
+  const paddingClass = text ? 'px-4 py-3' : 'p-3';
   return (
     <motion.button
-      className="px-3 py-2 rounded-xl flex items-center gap-2 glassmorphic shadow-lg border border-white/30 dark:border-slate-700/40 backdrop-blur-md bg-white/20 dark:bg-slate-900/30"
+      className={`rounded-full flex items-center justify-center gap-2 glassmorphic shadow-lg border border-white/30 dark:border-slate-700/40 backdrop-blur-md bg-white/20 dark:bg-slate-900/30 hover:bg-white/30 dark:hover:bg-slate-800/40 ${paddingClass}`}
       onClick={onClick}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      aria-label="About this business"
+      aria-label={ariaLabel}
     >
-      <Info className="w-5 h-5 text-slate-700 dark:text-slate-200" />
-    </motion.button>
-  );
-}
-
-function GlassDashboardButton({ onClick }: { onClick: () => void }) {
-  return (
-    <motion.button
-      className="px-3 py-2 rounded-xl flex items-center gap-2 glassmorphic shadow-lg border border-white/30 dark:border-slate-700/40 backdrop-blur-md bg-white/20 dark:bg-slate-900/30"
-      onClick={onClick}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      aria-label="Customer activity"
-    >
-      <User className="w-5 h-5 text-slate-700 dark:text-slate-200" />
+      {children}
+      {text && <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{text}</span>}
     </motion.button>
   );
 }
@@ -76,7 +65,6 @@ function GlassDashboardButton({ onClick }: { onClick: () => void }) {
 function BusinessCardModal({ open, onClose, storeMeta }: { open: boolean; onClose: () => void; storeMeta?: StoreMeta }) {
   const b = { ...DUMMY_BUSINESS, ...storeMeta };
   
-  // Handle back button press
   useEffect(() => {
     if (!open) return;
     
@@ -89,7 +77,6 @@ function BusinessCardModal({ open, onClose, storeMeta }: { open: boolean; onClos
     
     return () => {
       window.removeEventListener('popstate', handlePopState);
-      // This is a simplified approach. A robust solution might need to check if the modal was the last state pushed.
       if (window.history.state?.modalOpen) {
         window.history.back();
       }
@@ -246,6 +233,8 @@ interface ProductGridProps {
 }
 
 const ProductGrid = memo(function ProductGrid({ products, containerRef, storeId }: ProductGridProps) {
+  const router = useRouter();
+  const { userId } = useUser();
   const [isSingleColumn, setIsSingleColumn] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [storeMeta, setStoreMeta] = useState<StoreMeta | null>(null);
@@ -279,19 +268,23 @@ const ProductGrid = memo(function ProductGrid({ products, containerRef, storeId 
     <LayoutGroup>
       <div className="sm:hidden fixed bottom-16 left-0 right-0 z-40 flex justify-center pointer-events-none">
         <div className="flex items-center gap-2 pointer-events-auto">
-          <motion.button
+          <GlassButton
             onClick={() => setIsSingleColumn(!isSingleColumn)}
-            className="flex items-center gap-2 px-4 py-3 rounded-full glassmorphic shadow-lg border border-white/30 backdrop-blur-md bg-white/20 text-[var(--text-primary)]"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={transition}
             aria-label="Toggle grid layout"
+            text={isSingleColumn ? 'Double' : 'Single'}
+          />
+          <GlassButton
+            onClick={() => router.push(`/dashboard/${storeId}/${userId}`)}
+            aria-label="Customer activity"
           >
-            {isSingleColumn ? <Grid2X2 className="w-5 h-5" /> : <LayoutList className="w-5 h-5" />}
-            <span className="text-sm font-medium">{isSingleColumn ? 'Double' : 'Single'}</span>
-          </motion.button>
-          <GlassDashboardButton onClick={() => console.log('dashboard button pressed')} />
-          <GlassAboutButton onClick={() => setAboutOpen(true)} />
+            <User className="w-5 h-5 text-slate-700 dark:text-slate-200" />
+          </GlassButton>
+          <GlassButton
+            onClick={() => setAboutOpen(true)}
+            aria-label="About this business"
+          >
+            <Info className="w-5 h-5 text-slate-700 dark:text-slate-200" />
+          </GlassButton>
         </div>
       </div>
       
