@@ -1,10 +1,14 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { DocumentSnapshot } from 'firebase/firestore';
 import {
   getGlobalPromoProducts,
   getAllProductsByCategory,
   getPopularCategories,
+  getGlobalNewestProducts,
+  getGlobalPopularProducts,
+  PaginatedProductsResult
 } from '../../lib/db';
 import { useConnectionCheck } from '../../hooks/useConnectionCheck';
 import Navbar from '../../components/layout/navbar';
@@ -13,7 +17,6 @@ import SkeletonLoader from '../../components/SkeletonLoader';
 import type { Product } from '../../types/product';
 import ConnectionErrorToast from '../../components/ConnectionErrorToast';
 import { CategoryCache } from '../../lib/categoryCache';
-import { ProductListCache } from '../../lib/productCache';
 
 const ProductGrid = dynamic(
   () => import('../../components/products/ProductGrid'),
@@ -22,8 +25,8 @@ const ProductGrid = dynamic(
 
 const ProductGridSkeleton = () => (
   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 gap-3 sm:gap-4 px-4">
-    {Array.from({ length: 6 }).map((_, index) => (
-      <SkeletonLoader key={`product-${index}`} />
+    {Array.from({ length: 12 }).map((_, index) => (
+      <SkeletonLoader key={`product-skeleton-${index}`} />
     ))}
   </div>
 );
@@ -39,137 +42,108 @@ const PRODUCTS_PAGE_SIZE = 24;
 export default function BizconPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
-  const storeName = "Bizcon Marketplace"; // Static store name
+  const storeName = "Bizcon Marketplace";
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('Promo');
-  const [page, setPage] = useState(1);
+  const [lastVisible, setLastVisible] = useState<DocumentSnapshot | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const { isConnectionError, setIsConnectionError } = useConnectionCheck();
-  const productGridRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<HTMLDivElement>(null);
+  const productGridRef = useRef<HTMLDivElement>(null);
 
-  const fetchMoreProducts = useCallback(async () => {
-    if (loading || !hasMore) return;
-
-    const nextPage = page + 1;
+  const fetchProducts = useCallback(async (category: string, lastDoc: DocumentSnapshot | null = null) => {
+    if (loading) return;
     setLoading(true);
+    
+    const isInitialLoad = lastDoc === null;
 
     try {
-      const cacheKey = `bizcon_products_${activeCategory || 'all'}_page${nextPage}`;
-      let fetchedProducts;
-      const cached = ProductListCache.get(cacheKey);
-
-      if (cached && Array.isArray(cached)) {
-        fetchedProducts = cached;
-      } else {
-        if (activeCategory === 'Promo') {
-          fetchedProducts = await getGlobalPromoProducts(nextPage, PRODUCTS_PAGE_SIZE);
-        } else {
-          fetchedProducts = await getAllProductsByCategory(activeCategory, nextPage, PRODUCTS_PAGE_SIZE);
-        }
-        ProductListCache.set(cacheKey, fetchedProducts);
+      let result: PaginatedProductsResult;
+      
+      switch (category) {
+        case 'Promo':
+          result = await getGlobalPromoProducts(lastDoc, PRODUCTS_PAGE_SIZE);
+          break;
+        case 'Popular':
+          result = await getGlobalPopularProducts(lastDoc, PRODUCTS_PAGE_SIZE);
+          break;
+        case 'New Arrivals':
+          result = await getGlobalNewestProducts(lastDoc, PRODUCTS_PAGE_SIZE);
+          break;
+        default:
+          result = await getAllProductsByCategory(category, lastDoc, PRODUCTS_PAGE_SIZE);
+          break;
       }
       
-      if (fetchedProducts.length > 0) {
-        setProducts(prevProducts => {
-          const existingIds = new Set(prevProducts.map(p => p.id));
-          const newProducts = fetchedProducts.filter(p => !existingIds.has(p.id));
-          return [...prevProducts, ...newProducts];
-        });
-        setPage(nextPage);
+      if (result && result.products) {
+        setProducts(prev => isInitialLoad ? result.products : [...prev, ...result.products]);
+        setLastVisible(result.lastVisible);
+        setHasMore(result.lastVisible !== null);
+      } else {
+        setHasMore(false);
       }
-      setHasMore(fetchedProducts.length === PRODUCTS_PAGE_SIZE);
+      
     } catch (error) {
-      console.error('Error fetching more global products:', error);
+      console.error(`Error fetching products for category ${category}:`, error);
       setIsConnectionError(true);
     } finally {
       setLoading(false);
+      if (isInitialLoad) setInitialLoading(false);
     }
-  }, [page, activeCategory, loading, hasMore, setIsConnectionError]);
-
+  }, [loading, setIsConnectionError]);
 
   const handleCategorySelect = useCallback((category: string) => {
     setActiveCategory(category);
-    setPage(1);
+    setInitialLoading(true);
     setProducts([]);
+    setLastVisible(null);
     setHasMore(true);
-    // Initial fetch for new category handled by useEffect below
-  }, []);
+    fetchProducts(category, null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [fetchProducts]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      setInitialLoading(true);
       try {
         const cacheKey = 'bizcon_popular_categories';
-        let fetchedCategories;
         const cached = CategoryCache.get(cacheKey);
-
         if (cached) {
-          fetchedCategories = cached;
+          setCategories(cached);
         } else {
-          fetchedCategories = await getPopularCategories();
+          const fetchedCategories = await getPopularCategories();
           CategoryCache.save(fetchedCategories, cacheKey);
+          setCategories(fetchedCategories);
         }
-        setCategories(fetchedCategories);
-
-        // Fetch initial products for the active category
-        const productsCacheKey = `bizcon_products_${activeCategory || 'all'}_page1`;
-        let initialProducts;
-        const cachedProducts = ProductListCache.get(productsCacheKey);
-
-        if (cachedProducts && Array.isArray(cachedProducts)){
-            initialProducts = cachedProducts;
-        } else {
-            if (activeCategory === 'Promo') {
-                initialProducts = await getGlobalPromoProducts(1, PRODUCTS_PAGE_SIZE);
-            } else {
-                initialProducts = await getAllProductsByCategory(activeCategory, 1, PRODUCTS_PAGE_SIZE);
-            }
-            ProductListCache.set(productsCacheKey, initialProducts);
-        }
-
-        setProducts(initialProducts);
-        setHasMore(initialProducts.length === PRODUCTS_PAGE_SIZE);
-
+        fetchProducts(activeCategory, null);
       } catch (error) {
         console.error("Error fetching initial bizcon data:", error);
         setIsConnectionError(true);
-      } finally {
         setInitialLoading(false);
       }
     };
     fetchInitialData();
-  }, [activeCategory, setIsConnectionError]);
-  
-  const scrollProductGridToTop = () => {
-    if (productGridRef.current) {
-      productGridRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    if (!hasMore || loading) return;
-
     const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        fetchMoreProducts();
+      if (entries[0].isIntersecting && hasMore && !loading) {
+        fetchProducts(activeCategory, lastVisible);
       }
-    }, { threshold: 1 });
+    }, { threshold: 1.0 });
 
-    const currentRef = observerRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
+    const currentObserverRef = observerRef.current;
+    if (currentObserverRef) {
+      observer.observe(currentObserverRef);
     }
 
     return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
+      if (currentObserverRef) {
+        observer.unobserve(currentObserverRef);
       }
     };
-  }, [hasMore, loading, fetchMoreProducts]);
+  }, [hasMore, loading, activeCategory, fetchProducts, lastVisible]);
 
   return (
     <div className="min-h-screen bg-background overscroll-none">
@@ -179,7 +153,7 @@ export default function BizconPage() {
           onCategorySelect={handleCategorySelect}
           activeCategory={activeCategory}
           categories={categories}
-          onActiveCategoryClick={scrollProductGridToTop}
+          onActiveCategoryClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         />
         <div className="mt-3 sm:mt-4">
           {initialLoading ? (
@@ -187,15 +161,15 @@ export default function BizconPage() {
           ) : (
             <>
               {isConnectionError && (
-                <ConnectionErrorToast onRetry={() => window.location.reload()} />
+                <ConnectionErrorToast onRetry={() => fetchProducts(activeCategory, null)} />
               )}
               {products.length === 0 && !loading ? (
-                 <div className="text-center py-10">No products found in this category.</div>
+                 <div className="text-center py-10 px-4">No products found in this category.</div>
               ) : (
                 <ProductGrid 
                   products={products}
                   containerRef={productGridRef}
-                  storeId={null} // No single storeId for bizcon view
+                  storeId={null}
                 />
               )}
               {hasMore && (

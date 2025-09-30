@@ -17,7 +17,9 @@ import {
   increment,
   setDoc,
   Timestamp,
-  collectionGroup
+  collectionGroup,
+  startAfter,
+  DocumentSnapshot
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Product } from '../types/product';
@@ -47,6 +49,13 @@ export interface WholesaleData {
   name: string;
   contacts: Contact[];
 }
+
+// Type for paginated product results
+export interface PaginatedProductsResult {
+  products: Product[];
+  lastVisible: DocumentSnapshot | null;
+}
+
 
 function assertDb() {
   if (!db) throw new Error('Firestore db is not initialized. Check your Firebase config and imports.');
@@ -519,49 +528,113 @@ export async function incrementProductViews(storeId: string, productId: string):
   }
 }
 
-// New Global Marketplace Functions
+// --- New & Updated Global Marketplace Functions ---
 
-/**
- * Fetches promo products from all stores across the platform, sorted by popularity.
- */
-export async function getGlobalPromoProducts(pageNum = 1, pageSize = 24): Promise<Product[]> {
+async function executePaginatedQuery(q: any): Promise<PaginatedProductsResult> {
+  const snapshot = await getDocs(q);
+  const products = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }) as Product);
+  const lastVisible = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
+  return { products, lastVisible };
+}
+
+export async function getGlobalPromoProducts(lastDoc: DocumentSnapshot | null = null, pageSize = 24): Promise<PaginatedProductsResult> {
   assertDb();
   try {
     const productsRef = collectionGroup(db, 'products');
-    const q = query(
+    let q = query(
       productsRef,
       where('originalPrice', '>', 0),
       orderBy('views', 'desc'),
       limit(pageSize)
     );
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }) as Product);
+    if (lastDoc) {
+      q = query(q, startAfter(lastDoc));
+    }
+    return await executePaginatedQuery(q);
   } catch (error) {
     console.error("Error fetching global promo products:", error);
-    return [];
+    return { products: [], lastVisible: null };
   }
 }
 
-/**
- * Fetches all products for a given category from all stores, sorted by popularity.
- */
-export async function getAllProductsByCategory(categoryName: string, pageNum = 1, pageSize = 24): Promise<Product[]> {
+export async function getAllProductsByCategory(categoryName: string, lastDoc: DocumentSnapshot | null = null, pageSize = 24): Promise<PaginatedProductsResult> {
   assertDb();
   try {
     const productsRef = collectionGroup(db, 'products');
-    const q = query(
+    let q = query(
       productsRef,
       where('category', '==', categoryName),
       orderBy('views', 'desc'),
       limit(pageSize)
     );
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }) as Product);
+    if (lastDoc) {
+      q = query(q, startAfter(lastDoc));
+    }
+    return await executePaginatedQuery(q);
   } catch (error) {
     console.error(`Error fetching global products for category ${categoryName}:`, error);
-    return [];
+    return { products: [], lastVisible: null };
   }
 }
+
+export async function getGlobalNewestProducts(lastDoc: DocumentSnapshot | null = null, pageSize = 24): Promise<PaginatedProductsResult> {
+  assertDb();
+  try {
+    const productsRef = collectionGroup(db, 'products');
+    let q = query(
+      productsRef,
+      orderBy('createdAt', 'desc'),
+      limit(pageSize)
+    );
+    if (lastDoc) {
+      q = query(q, startAfter(lastDoc));
+    }
+    return await executePaginatedQuery(q);
+  } catch (error) {
+    console.error('Error fetching global newest products:', error);
+    return { products: [], lastVisible: null };
+  }
+}
+
+export async function getGlobalPopularProducts(lastDoc: DocumentSnapshot | null = null, pageSize = 24): Promise<PaginatedProductsResult> {
+  assertDb();
+  try {
+    const productsRef = collectionGroup(db, 'products');
+    let q = query(
+      productsRef,
+      orderBy('views', 'desc'),
+      limit(pageSize)
+    );
+    if (lastDoc) {
+      q = query(q, startAfter(lastDoc));
+    }
+    return await executePaginatedQuery(q);
+  } catch (error) {
+    console.error('Error fetching global popular products:', error);
+    return { products: [], lastVisible: null };
+  }
+}
+
+export async function getStorePopularProducts(storeId: string, lastDoc: DocumentSnapshot | null = null, pageSize = 24): Promise<PaginatedProductsResult> {
+  if (!storeId) return { products: [], lastVisible: null };
+  assertDb();
+  try {
+    const productsRef = collection(db, 'stores', storeId, 'products');
+    let q = query(
+      productsRef,
+      orderBy('views', 'desc'),
+      limit(pageSize)
+    );
+    if (lastDoc) {
+      q = query(q, startAfter(lastDoc));
+    }
+    return await executePaginatedQuery(q);
+  } catch (error) {
+    console.error(`Error fetching popular products for store ${storeId}:`, error);
+    return { products: [], lastVisible: null };
+  }
+}
+
 
 /**
  * Aggregates all unique categories across all stores and sorts them by popularity (sum of product views).

@@ -1,9 +1,15 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { useSwipeable } from 'react-swipeable';
 import { useParams } from 'next/navigation';
-import { getProducts, getProductsByCategory, getCategories, getStoreMeta } from '../../lib/db';
+import {
+  getProducts,
+  getProductsByCategory,
+  getCategories,
+  getStoreMeta,
+  getStorePopularProducts, 
+}
+from '../../lib/db';
 import { useConnectionCheck } from '../../hooks/useConnectionCheck';
 import Navbar from '../../components/layout/navbar';
 import CategoryBar from '../../components/layout/CategoryBar';
@@ -20,8 +26,8 @@ const ProductGrid = dynamic(
 
 const ProductGridSkeleton = () => (
   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 gap-3 sm:gap-4 px-4">
-    {Array.from({ length: 3 }).map((_, index) => (
-      <SkeletonLoader key={`product-${index}`} />
+    {Array.from({ length: 6 }).map((_, index) => (
+      <SkeletonLoader key={`product-skeleton-${index}`} />
     ))}
   </div>
 );
@@ -37,198 +43,124 @@ const PRODUCTS_PAGE_SIZE = 24;
 export default function StorefrontPage() {
   const params = useParams();
   const storeId = typeof params?.storeId === 'string' ? params.storeId : Array.isArray(params?.storeId) ? params.storeId[0] : '';
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [storeName, setStoreName] = useState('');
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('Promo');
-  const [page, setPage] = useState(1);
+  const [lastVisible, setLastVisible] = useState<any>(null);
   const [hasMore, setHasMore] = useState(true);
   const { isConnectionError, setIsConnectionError } = useConnectionCheck();
-  const productGridRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<HTMLDivElement>(null);
+  const productGridRef = useRef<HTMLDivElement>(null);
 
-  const handleCategorySelect = useCallback(async (category: string) => {
-    setActiveCategory(category);
-    setPage(1);
+  const fetchProducts = useCallback(async (category: string, pageNum = 1, lastDoc: any = null) => {
+    if (!storeId) return;
     setLoading(true);
     try {
+      const cacheKey = `store_${storeId}_products_${category || 'all'}_page${pageNum}`;
       let fetchedProducts;
-      const cacheKey = `products_${storeId}_${category || 'all'}_page1`;
       const cached = ProductListCache.get(cacheKey);
-      if (cached && Array.isArray(cached)) {
+
+      if (cached && Array.isArray(cached) && pageNum === 1) {
         fetchedProducts = cached;
       } else {
         switch (category) {
           case 'Promo': {
             const promoProducts = await getProducts(storeId);
-            fetchedProducts = promoProducts.filter(product =>
-              product.soldOut ||
-              (product.originalPrice && product.originalPrice > product.price)
-            );
+            fetchedProducts = promoProducts.filter(p => p.originalPrice && p.originalPrice > p.price);
             break;
           }
-          case 'Back in Stock': {
-            const allProducts = await getProducts(storeId);
-            fetchedProducts = allProducts.filter(product =>
-              !product.soldOut && product.backInStock
-            );
+          case 'Popular': {
+            fetchedProducts = await getStorePopularProducts(storeId, lastDoc, PRODUCTS_PAGE_SIZE);
             break;
           }
-          case '': {
-            fetchedProducts = await getProducts(storeId);
+          case 'New Arrivals': {
+            fetchedProducts = await getProducts(storeId); // Already sorted by createdAt desc by default
             break;
           }
           default: {
             fetchedProducts = await getProductsByCategory(storeId, category);
+            break;
           }
         }
-        fetchedProducts = Array.isArray(fetchedProducts)
-          ? fetchedProducts.sort((a, b) => {
-              const aTime = a.createdAt?.toMillis?.() || 0;
-              const bTime = b.createdAt?.toMillis?.() || 0;
-              return bTime - aTime;
-            })
-          : [];
-        ProductListCache.set(cacheKey, fetchedProducts);
+        if (pageNum === 1) {
+          ProductListCache.set(cacheKey, fetchedProducts);
+        }
       }
-      setProducts(Array.isArray(fetchedProducts) ? fetchedProducts.slice(0, PRODUCTS_PAGE_SIZE) : []);
-      setHasMore(Array.isArray(fetchedProducts) ? PRODUCTS_PAGE_SIZE < fetchedProducts.length : false);
-    } catch {
-      console.error('Error fetching products:');
+      
+      if(fetchedProducts) {
+        setProducts(prev => pageNum === 1 ? fetchedProducts : [...prev, ...fetchedProducts]);
+        setHasMore(fetchedProducts.length === PRODUCTS_PAGE_SIZE);
+      }
+
+    } catch (error) {
+      console.error(`Error fetching products for store ${storeId}, category ${category}:`, error);
+      setIsConnectionError(true);
     } finally {
       setLoading(false);
+      if (pageNum === 1) setInitialLoading(false);
     }
-  }, [storeId]);
+  }, [storeId, setIsConnectionError]);
+
+  const handleCategorySelect = useCallback((category: string) => {
+    setActiveCategory(category);
+    setProducts([]);
+    setLastVisible(null);
+    setHasMore(true);
+    fetchProducts(category, 1, null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [fetchProducts]);
 
   useEffect(() => {
     if (!storeId) return;
     const fetchInitialData = async () => {
       try {
-        const cachedCategories = CategoryCache.get();
-        let fetchedCategories;
-        if (cachedCategories) {
-          fetchedCategories = cachedCategories;
-        } else {
-          fetchedCategories = await getCategories(storeId);
-          CategoryCache.save(fetchedCategories);
-        }
-        setCategories(fetchedCategories);
-        const storeMeta = await getStoreMeta(storeId);
-        setStoreName(storeMeta?.name || storeId);
-        await handleCategorySelect('Promo');
-      } catch {
+        const meta = await getStoreMeta(storeId);
+        setStoreName(meta?.name || storeId);
+
+        const cats = await getCategories(storeId);
+        setCategories(cats);
+
+        // Fetch initial products for the default category
+        fetchProducts(activeCategory, 1, null);
+
+      } catch (error) {
+        console.error("Error fetching initial store data:", error);
         setIsConnectionError(true);
       } finally {
         setInitialLoading(false);
       }
     };
     fetchInitialData();
-  }, [storeId, handleCategorySelect, setIsConnectionError]);
+  }, [storeId, activeCategory, fetchProducts, setIsConnectionError]);
 
-  const scrollProductGridToTop = () => {
-    if (productGridRef.current) {
-      productGridRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  const fetchMoreProducts = useCallback(() => {
+    if (!loading && hasMore) {
+      fetchProducts(activeCategory, products.length / PRODUCTS_PAGE_SIZE + 1, lastVisible);
     }
-  };
-
-  const switchCategory = (direction: 'left' | 'right') => {
-    const allCategories = [
-      '',
-      'Promo',
-      'Back in Stock',
-      ...categories.map(c => c.name)
-    ];
-    const currentIndex = allCategories.indexOf(activeCategory);
-    let newIndex;
-    if (direction === 'left') {
-      newIndex = currentIndex === allCategories.length - 1 ? 0 : currentIndex + 1;
-    } else {
-      newIndex = currentIndex === 0 ? allCategories.length - 1 : currentIndex - 1;
-    }
-    handleCategorySelect(allCategories[newIndex]);
-  };
-
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => switchCategory('left'),
-    onSwipedRight: () => switchCategory('right'),
-    preventScrollOnSwipe: true,
-    trackMouse: false,
-    delta: 50,
-  });
+  }, [loading, hasMore, activeCategory, products.length, lastVisible, fetchProducts]);
 
   useEffect(() => {
-    if (!hasMore || loading || initialLoading) return;
     const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        setPage((prev) => prev + 1);
+      if (entries[0].isIntersecting && hasMore && !loading) {
+        fetchMoreProducts();
       }
-    }, { threshold: 1 });
-    const currentRef = observerRef.current;
-    if (currentRef) observer.observe(currentRef);
-    return () => {
-      if (currentRef) observer.unobserve(currentRef);
-    };
-  }, [hasMore, loading, initialLoading]);
+    }, { threshold: 1.0 });
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        const cacheKey = `products_${storeId}_${activeCategory || 'all'}_page${page}`;
-        const cachedProducts = ProductListCache.get(cacheKey);
-        let fetchedProducts;
-        if (cachedProducts && Array.isArray(cachedProducts)) {
-          fetchedProducts = cachedProducts;
-        } else {
-          switch (activeCategory) {
-            case 'Promo': {
-              const promoProducts = await getProducts(storeId);
-              fetchedProducts = promoProducts.filter(product =>
-                product.soldOut ||
-                (product.originalPrice && product.originalPrice > product.price)
-              );
-              break;
-            }
-            case 'Back in Stock': {
-              const allProducts = await getProducts(storeId);
-              fetchedProducts = allProducts.filter(product =>
-                !product.soldOut && product.backInStock
-              );
-              break;
-            }
-            case '': {
-              fetchedProducts = await getProducts(storeId);
-              break;
-            }
-            default: {
-              fetchedProducts = await getProductsByCategory(storeId, activeCategory);
-            }
-          }
-          fetchedProducts = Array.isArray(fetchedProducts)
-            ? fetchedProducts.sort((a, b) => {
-                const aTime = a.createdAt?.toMillis?.() || 0;
-                const bTime = b.createdAt?.toMillis?.() || 0;
-                return bTime - aTime;
-              })
-            : [];
-          ProductListCache.set(cacheKey, fetchedProducts);
-        }
-        if (!Array.isArray(fetchedProducts)) fetchedProducts = [];
-        const paged = fetchedProducts.slice(0, page * PRODUCTS_PAGE_SIZE);
-        setProducts(paged);
-        setHasMore(paged.length < fetchedProducts.length);
-      } catch {
-        // handle error
-      } finally {
-        setLoading(false);
+    const currentObserverRef = observerRef.current;
+    if (currentObserverRef) {
+      observer.observe(currentObserverRef);
+    }
+
+    return () => {
+      if (currentObserverRef) {
+        observer.unobserve(currentObserverRef);
       }
     };
-    fetchProducts();
-  }, [activeCategory, page, storeId]);
+  }, [hasMore, loading, fetchMoreProducts]);
 
   return (
     <div className="min-h-screen bg-background overscroll-none">
@@ -238,29 +170,29 @@ export default function StorefrontPage() {
           onCategorySelect={handleCategorySelect}
           activeCategory={activeCategory}
           categories={categories}
-          onActiveCategoryClick={scrollProductGridToTop}
+          onActiveCategoryClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         />
-        <div {...swipeHandlers} className="mt-3 sm:mt-4">
+        <div className="mt-3 sm:mt-4">
           {initialLoading ? (
             <LoadingGrid />
           ) : (
             <>
               {isConnectionError && (
-                <ConnectionErrorToast onRetry={() => window.location.reload()} />
+                <ConnectionErrorToast onRetry={() => fetchProducts(activeCategory, 1, null)} />
               )}
-              {loading ? (
-                <LoadingGrid />
-              ) : products.length === 0 ? (
-                <ProductGrid products={[]} containerRef={productGridRef} storeId={storeId} />
+              {products.length === 0 && !loading ? (
+                 <div className="text-center py-10 px-4">No products found in this category.</div>
               ) : (
                 <ProductGrid 
                   products={products}
                   containerRef={productGridRef}
-                  storeId={storeId}
+                  storeId={storeId} // Pass storeId here
                 />
               )}
-              {hasMore && !loading && (
-                <div ref={observerRef} className="h-8" />
+              {hasMore && (
+                <div ref={observerRef} className="h-8 flex items-center justify-center">
+                   {loading && <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>}
+                </div>
               )}
             </>
           )}

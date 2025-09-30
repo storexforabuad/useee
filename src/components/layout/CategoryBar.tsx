@@ -39,30 +39,10 @@ export default function CategoryBar({ onCategorySelect, activeCategory, categori
       const containerWidth = container.offsetWidth;
       const buttonLeft = button.offsetLeft;
       const buttonWidth = button.offsetWidth;
-      const buttonRight = buttonLeft + buttonWidth;
-      const scrollRight = container.scrollLeft + containerWidth;
-      // If the button is near the right edge and there are more categories to the right, scroll left
-      if (buttonRight > scrollRight - 24) { // 24px as a buffer
-        const scrollAmount = buttonRight - scrollRight + 48; // 48px to show more categories
-        container.scrollTo({
-          left: container.scrollLeft + scrollAmount,
-          behavior: 'smooth'
-        });
-      } else {
-        // Center the button as before
-        const scrollLeft = buttonLeft - (containerWidth / 2) + (buttonWidth / 2);
-        container.scrollTo({
-          left: scrollLeft,
-          behavior: 'smooth'
-        });
-      }
+      const scrollLeft = buttonLeft - (containerWidth / 2) + (buttonWidth / 2);
+      container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
     }
 
-    // Defensive check: ensure onCategorySelect always gets a valid category string
-    if (typeof category !== 'string') {
-      console.warn('CategoryBar: Invalid category selected:', category);
-      return;
-    }
     if (activeCategory === category) {
       if (onActiveCategoryClick) onActiveCategoryClick();
     } else {
@@ -70,28 +50,20 @@ export default function CategoryBar({ onCategorySelect, activeCategory, categori
     }
   };
 
-  // Defensive check: ensure categories passed in always have valid id and name
   const getIconForCategory = (categoryName: string) => {
     const iconMap: { [key: string]: string } = {
-      'New Arrivals': '⭐',
       'Promo': '🔥',
-      'Back in Stock': '📦',
-      // 'Atamfa': '👗',
-      // 'Laces': '🥻',
-      // 'Caps': '🧢' // ✅ Added Caps icon
+      'Popular': '💖',
+      'New Arrivals': '⭐',
     };
-    // Use 🛍️ for all user-generated categories
     return iconMap[categoryName] || '🛍️';
   };
 
   const getCategoryColor = (categoryName: string): string => {
     const colorMap: { [key: string]: string } = {
-      'New Arrivals': 'bg-[var(--badge-blue-bg)] text-[var(--badge-blue-text)]',
       'Promo': 'bg-[var(--badge-red-bg)] text-[var(--badge-red-text)]',
-      'Back in Stock': 'bg-[var(--badge-green-bg)] text-[var(--badge-green-text)]',
-      // 'Atamfa': 'bg-[var(--badge-purple-bg)] text-[var(--badge-purple-text)]',
-      // 'Laces': 'bg-[var(--badge-pink-bg)] text-[var(--badge-pink-text)]',
-      // 'Caps': 'bg-[var(--badge-yellow-bg)] text-[var(--badge-yellow-text)]' // ✅ Added Caps style
+      'Popular': 'bg-[var(--badge-pink-bg)] text-[var(--badge-pink-text)]',
+      'New Arrivals': 'bg-[var(--badge-blue-bg)] text-[var(--badge-blue-text)]',
     };
     return colorMap[categoryName] || 'bg-card-hover text-text-primary';
   };
@@ -103,7 +75,7 @@ export default function CategoryBar({ onCategorySelect, activeCategory, categori
   }) => (
     <motion.button
       onClick={onClick}
-      className="flex flex-col items-center w-[72px] sm:w-[80px]"
+      className="flex flex-col items-center w-[72px] sm:w-[80px] flex-shrink-0"
       whileTap={{ scale: 0.95 }}
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
     >
@@ -115,38 +87,31 @@ export default function CategoryBar({ onCategorySelect, activeCategory, categori
             : 'hover:ring-3 hover:ring-[var(--button-primary)] hover:ring-offset-1 hover:ring-offset-[var(--background)]'
           }
           transform transition-all duration-200 ease-out`}
-        animate={isActive ? { 
-          scale: [1, 1.1, 1.05],
-          transition: { duration: 0.3, ease: "easeOut" }
-        } : { scale: 1 }}
-        style={{
-          willChange: 'transform',
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden'
-        }}
+        animate={isActive ? { scale: [1, 1.1, 1.05] } : { scale: 1 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
       >
         <span className="text-2xl sm:text-2xl">{getIconForCategory(name)}</span>
       </motion.div>
       <motion.span 
         className="text-xs font-medium truncate max-w-[80px] text-center"
-        animate={isActive ? { 
-          scale: [1, 1.05, 1],
-          transition: { duration: 0.3, delay: 0.1 }
-        } : { scale: 1 }}
+        animate={isActive ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
       >
-        {name === '' ? 'New Arrivals' : name}
+        {name}
       </motion.span>
     </motion.button>
   );
 
-  // Default categories
-  const defaultCategories = [
+  // Define system categories that appear first
+  const systemCategories = [
     { id: 'promo', name: 'Promo' },
-    { id: 'new', name: 'New Arrivals' },
-    { id: 'back', name: 'Back in Stock' }
+    { id: 'popular', name: 'Popular' },
+    { id: 'new-arrivals', name: 'New Arrivals' },
   ];
-  // Only show vendor-generated categories in the vendor section
-  const vendorCategories = categories.filter(c => !defaultCategories.some(dc => dc.name === c.name));
+
+  // Filter out any vendor-created categories that have the same name as system ones
+  const vendorCategories = categories.filter(c => !systemCategories.some(sc => sc.name === c.name));
 
   return (
     <div className={`category-bar-container ${isSticky ? 'is-sticky' : ''} relative`}>
@@ -159,19 +124,22 @@ export default function CategoryBar({ onCategorySelect, activeCategory, categori
       <div className="absolute left-0 right-0 top-0 h-px bg-[var(--border-color)] opacity-40 z-20" />
       <div className="overflow-x-auto scrollbar-hide px-4">
         <div className="flex gap-3 py-3 min-w-min justify-center items-center">
-          {/* Default categories */}
-          <CategoryButton 
-            name="Promo" 
-            onClick={(e) => handleCategoryClick('Promo', e)} 
-            isActive={activeCategory === 'Promo'}
-          />
-          <CategoryButton 
-            name="New Arrivals" 
-            onClick={(e) => handleCategoryClick('', e)} 
-            isActive={activeCategory === ''}
-          />
+          {/* System Categories */}
+          {systemCategories.map(category => (
+            <CategoryButton 
+              key={category.id}
+              name={category.name} 
+              onClick={(e) => handleCategoryClick(category.name, e)} 
+              isActive={activeCategory === category.name}
+            />
+          ))}
+
+          {/* Separator */}
+          {vendorCategories.length > 0 && (
+            <div className="w-px h-10 bg-[var(--border-color)] opacity-60 mx-2" />
+          )}
+
           {/* Vendor-generated categories */}
-          <div className="w-px h-10 bg-[var(--border-color)] opacity-60 mx-2 " />
           {vendorCategories.map((category) => (
             <CategoryButton
               key={category.id}
