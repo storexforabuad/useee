@@ -1,7 +1,7 @@
 import { memo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { Grid2X2, LayoutList, Info, Phone, MessageCircle, Star, Clock, X, MapPin } from 'lucide-react';
+import { Grid2X2, LayoutList, Info, Phone, MessageCircle, Star, Clock, X, MapPin, User } from 'lucide-react';
 import { Product } from '../../types/product';
 import { motion, LayoutGroup, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
@@ -48,13 +48,27 @@ const DUMMY_BUSINESS = {
 function GlassAboutButton({ onClick }: { onClick: () => void }) {
   return (
     <motion.button
-      className="ml-2 px-3 py-2 rounded-xl flex items-center gap-2 glassmorphic shadow-lg border border-white/30 dark:border-slate-700/40 backdrop-blur-md bg-white/20 dark:bg-slate-900/30"
+      className="px-3 py-2 rounded-xl flex items-center gap-2 glassmorphic shadow-lg border border-white/30 dark:border-slate-700/40 backdrop-blur-md bg-white/20 dark:bg-slate-900/30"
       onClick={onClick}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       aria-label="About this business"
     >
       <Info className="w-5 h-5 text-slate-700 dark:text-slate-200" />
+    </motion.button>
+  );
+}
+
+function GlassDashboardButton({ onClick }: { onClick: () => void }) {
+  return (
+    <motion.button
+      className="px-3 py-2 rounded-xl flex items-center gap-2 glassmorphic shadow-lg border border-white/30 dark:border-slate-700/40 backdrop-blur-md bg-white/20 dark:bg-slate-900/30"
+      onClick={onClick}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      aria-label="Customer activity"
+    >
+      <User className="w-5 h-5 text-slate-700 dark:text-slate-200" />
     </motion.button>
   );
 }
@@ -264,18 +278,19 @@ const ProductGrid = memo(function ProductGrid({ products, containerRef, storeId 
   return (
     <LayoutGroup>
       <div className="sm:hidden fixed bottom-16 left-0 right-0 z-40 flex justify-center pointer-events-none">
-        <motion.button
-          onClick={() => setIsSingleColumn(!isSingleColumn)}
-          className="flex items-center gap-2 px-4 py-3 rounded-full glassmorphic shadow-lg border border-white/30 backdrop-blur-md bg-white/20 text-[var(--text-primary)] pointer-events-auto"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          transition={transition}
-          aria-label="Toggle grid layout"
-        >
-          {isSingleColumn ? <Grid2X2 className="w-5 h-5" /> : <LayoutList className="w-5 h-5" />}
-          <span className="text-sm font-medium">{isSingleColumn ? 'Double' : 'Single'}</span>
-        </motion.button>
-        <div className="pointer-events-auto">
+        <div className="flex items-center gap-2 pointer-events-auto">
+          <motion.button
+            onClick={() => setIsSingleColumn(!isSingleColumn)}
+            className="flex items-center gap-2 px-4 py-3 rounded-full glassmorphic shadow-lg border border-white/30 backdrop-blur-md bg-white/20 text-[var(--text-primary)]"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={transition}
+            aria-label="Toggle grid layout"
+          >
+            {isSingleColumn ? <Grid2X2 className="w-5 h-5" /> : <LayoutList className="w-5 h-5" />}
+            <span className="text-sm font-medium">{isSingleColumn ? 'Double' : 'Single'}</span>
+          </motion.button>
+          <GlassDashboardButton onClick={() => console.log('dashboard button pressed')} />
           <GlassAboutButton onClick={() => setAboutOpen(true)} />
         </div>
       </div>
@@ -301,13 +316,9 @@ const ProductGrid = memo(function ProductGrid({ products, containerRef, storeId 
               key={product.id}
               layout
               transition={transition}
+              className="group block relative touch-manipulation"
             >
-              <Link
-                href={`/${storeId}/products/${product.id}`}
-                className="group block relative touch-manipulation"
-              >
-                <ProductCard product={product} storeId={storeId} />
-              </Link>
+              <ProductCard product={product} storeId={storeId} />
             </motion.div>
           ))
         )}
