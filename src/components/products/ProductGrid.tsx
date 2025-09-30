@@ -50,7 +50,7 @@ function GlassButton({ onClick, children, 'aria-label': ariaLabel, text }: { onC
   const paddingClass = text ? 'px-4 py-3' : 'p-3';
   return (
     <motion.button
-      className={`rounded-full flex items-center justify-center gap-2 glassmorphic shadow-lg border border-white/30 dark:border-slate-700/40 backdrop-blur-md bg-white/20 dark:bg-slate-900/30 hover:bg-white/30 dark:hover:bg-slate-800/40 ${paddingClass}`}
+      className={`card-glass rounded-full flex items-center justify-center gap-2 shadow-lg ${paddingClass}`}
       onClick={onClick}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
