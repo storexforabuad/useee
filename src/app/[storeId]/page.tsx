@@ -74,7 +74,9 @@ export default function StorefrontPage() {
             break;
           }
           case 'Popular': {
-            fetchedProducts = await getStorePopularProducts(storeId, lastDoc, PRODUCTS_PAGE_SIZE);
+            const { products: popularProducts, lastVisible: newLastVisible } = await getStorePopularProducts(storeId, lastDoc, PRODUCTS_PAGE_SIZE);
+            fetchedProducts = popularProducts;
+            setLastVisible(newLastVisible);
             break;
           }
           case 'New Arrivals': {

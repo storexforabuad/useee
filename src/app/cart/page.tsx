@@ -5,6 +5,8 @@ import { useCart } from '../../lib/cartContext';
 import { ShoppingCart } from 'lucide-react';
 import { getStoreMeta } from '../../lib/db';
 import { useState, useEffect } from 'react';
+import { StoreMeta } from '../../types/store';
+import { Product } from '../../types/product';
 import { incrementOrderCount } from '../../app/actions/orderActions';
 
 const CartItem = dynamic(
@@ -15,20 +17,44 @@ const CartItem = dynamic(
   }
 );
 
+interface GroupedCart {
+  [storeId: string]: Product[];
+}
+
 export default function CartPage() {
   const { state, dispatch } = useCart();
-  const [storeMeta, setStoreMeta] = useState<{ whatsapp?: string } | null>(null);
-  const routeParams = typeof window !== 'undefined' ? window.location.pathname.split('/') : [];
-  const storeId = routeParams.length > 1 ? routeParams[1] : 'alaniq';
+  const [storeMetas, setStoreMetas] = useState<{[storeId: string]: StoreMeta}>({});
+  const [groupedCart, setGroupedCart] = useState<GroupedCart>({});
 
   useEffect(() => {
-    async function fetchMeta() {
-      if (!storeId) return;
-      const meta = await getStoreMeta(storeId);
-      setStoreMeta(meta && meta.whatsapp ? { whatsapp: meta.whatsapp } : null);
+    const newGroupedCart: GroupedCart = state.items.reduce((acc, item) => {
+      const storeId = item.storeId || 'unknown';
+      if (!acc[storeId]) {
+        acc[storeId] = [];
+      }
+      acc[storeId].push(item);
+      return acc;
+    }, {} as GroupedCart);
+    setGroupedCart(newGroupedCart);
+
+    async function fetchMetas() {
+      const storeIds = Object.keys(newGroupedCart);
+      const metas: {[storeId: string]: StoreMeta} = {};
+      for (const id of storeIds) {
+        if (id !== 'unknown') {
+            const meta = await getStoreMeta(id);
+            if (meta) {
+                metas[id] = meta as StoreMeta;
+            }
+        }
+      }
+      setStoreMetas(metas);
     }
-    fetchMeta();
-  }, [storeId]);
+
+    if (Object.keys(newGroupedCart).length > 0) {
+        fetchMetas();
+    }
+  }, [state.items]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -45,30 +71,40 @@ export default function CartPage() {
     dispatch({ type: 'REMOVE_ITEM', payload: id });
   };
   
-  const createWhatsAppMessage = async () => {
-    if (!storeId) return;
-    await incrementOrderCount(storeId, state.items.length);
-    const itemsList = state.items
+  const createWhatsAppMessage = async (storeId: string, items: Product[]) => {
+    const storeMeta = storeMetas[storeId];
+    if (!storeMeta || !storeMeta.whatsapp) return;
+
+    await incrementOrderCount(storeId, items.length);
+
+    const itemsList = items
       .map((item, index) => 
         `${index + 1}. *${item.name}*\n` +
         `• Quantity: ${item.quantity}\n` +
         `• Price: ${formatPrice(item.price * item.quantity)}\n` +
-        `• Product Link: ${window.location.origin}/products/${item.id}`
+        `• Product Link: ${window.location.origin}/${storeId}/products/${item.id}`
       )
       .join('\n\n');
+
+    const totalAmount = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
   
     const message = 
       `🛍️ *New Order Request*\n\n` +
       `Hello! I would like to place an order for the following items:\n\n` +
       `${itemsList}\n\n` +
-      `Total Items: ${state.totalItems}\n` +
-      `Total Amount: ${formatPrice(state.totalAmount)}\n\n` +
+      `Total Items: ${totalItems}\n` +
+      `Total Amount: ${formatPrice(totalAmount)}\n\n` +
       `Thank you! 🙏`;
   
     const encodedMessage = encodeURIComponent(message);
-    const whatsappNumber = storeMeta?.whatsapp || '+2349021067212';
-    const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${encodedMessage}`;
+    const whatsappLink = `https://wa.me/${storeMeta.whatsapp.replace(/\D/g, '')}?text=${encodedMessage}`;
     window.open(whatsappLink, '_blank');
+    
+    // Remove only ordered items from cart
+    items.forEach(item => {
+        dispatch({ type: 'REMOVE_ITEM', payload: item.id });
+    });
   };
 
   if (state.items.length === 0) {
@@ -84,55 +120,42 @@ export default function CartPage() {
 
   return (
     <div className="min-h-[60vh] mx-auto max-w-2xl px-3 sm:px-4 py-6 sm:py-8">
-      <h1 className="text-xl sm:text-2xl font-bold text-text-primary">Your List</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-text-primary mb-6">Your List</h1>
       
-      <div className="mt-6 sm:mt-8 space-y-3">
-        {state.items.map(item => (
-          <CartItem 
-            key={item.id} 
-            item={item}
-            onUpdateQuantity={handleUpdateQuantity}
-            onRemove={handleRemoveItem}
-          />
-        ))}
-      </div>
+      {Object.entries(groupedCart).map(([storeId, items]) => {
+        const storeMeta = storeMetas[storeId];
+        const totalAmount = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-      <div className="mt-6 sm:mt-8 border-t border-[var(--border-color)] pt-6 sm:pt-8">
-        <div className="flex justify-between text-base sm:text-lg font-medium text-text-primary">
-          <span>Total</span>
-          <span>{formatPrice(state.totalAmount)}</span>
-        </div>
-
-        <button
-  onClick={createWhatsAppMessage}
-  className="mt-6 sm:mt-8 group relative w-full inline-flex items-center justify-center gap-2 
-    px-6 py-3.5 rounded-[980px] bg-[var(--button-success)] text-white font-medium
-    shadow-sm hover:shadow-md transition-all duration-300
-    hover:bg-[var(--button-success-hover)] transform-gpu
-    active:scale-[0.98] cursor-default
-    disabled:opacity-75 disabled:cursor-not-allowed
-    product-detail-button-success"
->
-  <ShoppingCart className="w-5 h-5 transition-transform group-hover:-translate-y-0.5" />
-  <span className="relative tracking-[-0.01em]">Order Now</span>
-</button>
-</div>
-
-      {/* <footer className="py-8 sm:py-12 text-center text-sm sm:text-base text-text-secondary">
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
-          <span>powered by Compass Engine &copy; {new Date().getFullYear()}.</span>
-          <a 
-            href={`https://wa.me/+2349099933360`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[var(--text-primary)] hover:text-[var(--button-primary)] 
-              transition-colors duration-200 flex items-center gap-1 touch-manipulation"
-          >
-            <ShoppingCart size={16} />
-            <span>09099933360</span>
-          </a>
-        </div>
-      </footer> */}
+        return (
+          <div key={storeId} className="mb-8 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+            <h2 className="text-lg font-bold text-text-primary mb-4">{storeMeta?.name || 'Unknown Store'}</h2>
+            <div className="space-y-3">
+              {items.map(item => (
+                <CartItem 
+                  key={item.id} 
+                  item={item}
+                  onUpdateQuantity={handleUpdateQuantity}
+                  onRemove={handleRemoveItem}
+                />
+              ))}
+            </div>
+            <div className="mt-6 border-t border-[var(--border-color)] pt-6">
+              <div className="flex justify-between text-base font-medium text-text-primary">
+                <span>Subtotal</span>
+                <span>{formatPrice(totalAmount)}</span>
+              </div>
+              <button
+                onClick={() => createWhatsAppMessage(storeId, items)}
+                disabled={!storeMeta || !storeMeta.whatsapp}
+                className="mt-6 group relative w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-[980px] bg-[var(--button-success)] text-white font-medium shadow-sm hover:shadow-md transition-all duration-300 hover:bg-[var(--button-success-hover)] transform-gpu active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                <span className="relative tracking-[-0.01em]">Order from {storeMeta?.name || '...'}</span>
+              </button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

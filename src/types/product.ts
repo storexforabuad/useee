@@ -18,4 +18,5 @@ export interface Product {
     toMillis: () => number;
   };
   soldOut?: boolean;
+  storeId: string; // Added storeId
 }

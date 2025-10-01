@@ -8,8 +8,8 @@ import { OrdersCard } from '../../../../components/customer/CustomerDashboard';
 
 export default function DashboardPage() {
   const params = useParams();
-  const { storeId, userId } = params;
-  const { orders, fetchOrders, loading } = useOrders();
+  const storeId = Array.isArray(params.storeId) ? params.storeId[0] : params.storeId;
+  const { orders, fetchOrders, loading } = useOrders(storeId || null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = async () => {

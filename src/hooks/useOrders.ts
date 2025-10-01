@@ -10,7 +10,7 @@ export interface Order {
   orderDate: string;
 }
 
-export function useOrders() {
+export function useOrders(storeId: string | null) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -19,15 +19,20 @@ export function useOrders() {
     try {
       const storedOrders = localStorage.getItem('customer_orders');
       if (storedOrders) {
-        setOrders(JSON.parse(storedOrders));
+        const allOrders: Order[] = JSON.parse(storedOrders);
+        if (storeId) {
+          const filteredOrders = allOrders.filter(order => order.storeMeta.id === storeId);
+          setOrders(filteredOrders);
+        } else {
+          setOrders(allOrders);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch orders from localStorage", error);
-      // Handle potential JSON parsing errors or other issues
       setOrders([]);
     }
     setLoading(false);
-  }, []);
+  }, [storeId]);
 
   useEffect(() => {
     fetchOrders();
@@ -40,13 +45,18 @@ export function useOrders() {
         storeMeta, 
         orderDate: new Date().toISOString() 
       };
-      const updatedOrders = [newOrder, ...orders];
-      setOrders(updatedOrders);
+      const storedOrders = localStorage.getItem('customer_orders');
+      const allOrders = storedOrders ? JSON.parse(storedOrders) : [];
+      const updatedOrders = [newOrder, ...allOrders];
       localStorage.setItem('customer_orders', JSON.stringify(updatedOrders));
+      
+      // After adding, we need to refetch to apply the filter
+      fetchOrders();
+
     } catch (error) {
       console.error("Failed to save order to localStorage", error);
     }
   };
 
-  return { orders, addOrder, fetchOrders, loading };
+  return { orders, addOrder, fetchOrders, loading, isRefreshing: loading };
 }

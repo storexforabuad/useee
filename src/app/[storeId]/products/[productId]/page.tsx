@@ -7,8 +7,9 @@ import { useParams } from 'next/navigation';
 import { getProductById, incrementProductViews, getStoreMeta } from '../../../../lib/db';
 import { CirclePlus, ShoppingCart, Clock, Check } from 'lucide-react';
 import { useCart } from '../../../../lib/cartContext';
-import { useOrders } from '../../../../hooks/useOrders'; // Import the new hook
+import { useOrders } from '../../../../hooks/useOrders';
 import { Product } from '../../../../types/product';
+import { StoreMeta } from '../../../../types/store';
 import { calculateDiscount, formatPrice } from '../../../../utils/price';
 import { ViewHistoryCache } from '../../../../lib/viewHistoryCache';
 import { ProductDetailCache } from '../../../../lib/productDetailCache';
@@ -32,10 +33,10 @@ export default function ProductDetail() {
   const [isAdding, setIsAdding] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
   const { state, dispatch } = useCart();
-  const { addOrder } = useOrders(); // Use the new hook
-  const [storeMeta, setStoreMeta] = useState<{ name?: string, whatsapp?: string } | null>(null);
+  const { addOrder } = useOrders(null); // Pass null for storeId in global context
+  const [storeMeta, setStoreMeta] = useState<StoreMeta | null>(null);
 
-  const [imageLoading, setImageLoading] = useState(true); // Add this state
+  const [imageLoading, setImageLoading] = useState(true);
 
   const discount = product ? calculateDiscount(product.price, product.originalPrice) : null;
 
@@ -77,7 +78,7 @@ export default function ProductDetail() {
     async function fetchMeta() {
       if (!storeId) return;
       const meta = await getStoreMeta(storeId);
-      setStoreMeta(meta);
+      setStoreMeta(meta as StoreMeta | null);
     }
     fetchMeta();
   }, [storeId]);
@@ -98,10 +99,9 @@ export default function ProductDetail() {
   }
 
   const handleOrderNow = async () => {
-    if (!product || !storeId || !storeMeta) return;
+    if (!product || !storeId || !storeMeta || !storeMeta.whatsapp) return;
 
-    // Save the order to localStorage
-    addOrder(product, storeMeta as any);
+    addOrder(product, storeMeta);
     
     await incrementOrderCount(storeId, 1);
     const message = 
@@ -113,8 +113,7 @@ export default function ProductDetail() {
       `Thank you! 🙏`;
     
     const encodedMessage = encodeURIComponent(message);
-    const whatsappNumber = storeMeta?.whatsapp || '+2349021067212';
-    const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${encodedMessage}`;
+    const whatsappLink = `https://wa.me/${storeMeta.whatsapp.replace(/\D/g, '')}?text=${encodedMessage}`;
     window.open(whatsappLink, '_blank');
   };
 
@@ -150,6 +149,8 @@ export default function ProductDetail() {
       text: 'text-[var(--badge-blue-text)]'
     };
   };
+
+  const canOrder = product && !product.soldOut && storeMeta && storeMeta.whatsapp;
 
 return (
   <>
@@ -265,7 +266,6 @@ return (
               </p>
             </div>
           ) : (
-            // Show full product details for in-stock products
             <>
               {/* Product Title */}
               <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] mb-4">
@@ -312,6 +312,7 @@ return (
               <div className="flex flex-col gap-3">
                 <button
                   onClick={handleOrderNow}
+                  disabled={!canOrder}
                   className="group relative w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-[980px] bg-[var(--button-success)] text-white font-medium shadow-sm hover:shadow-md transition-all duration-300 hover:bg-[var(--button-success-hover)] transform-gpu active:scale-[0.98] cursor-default disabled:opacity-75 disabled:cursor-not-allowed product-detail-button-success min-h-[48px] text-base"
                   style={{ minHeight: '48px', fontSize: '1rem' }}
                   tabIndex={0}
