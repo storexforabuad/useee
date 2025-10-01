@@ -126,6 +126,7 @@ export default function ProductDetail() {
       payload: {
         ...product,
         quantity: 1,
+        storeId: storeId, // Ensure storeId is added to the cart item
       }
     });
     setIsAdding(false);

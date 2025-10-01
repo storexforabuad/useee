@@ -37,7 +37,8 @@ export default function ProductCard({ product, storeId }: ProductCardProps) {
 
   const productLink = storeId
     ? `/${storeId}/products/${product.id}`
-    : `/bizcon/products/${product.id}`;
+    : `/bizcon/products/${product.id}?storeId=${product.storeId}`;
+
 
   const discount = calculateDiscount(product.price, product.originalPrice);
 

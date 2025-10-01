@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { getProductById, getStoreMeta } from '../../../../lib/db';
 import { CirclePlus, ShoppingCart, Clock, Check } from 'lucide-react';
 import { useCart } from '../../../../lib/cartContext';
@@ -33,7 +33,10 @@ export default function ProductDetail() {
   const [isAdding, setIsAdding] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
   const { state, dispatch } = useCart();
-  const { addOrder } = useOrders(null); // Pass null for storeId in global context
+  const searchParams = useSearchParams();
+
+  const storeId = useMemo(() => searchParams.get('storeId'), [searchParams]);
+  const { addOrder } = useOrders(storeId); // Pass storeId in global context
   const [storeMeta, setStoreMeta] = useState<StoreMeta | null>(null);
 
   const [imageLoading, setImageLoading] = useState(true);
@@ -55,7 +58,6 @@ export default function ProductDetail() {
         }
         let fetchedProduct: Product | undefined = ProductDetailCache.get(productId);
         if (!fetchedProduct) {
-          // In global context, storeId is null for getProductById
           fetchedProduct = (await getProductById(null, productId)) || undefined;
         }
         if (!isMounted) return;
@@ -75,13 +77,13 @@ export default function ProductDetail() {
 
   useEffect(() => {
     async function fetchMeta() {
-      if (product?.storeId) {
-        const meta = await getStoreMeta(product.storeId);
+      if (storeId) {
+        const meta = await getStoreMeta(storeId);
         setStoreMeta(meta as StoreMeta | null);
       }
     }
     fetchMeta();
-  }, [product]);
+  }, [storeId]);
 
   useEffect(() => {
     if (product) {
@@ -126,6 +128,7 @@ export default function ProductDetail() {
       payload: {
         ...product,
         quantity: 1,
+        storeId: storeId, // Ensure storeId is added to the cart item
       }
     });
     setIsAdding(false);
