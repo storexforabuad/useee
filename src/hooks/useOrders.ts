@@ -20,10 +20,15 @@ export function useOrders(storeId: string | null) {
       const storedOrders = localStorage.getItem('customer_orders');
       if (storedOrders) {
         const allOrders: Order[] = JSON.parse(storedOrders);
-        if (storeId) {
+        
+        // If the storeId is 'bizcon', we want to show all orders (global view).
+        // Otherwise, we filter by the specific storeId.
+        if (storeId && storeId !== 'bizcon') {
           const filteredOrders = allOrders.filter(order => order.storeMeta.id === storeId);
           setOrders(filteredOrders);
         } else {
+          // This branch now correctly handles both the global case (storeId === 'bizcon')
+          // and the case where no storeId is provided at all.
           setOrders(allOrders);
         }
       }
@@ -50,7 +55,7 @@ export function useOrders(storeId: string | null) {
       const updatedOrders = [newOrder, ...allOrders];
       localStorage.setItem('customer_orders', JSON.stringify(updatedOrders));
       
-      // After adding, we need to refetch to apply the filter
+      // After adding, we need to refetch to apply the correct filter context
       fetchOrders();
 
     } catch (error) {

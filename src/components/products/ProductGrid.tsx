@@ -247,6 +247,11 @@ const ProductGrid = memo(function ProductGrid({ products, containerRef, storeId 
     }
     fetchStoreMeta();
   }, [storeId]);
+  
+  const handleDashboardClick = () => {
+    const dashboardStoreId = storeId || 'bizcon';
+    router.push(`/dashboard/${dashboardStoreId}/${userId}`);
+  };
 
   const validProducts = products.filter(p => p && p.id && Array.isArray(p.images));
 
@@ -274,7 +279,7 @@ const ProductGrid = memo(function ProductGrid({ products, containerRef, storeId 
             text={isSingleColumn ? 'Double' : 'Single'}
           />
           <GlassButton
-            onClick={() => router.push(`/dashboard/${storeId}/${userId}`)}
+            onClick={handleDashboardClick}
             aria-label="Customer activity"
           >
             <User className="w-5 h-5 text-slate-700 dark:text-slate-200" />
