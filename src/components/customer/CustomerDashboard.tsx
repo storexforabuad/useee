@@ -147,7 +147,7 @@ function OrdersModal({ isOpen, onClose, orders }: OrdersModalProps) {
                         <div className="flex-grow">
                           <p className="text-sm text-slate-500 dark:text-slate-400">{order.storeMeta.name}</p>
                           <h3 className="font-semibold text-md text-slate-800 dark:text-slate-100 mb-1">{order.product.name}</h3>
-                          <p className="text-lg font-bold text-blue-500 dark:text-blue-400 mb-3">${order.product.price}</p>
+                          <p className="text-lg font-bold text-blue-500 dark:text-blue-400 mb-3">{formatPrice(order.product.price)}</p>
                           
                           <div className="flex items-center gap-2">
                             <motion.button
