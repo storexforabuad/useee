@@ -326,7 +326,7 @@ export async function getProductById(storeId: string | null, id: string): Promis
       }
 
       const productDoc = snapshot.docs[0];
-      const product = { ...productDoc.data(), id: productDoc.id } as Product;
+      const product = { ...productDoc.data(), id: productDoc.id, storeId: productDoc.ref.parent.parent?.id } as Product;
 
       // Increment views for global discovery
       await updateDoc(productDoc.ref, { views: increment(1) });
@@ -532,7 +532,7 @@ export async function incrementProductViews(storeId: string, productId: string):
 
 async function executePaginatedQuery(q: any): Promise<PaginatedProductsResult> {
   const snapshot = await getDocs(q);
-  const products = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }) as Product);
+  const products = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, storeId: doc.ref.parent.parent?.id }) as Product);
   const lastVisible = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
   return { products, lastVisible };
 }
