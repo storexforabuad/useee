@@ -36,7 +36,7 @@ export default function ProductDetail() {
   const searchParams = useSearchParams();
 
   const storeId = useMemo(() => searchParams.get('storeId'), [searchParams]);
-  const { addOrder } = useOrders(storeId); // Pass storeId in global context
+  const { addOrder } = useOrders(null); // Pass null for global context
   const [storeMeta, setStoreMeta] = useState<StoreMeta | null>(null);
 
   const [imageLoading, setImageLoading] = useState(true);

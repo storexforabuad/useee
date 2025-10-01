@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { StoreMeta } from '../../types/store';
 import { Product } from '../../types/product';
 import { incrementOrderCount } from '../../app/actions/orderActions';
+import { useOrders } from '../../hooks/useOrders';
 
 const CartItem = dynamic(
   () => import('../../components/cart/CartItem'),
@@ -25,6 +26,7 @@ export default function CartPage() {
   const { state, dispatch } = useCart();
   const [storeMetas, setStoreMetas] = useState<{[storeId: string]: StoreMeta}>({});
   const [groupedCart, setGroupedCart] = useState<GroupedCart>({});
+  const { addOrder } = useOrders(null); // Use with null for global context
 
   useEffect(() => {
     const newGroupedCart: GroupedCart = state.items.reduce((acc, item) => {
@@ -74,6 +76,11 @@ export default function CartPage() {
   const createWhatsAppMessage = async (storeId: string, items: Product[]) => {
     const storeMeta = storeMetas[storeId];
     if (!storeMeta || !storeMeta.whatsapp) return;
+
+    // Save each item as an order
+    items.forEach(item => {
+      addOrder(item, storeMeta);
+    });
 
     await incrementOrderCount(storeId, items.length);
 

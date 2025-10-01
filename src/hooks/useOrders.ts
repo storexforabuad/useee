@@ -16,16 +16,23 @@ export function useOrders(storeId: string | null) {
 
   const fetchOrders = useCallback(() => {
     setLoading(true);
+    console.log(`[DEBUG] useOrders Hook: Fetching orders. Filtering for storeId:`, storeId);
     try {
       const storedOrders = localStorage.getItem('customer_orders');
       if (storedOrders) {
         const allOrders: Order[] = JSON.parse(storedOrders);
+        console.log('[DEBUG] useOrders Hook: Found this raw data in localStorage:', allOrders);
+
         if (storeId) {
           const filteredOrders = allOrders.filter(order => order.storeMeta.id === storeId);
+          console.log('[DEBUG] useOrders Hook: After filtering, these orders remain:', filteredOrders);
           setOrders(filteredOrders);
         } else {
+          console.log('[DEBUG] useOrders Hook: No storeId provided, returning all orders.');
           setOrders(allOrders);
         }
+      } else {
+        console.log('[DEBUG] useOrders Hook: No customer_orders found in localStorage.');
       }
     } catch (error) {
       console.error("Failed to fetch orders from localStorage", error);
