@@ -12,6 +12,7 @@ import { OrdersSection } from '../../../../components/customer/sections/OrdersSe
 import { ReferralsSection } from '../../../../components/customer/sections/ReferralsSection';
 import { WishlistSection } from '../../../../components/customer/sections/WishlistSection';
 import { ProfileSection } from '../../../../components/customer/sections/ProfileSection';
+import { WishlistModal } from '../../../../components/customer/modals/WishlistModal';
 
 const sectionConfig = {
   home: { title: 'Dashboard', subtitle: 'A summary of your recent orders and interactions.' },
@@ -25,6 +26,7 @@ const DashboardSkeleton = () => (
   <div className="animate-pulse">
     <div className="h-12 mb-6 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
     <div className="grid grid-cols-2 gap-4">
+      <div className="h-40 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
       <div className="h-40 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
       <div className="h-40 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
     </div>
@@ -42,6 +44,7 @@ export default function DashboardPage() {
   // State for modals
   const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
   const [isReferralsModalOpen, setIsReferralsModalOpen] = useState(false);
+  const [isWishlistModalOpen, setIsWishlistModalOpen] = useState(false);
 
   useEffect(() => {
     if (!loading) {
@@ -57,7 +60,7 @@ export default function DashboardPage() {
   };
 
   const currentSection = sectionConfig[activeSection];
-  const isAnyModalOpen = isOrdersModalOpen || isReferralsModalOpen;
+  const isAnyModalOpen = isOrdersModalOpen || isReferralsModalOpen || isWishlistModalOpen;
 
   return (
     <div className="bg-slate-50 dark:bg-black min-h-screen">
@@ -97,6 +100,9 @@ export default function DashboardPage() {
                   isReferralsModalOpen={isReferralsModalOpen}
                   onReferralsModalOpen={() => setIsReferralsModalOpen(true)}
                   onReferralsModalClose={() => setIsReferralsModalOpen(false)}
+                  isWishlistModalOpen={isWishlistModalOpen}
+                  onWishlistModalOpen={() => setIsWishlistModalOpen(true)}
+                  onWishlistModalClose={() => setIsWishlistModalOpen(false)}
                 />
               </>
             )
@@ -112,6 +118,7 @@ export default function DashboardPage() {
         setActiveSection={setActiveSection} 
         isModalOpen={isAnyModalOpen} 
       />
+      <WishlistModal isOpen={isWishlistModalOpen} onClose={() => setIsWishlistModalOpen(false)} />
     </div>
   );
 }
