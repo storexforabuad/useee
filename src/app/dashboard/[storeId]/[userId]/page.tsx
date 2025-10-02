@@ -14,7 +14,7 @@ import { WishlistSection } from '../../../../components/customer/sections/Wishli
 import { ProfileSection } from '../../../../components/customer/sections/ProfileSection';
 
 const sectionConfig = {
-  home: { title: 'Your Activity', subtitle: 'A summary of your recent orders and interactions.' },
+  home: { title: 'Dashboard', subtitle: 'A summary of your recent orders and interactions.' },
   orders: { title: 'Your Orders', subtitle: 'Review and track all your past orders.' },
   referrals: { title: 'Your Referrals', subtitle: 'Track your referrals and see your rewards.' },
   wishlist: { title: 'Your Wishlist', subtitle: 'View and share items you have saved.' },

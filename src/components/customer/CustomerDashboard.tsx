@@ -31,14 +31,14 @@ export function CustomerDashboard({
     <>
       <div className="grid grid-cols-2 gap-4">
         <CustomerStatCard
-          icon={<ShoppingBag className="w-8 h-8 opacity-80" />}
+          icon={<ShoppingBag className="w-7 h-7 opacity-80" />}
           value={orders.length}
           label="My Orders"
           gradient="bg-gradient-to-br from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700"
           onClick={onOrdersModalOpen}
         />
         <CustomerStatCard
-          icon={<Gift className="w-8 h-8 opacity-80" />}
+          icon={<Gift className="w-7 h-7 opacity-80" />}
           value={0}
           label="My Referrals"
           gradient="bg-gradient-to-br from-green-500 to-teal-600 dark:from-green-600 dark:to-teal-700"

@@ -19,7 +19,7 @@ export function CustomerStatCard({ icon, value, label, gradient, onClick }: Cust
       whileHover={{ scale: 1.03, y: -5 }}
       whileTap={{ scale: 0.98 }}
     >
-      <div className="mb-2">{icon}</div>
+      <div className="bg-white/20 rounded-full p-3 mb-2">{icon}</div>
       <span className="text-4xl font-bold">{value}</span>
       <span className="text-sm font-medium mt-1 opacity-90">{label}</span>
     </motion.button>
