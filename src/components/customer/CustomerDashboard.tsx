@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingBag, RefreshCw, Gift, Star } from 'lucide-react';
 import { Order } from '../../hooks/useOrders';
@@ -14,13 +13,32 @@ interface CustomerDashboardProps {
   onRefresh: () => void;
   isRefreshing: boolean;
   storeId?: string;
+  isOrdersModalOpen: boolean;
+  onOrdersModalOpen: () => void;
+  onOrdersModalClose: () => void;
+  isReferralsModalOpen: boolean;
+  onReferralsModalOpen: () => void;
+  onReferralsModalClose: () => void;
+  isRewardsModalOpen: boolean;
+  onRewardsModalOpen: () => void;
+  onRewardsModalClose: () => void;
 }
 
-export function CustomerDashboard({ orders, onRefresh, isRefreshing, storeId }: CustomerDashboardProps) {
-  const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
-  const [isReferralsModalOpen, setIsReferralsModalOpen] = useState(false);
-  const [isRewardsModalOpen, setIsRewardsModalOpen] = useState(false);
-
+export function CustomerDashboard({ 
+  orders, 
+  onRefresh, 
+  isRefreshing, 
+  storeId, 
+  isOrdersModalOpen,
+  onOrdersModalOpen,
+  onOrdersModalClose,
+  isReferralsModalOpen,
+  onReferralsModalOpen,
+  onReferralsModalClose,
+  isRewardsModalOpen,
+  onRewardsModalOpen,
+  onRewardsModalClose
+}: CustomerDashboardProps) {
   const isStoreContext = storeId && storeId !== 'bizcon';
 
   return (
@@ -40,7 +58,7 @@ export function CustomerDashboard({ orders, onRefresh, isRefreshing, storeId }: 
           icon={<ShoppingBag className="w-6 h-6 text-blue-500 dark:text-blue-400" />}
           title="My Orders"
           subtitle={`You have ${orders.length} order(s)`}
-          onClick={() => setIsOrdersModalOpen(true)}
+          onClick={onOrdersModalOpen}
           color="blue"
         />
 
@@ -48,7 +66,7 @@ export function CustomerDashboard({ orders, onRefresh, isRefreshing, storeId }: 
           icon={<Gift className="w-6 h-6 text-green-500 dark:text-green-400" />}
           title="My Referrals"
           subtitle={isStoreContext ? "Refer friends to this store" : "Refer friends for global rewards"}
-          onClick={() => setIsReferralsModalOpen(true)}
+          onClick={onReferralsModalOpen}
           color="green"
         />
 
@@ -56,14 +74,14 @@ export function CustomerDashboard({ orders, onRefresh, isRefreshing, storeId }: 
           icon={<Star className="w-6 h-6 text-yellow-500 dark:text-yellow-400" />}
           title="My Rewards"
           subtitle={isStoreContext ? "View your rewards from this store" : "View your global rewards"}
-          onClick={() => setIsRewardsModalOpen(true)}
+          onClick={onRewardsModalOpen}
           color="yellow"
         />
       </div>
 
-      <OrdersModal isOpen={isOrdersModalOpen} onClose={() => setIsOrdersModalOpen(false)} orders={orders} />
-      <ReferralsModal isOpen={isReferralsModalOpen} onClose={() => setIsReferralsModalOpen(false)} storeId={storeId} />
-      <RewardsModal isOpen={isRewardsModalOpen} onClose={() => setIsRewardsModalOpen(false)} storeId={storeId} />
+      <OrdersModal isOpen={isOrdersModalOpen} onClose={onOrdersModalClose} orders={orders} />
+      <ReferralsModal isOpen={isReferralsModalOpen} onClose={onReferralsModalClose} storeId={storeId} />
+      <RewardsModal isOpen={isRewardsModalOpen} onClose={onRewardsModalClose} storeId={storeId} />
     </>
   );
 }

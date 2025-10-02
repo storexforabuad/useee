@@ -8,6 +8,7 @@ export type CustomerSection = 'home' | 'orders' | 'referrals' | 'wishlist' | 'pr
 interface CustomerMobileNavProps {
   activeSection: CustomerSection;
   setActiveSection: (section: CustomerSection) => void;
+  isModalOpen: boolean;
 }
 
 const navItems = [
@@ -18,9 +19,9 @@ const navItems = [
   { id: 'profile', icon: User, label: 'Profile' },
 ] as const;
 
-export function CustomerMobileNav({ activeSection, setActiveSection }: CustomerMobileNavProps) {
+export function CustomerMobileNav({ activeSection, setActiveSection, isModalOpen }: CustomerMobileNavProps) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-[calc(4.5rem+env(safe-area-inset-bottom))] bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800/80 z-50">
+    <nav className={`fixed bottom-0 left-0 right-0 h-[calc(4.5rem+env(safe-area-inset-bottom))] bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800/80 z-50 transition-transform duration-300 ease-in-out ${isModalOpen ? 'translate-y-full pointer-events-none' : 'translate-y-0'}`}>
       <div className="flex justify-around items-start h-full max-w-md mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;

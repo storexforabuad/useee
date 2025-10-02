@@ -25,6 +25,11 @@ export default function DashboardPage() {
   const { orders, fetchOrders, loading } = useOrders(storeId || null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeSection, setActiveSection] = useState<CustomerSection>('home');
+  
+  // State for modals
+  const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
+  const [isReferralsModalOpen, setIsReferralsModalOpen] = useState(false);
+  const [isRewardsModalOpen, setIsRewardsModalOpen] = useState(false);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -34,6 +39,7 @@ export default function DashboardPage() {
   };
 
   const currentSection = sectionConfig[activeSection];
+  const isAnyModalOpen = isOrdersModalOpen || isReferralsModalOpen || isRewardsModalOpen;
 
   return (
     <div className="bg-slate-50 dark:bg-black min-h-screen">
@@ -51,6 +57,15 @@ export default function DashboardPage() {
               onRefresh={handleRefresh}
               isRefreshing={isRefreshing || loading}
               storeId={storeId}
+              isOrdersModalOpen={isOrdersModalOpen}
+              onOrdersModalOpen={() => setIsOrdersModalOpen(true)}
+              onOrdersModalClose={() => setIsOrdersModalOpen(false)}
+              isReferralsModalOpen={isReferralsModalOpen}
+              onReferralsModalOpen={() => setIsReferralsModalOpen(true)}
+              onReferralsModalClose={() => setIsReferralsModalOpen(false)}
+              isRewardsModalOpen={isRewardsModalOpen}
+              onRewardsModalOpen={() => setIsRewardsModalOpen(true)}
+              onRewardsModalClose={() => setIsRewardsModalOpen(false)}
             />
           )}
           {activeSection === 'orders' && <OrdersSection storeId={storeId} />}
@@ -59,7 +74,11 @@ export default function DashboardPage() {
           {activeSection === 'profile' && <ProfileSection storeId={storeId} />}
         </div>
       </main>
-      <CustomerMobileNav activeSection={activeSection} setActiveSection={setActiveSection} />
+      <CustomerMobileNav 
+        activeSection={activeSection} 
+        setActiveSection={setActiveSection} 
+        isModalOpen={isAnyModalOpen} 
+      />
     </div>
   );
 }
