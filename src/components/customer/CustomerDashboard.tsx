@@ -62,8 +62,8 @@ export function CustomerDashboard({ orders, onRefresh, isRefreshing, storeId }: 
       </div>
 
       <OrdersModal isOpen={isOrdersModalOpen} onClose={() => setIsOrdersModalOpen(false)} orders={orders} />
-      <ReferralsModal isOpen={isReferralsModalOpen} onClose={() => setIsReferralsModalOpen(false)} />
-      <RewardsModal isOpen={isRewardsModalOpen} onClose={() => setIsRewardsModalOpen(false)} />
+      <ReferralsModal isOpen={isReferralsModalOpen} onClose={() => setIsReferralsModalOpen(false)} storeId={storeId} />
+      <RewardsModal isOpen={isRewardsModalOpen} onClose={() => setIsRewardsModalOpen(false)} storeId={storeId} />
     </>
   );
 }
