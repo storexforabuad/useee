@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
@@ -21,16 +21,33 @@ const sectionConfig = {
   profile: { title: 'Your Profile', subtitle: 'Manage your account details and preferences.' },
 };
 
+const DashboardSkeleton = () => (
+  <div className="animate-pulse">
+    <div className="h-12 mb-6 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+    <div className="grid grid-cols-2 gap-4">
+      <div className="h-40 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+      <div className="h-40 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+    </div>
+  </div>
+);
+
 export default function DashboardPage() {
   const params = useParams();
   const storeId = Array.isArray(params.storeId) ? params.storeId[0] : params.storeId;
   const { orders, fetchOrders, loading } = useOrders(storeId || null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeSection, setActiveSection] = useState<CustomerSection>('home');
+  const [initialLoading, setInitialLoading] = useState(true);
   
   // State for modals
   const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
   const [isReferralsModalOpen, setIsReferralsModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loading) {
+      setInitialLoading(false);
+    }
+  }, [loading]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -57,28 +74,32 @@ export default function DashboardPage() {
 
         <div className={activeSection === 'home' ? '' : 'mt-8'}>
           {activeSection === 'home' && (
-            <>
-            <motion.button
-              onClick={handleRefresh}
-              className="w-full flex items-center justify-center gap-3 bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-bold py-3 px-4 rounded-2xl shadow-lg transition-all duration-300 ease-in-out mb-6"
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={isRefreshing || loading}
-            >
-              <RefreshCw className={`w-5 h-5 ${(isRefreshing || loading) ? 'animate-spin' : ''}`} />
-              <span>{(isRefreshing || loading) ? 'Refreshing...' : 'Refresh'}</span>
-            </motion.button>
-            <CustomerDashboard 
-              orders={orders}
-              storeId={storeId}
-              isOrdersModalOpen={isOrdersModalOpen}
-              onOrdersModalOpen={() => setIsOrdersModalOpen(true)}
-              onOrdersModalClose={() => setIsOrdersModalOpen(false)}
-              isReferralsModalOpen={isReferralsModalOpen}
-              onReferralsModalOpen={() => setIsReferralsModalOpen(true)}
-              onReferralsModalClose={() => setIsReferralsModalOpen(false)}
-            />
-            </>
+            initialLoading ? (
+              <DashboardSkeleton />
+            ) : (
+              <>
+                <motion.button
+                  onClick={handleRefresh}
+                  className="w-full flex items-center justify-center gap-3 bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-bold py-3 px-4 rounded-2xl shadow-lg transition-all duration-300 ease-in-out mb-6"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={isRefreshing || loading}
+                >
+                  <RefreshCw className={`w-5 h-5 ${(isRefreshing || loading) ? 'animate-spin' : ''}`} />
+                  <span>{(isRefreshing || loading) ? 'Refreshing...' : 'Refresh'}</span>
+                </motion.button>
+                <CustomerDashboard 
+                  orders={orders}
+                  storeId={storeId}
+                  isOrdersModalOpen={isOrdersModalOpen}
+                  onOrdersModalOpen={() => setIsOrdersModalOpen(true)}
+                  onOrdersModalClose={() => setIsOrdersModalOpen(false)}
+                  isReferralsModalOpen={isReferralsModalOpen}
+                  onReferralsModalOpen={() => setIsReferralsModalOpen(true)}
+                  onReferralsModalClose={() => setIsReferralsModalOpen(false)}
+                />
+              </>
+            )
           )}
           {activeSection === 'orders' && <OrdersSection storeId={storeId} />}
           {activeSection === 'referrals' && <ReferralsSection storeId={storeId} />}
