@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { RefreshCw } from 'lucide-react';
 import Navbar from '../../../../components/layout/navbar';
 import { useOrders } from '../../../../hooks/useOrders';
 import { CustomerDashboard } from '../../../../components/customer/CustomerDashboard';
@@ -12,7 +14,7 @@ import { WishlistSection } from '../../../../components/customer/sections/Wishli
 import { ProfileSection } from '../../../../components/customer/sections/ProfileSection';
 
 const sectionConfig = {
-  home: { title: 'Your Activity', subtitle: 'A summary of your recent orders and interactions.' },
+  home: { title: 'Summary', subtitle: 'A summary of your recent orders and interactions.' },
   orders: { title: 'Your Orders', subtitle: 'Review and track all your past orders.' },
   referrals: { title: 'Your Referrals', subtitle: 'Track your referrals and see your rewards.' },
   wishlist: { title: 'Your Wishlist', subtitle: 'View and share items you have saved.' },
@@ -29,7 +31,6 @@ export default function DashboardPage() {
   // State for modals
   const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
   const [isReferralsModalOpen, setIsReferralsModalOpen] = useState(false);
-  const [isRewardsModalOpen, setIsRewardsModalOpen] = useState(false);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -39,23 +40,35 @@ export default function DashboardPage() {
   };
 
   const currentSection = sectionConfig[activeSection];
-  const isAnyModalOpen = isOrdersModalOpen || isReferralsModalOpen || isRewardsModalOpen;
+  const isAnyModalOpen = isOrdersModalOpen || isReferralsModalOpen;
 
   return (
     <div className="bg-slate-50 dark:bg-black min-h-screen">
       <Navbar storeName={currentSection.title} />
       <main className="p-4 pt-20 pb-28 max-w-2xl mx-auto">
-        <h1 className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 mb-2">{currentSection.title}</h1>
-        <p className="text-slate-500 dark:text-slate-400 mb-6">
-          {currentSection.subtitle}
-        </p>
+        {activeSection !== 'home' && (
+          <>
+            <h1 className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 mb-2">{currentSection.title}</h1>
+            <p className="text-slate-500 dark:text-slate-400 mb-6">
+              {currentSection.subtitle}
+            </p>
+          </>
+        )}
 
-        <div className="mt-8">
+        <div className={activeSection === 'home' ? '' : 'mt-8'}>
           {activeSection === 'home' && (
+            <>
+            <motion.button
+              onClick={handleRefresh}
+              className="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-semibold py-3 px-4 rounded-xl shadow-sm transition-all duration-200 ease-in-out hover:shadow-md active:scale-[0.98] mb-6"
+              whileTap={{ scale: 0.98 }}
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span className="text-sm">Refresh</span>
+            </motion.button>
             <CustomerDashboard 
               orders={orders}
-              onRefresh={handleRefresh}
-              isRefreshing={isRefreshing || loading}
               storeId={storeId}
               isOrdersModalOpen={isOrdersModalOpen}
               onOrdersModalOpen={() => setIsOrdersModalOpen(true)}
@@ -63,10 +76,8 @@ export default function DashboardPage() {
               isReferralsModalOpen={isReferralsModalOpen}
               onReferralsModalOpen={() => setIsReferralsModalOpen(true)}
               onReferralsModalClose={() => setIsReferralsModalOpen(false)}
-              isRewardsModalOpen={isRewardsModalOpen}
-              onRewardsModalOpen={() => setIsRewardsModalOpen(true)}
-              onRewardsModalClose={() => setIsRewardsModalOpen(false)}
             />
+            </>
           )}
           {activeSection === 'orders' && <OrdersSection storeId={storeId} />}
           {activeSection === 'referrals' && <ReferralsSection storeId={storeId} />}
