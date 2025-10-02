@@ -14,7 +14,7 @@ import { WishlistSection } from '../../../../components/customer/sections/Wishli
 import { ProfileSection } from '../../../../components/customer/sections/ProfileSection';
 
 const sectionConfig = {
-  home: { title: 'Summary', subtitle: 'A summary of your recent orders and interactions.' },
+  home: { title: 'Your Activity', subtitle: 'A summary of your recent orders and interactions.' },
   orders: { title: 'Your Orders', subtitle: 'Review and track all your past orders.' },
   referrals: { title: 'Your Referrals', subtitle: 'Track your referrals and see your rewards.' },
   wishlist: { title: 'Your Wishlist', subtitle: 'View and share items you have saved.' },
@@ -60,12 +60,13 @@ export default function DashboardPage() {
             <>
             <motion.button
               onClick={handleRefresh}
-              className="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-semibold py-3 px-4 rounded-xl shadow-sm transition-all duration-200 ease-in-out hover:shadow-md active:scale-[0.98] mb-6"
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-bold py-3 px-4 rounded-2xl shadow-lg transition-all duration-300 ease-in-out mb-6"
+              whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              disabled={isRefreshing}
+              disabled={isRefreshing || loading}
             >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span className="text-sm">Refresh</span>
+              <RefreshCw className={`w-5 h-5 ${(isRefreshing || loading) ? 'animate-spin' : ''}`} />
+              <span>{(isRefreshing || loading) ? 'Refreshing...' : 'Refresh'}</span>
             </motion.button>
             <CustomerDashboard 
               orders={orders}

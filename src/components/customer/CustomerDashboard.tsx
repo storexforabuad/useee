@@ -1,11 +1,10 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { ShoppingBag, Gift } from 'lucide-react';
 import { Order } from '../../hooks/useOrders';
 import { OrdersModal } from './modals/OrdersModal';
 import { ReferralsModal } from './modals/ReferralsModal';
-import { DashboardActionCard } from './DashboardActionCard';
+import { CustomerStatCard } from './CustomerStatCard';
 
 interface CustomerDashboardProps {
   orders: Order[];
@@ -28,25 +27,22 @@ export function CustomerDashboard({
   onReferralsModalOpen,
   onReferralsModalClose,
 }: CustomerDashboardProps) {
-  const isStoreContext = storeId && storeId !== 'bizcon';
-
   return (
     <>
-      <div className="w-full flex flex-col gap-3">
-        <DashboardActionCard
-          icon={<ShoppingBag className="w-6 h-6 text-blue-500 dark:text-blue-400" />}
-          title="My Orders"
-          subtitle={`You have ${orders.length} order(s)`}
+      <div className="grid grid-cols-2 gap-4">
+        <CustomerStatCard
+          icon={<ShoppingBag className="w-8 h-8 opacity-80" />}
+          value={orders.length}
+          label="My Orders"
+          gradient="bg-gradient-to-br from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700"
           onClick={onOrdersModalOpen}
-          color="blue"
         />
-
-        <DashboardActionCard
-          icon={<Gift className="w-6 h-6 text-green-500 dark:text-green-400" />}
-          title="My Referrals"
-          subtitle={isStoreContext ? "Refer friends to this store" : "Refer friends for global rewards"}
+        <CustomerStatCard
+          icon={<Gift className="w-8 h-8 opacity-80" />}
+          value={0}
+          label="My Referrals"
+          gradient="bg-gradient-to-br from-green-500 to-teal-600 dark:from-green-600 dark:to-teal-700"
           onClick={onReferralsModalOpen}
-          color="green"
         />
       </div>
 
