@@ -32,7 +32,10 @@ export function CustomerMobileNav({ activeSection, setActiveSection, isModalOpen
               onClick={() => setActiveSection(item.id)}
               className="flex flex-col items-center justify-center pt-3 gap-1 w-full h-full text-slate-500 dark:text-slate-400 relative transition-colors duration-200"
             >
-              <Icon className={`w-6 h-6 transition-colors ${isActive ? 'text-blue-500 dark:text-blue-400' : ''}`} />
+              <Icon 
+                className={`w-6 h-6 transition-colors ${isActive ? 'text-blue-500 dark:text-blue-400' : ''}`}
+                fill={isActive ? 'currentColor' : 'none'} 
+              />
               <span className={`text-xs font-medium transition-colors ${isActive ? 'text-blue-500 dark:text-blue-400' : ''}`}>
                 {item.label}
               </span>
