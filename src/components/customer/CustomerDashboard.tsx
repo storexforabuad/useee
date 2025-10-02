@@ -2,22 +2,26 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingBag, RefreshCw, ArrowRight } from 'lucide-react';
+import { ShoppingBag, RefreshCw, Gift, Star } from 'lucide-react';
 import { Order } from '../../hooks/useOrders';
 import { OrdersModal } from './modals/OrdersModal';
+import { ReferralsModal } from './modals/ReferralsModal';
+import { RewardsModal } from './modals/RewardsModal';
+import { DashboardActionCard } from './DashboardActionCard';
 
-interface OrdersCardProps {
+interface CustomerDashboardProps {
   orders: Order[];
   onRefresh: () => void;
   isRefreshing: boolean;
+  storeId?: string;
 }
 
-export function OrdersCard({ orders, onRefresh, isRefreshing }: OrdersCardProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export function CustomerDashboard({ orders, onRefresh, isRefreshing, storeId }: CustomerDashboardProps) {
+  const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
+  const [isReferralsModalOpen, setIsReferralsModalOpen] = useState(false);
+  const [isRewardsModalOpen, setIsRewardsModalOpen] = useState(false);
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
+  const isStoreContext = storeId && storeId !== 'bizcon';
 
   return (
     <>
@@ -32,31 +36,34 @@ export function OrdersCard({ orders, onRefresh, isRefreshing }: OrdersCardProps)
           <span className="text-sm">Refresh</span>
         </motion.button>
 
-        <motion.div
-          layout
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="bg-white dark:bg-slate-900/80 backdrop-blur-lg border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-lg w-full overflow-hidden"
-          onClick={handleOpenModal}
-        >
-          <div className="p-5 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-100 dark:bg-blue-900/40 p-3 rounded-full">
-                <ShoppingBag className="w-6 h-6 text-blue-500 dark:text-blue-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">My Orders</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">You have {orders.length} order(s)</p>
-              </div>
-            </div>
-            <ArrowRight className="w-5 h-5 text-slate-400 dark:text-slate-500" />
-          </div>
-        </motion.div>
+        <DashboardActionCard
+          icon={<ShoppingBag className="w-6 h-6 text-blue-500 dark:text-blue-400" />}
+          title="My Orders"
+          subtitle={`You have ${orders.length} order(s)`}
+          onClick={() => setIsOrdersModalOpen(true)}
+          color="blue"
+        />
+
+        <DashboardActionCard
+          icon={<Gift className="w-6 h-6 text-green-500 dark:text-green-400" />}
+          title="My Referrals"
+          subtitle={isStoreContext ? "Refer friends to this store" : "Refer friends for global rewards"}
+          onClick={() => setIsReferralsModalOpen(true)}
+          color="green"
+        />
+
+        <DashboardActionCard
+          icon={<Star className="w-6 h-6 text-yellow-500 dark:text-yellow-400" />}
+          title="My Rewards"
+          subtitle={isStoreContext ? "View your rewards from this store" : "View your global rewards"}
+          onClick={() => setIsRewardsModalOpen(true)}
+          color="yellow"
+        />
       </div>
-      
-      <OrdersModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} orders={orders} />
+
+      <OrdersModal isOpen={isOrdersModalOpen} onClose={() => setIsOrdersModalOpen(false)} orders={orders} />
+      <ReferralsModal isOpen={isReferralsModalOpen} onClose={() => setIsReferralsModalOpen(false)} />
+      <RewardsModal isOpen={isRewardsModalOpen} onClose={() => setIsRewardsModalOpen(false)} />
     </>
   );
 }

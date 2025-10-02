@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Navbar from '../../../../components/layout/navbar';
 import { useOrders } from '../../../../hooks/useOrders';
-import { OrdersCard } from '../../../../components/customer/CustomerDashboard';
+import { CustomerDashboard } from '../../../../components/customer/CustomerDashboard';
 
 export default function DashboardPage() {
   const params = useParams();
@@ -29,10 +29,11 @@ export default function DashboardPage() {
         </p>
 
         <div className="mt-8">
-          <OrdersCard 
+          <CustomerDashboard 
             orders={orders}
             onRefresh={handleRefresh}
             isRefreshing={isRefreshing || loading}
+            storeId={storeId}
           />
         </div>
       </div>
