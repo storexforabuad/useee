@@ -8,11 +8,11 @@ interface Referral {
   businessName: string;
   businessNumber: string;
   storeId: string;
-  createdAt: any;
+  createdAt: { seconds: number; nanoseconds: number; };
 }
 
 // GET all referrals for the dev team, grouped by store
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const referralsQuery = collectionGroup(db, 'referrals');
     const querySnapshot = await getDocs(referralsQuery);

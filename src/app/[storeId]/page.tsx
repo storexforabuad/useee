@@ -16,8 +16,9 @@ import CategoryBar from '../../components/layout/CategoryBar';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import type { Product } from '../../types/product';
 import ConnectionErrorToast from '../../components/ConnectionErrorToast';
-import { CategoryCache } from '../../lib/categoryCache';
 import { ProductListCache } from '../../lib/productCache';
+import { useUser } from '@/hooks/useUser';
+import { useModalStore } from '@/lib/modalStore';
 
 const ProductGrid = dynamic(
   () => import('../../components/products/ProductGrid'),
@@ -50,13 +51,21 @@ export default function StorefrontPage() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('Promo');
-  const [lastVisible, setLastVisible] = useState<any>(null);
+  const [lastVisible, setLastVisible] = useState<null | object>(null);
   const [hasMore, setHasMore] = useState(true);
   const { isConnectionError, setIsConnectionError } = useConnectionCheck();
   const observerRef = useRef<HTMLDivElement>(null);
   const productGridRef = useRef<HTMLDivElement>(null);
+  const { user, loading: userLoading } = useUser();
+  const { openSignInModal } = useModalStore();
 
-  const fetchProducts = useCallback(async (category: string, pageNum = 1, lastDoc: any = null) => {
+  useEffect(() => {
+    if (!userLoading && !user) {
+      openSignInModal();
+    }
+  }, [user, userLoading, openSignInModal]);
+
+  const fetchProducts = useCallback(async (category: string, pageNum = 1, lastDoc: null | object = null) => {
     if (!storeId) return;
     setLoading(true);
     try {

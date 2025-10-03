@@ -17,6 +17,8 @@ import SkeletonLoader from '../../components/SkeletonLoader';
 import type { Product } from '../../types/product';
 import ConnectionErrorToast from '../../components/ConnectionErrorToast';
 import { CategoryCache } from '../../lib/categoryCache';
+import { useUser } from '@/hooks/useUser';
+import { useModalStore } from '@/lib/modalStore';
 
 const ProductGrid = dynamic(
   () => import('../../components/products/ProductGrid'),
@@ -51,6 +53,14 @@ export default function BizconPage() {
   const { isConnectionError, setIsConnectionError } = useConnectionCheck();
   const observerRef = useRef<HTMLDivElement>(null);
   const productGridRef = useRef<HTMLDivElement>(null);
+  const { user, loading: userLoading } = useUser();
+  const { openSignInModal } = useModalStore();
+
+  useEffect(() => {
+    if (!userLoading && !user) {
+      openSignInModal();
+    }
+  }, [user, userLoading, openSignInModal]);
 
   const fetchProducts = useCallback(async (category: string, lastDoc: DocumentSnapshot | null = null) => {
     if (loading) return;

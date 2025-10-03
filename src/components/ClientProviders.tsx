@@ -3,6 +3,8 @@
 import dynamic from 'next/dynamic';
 import { SpotlightProvider, useSpotlightContext } from '@/context/SpotlightContext';
 import { AnimatePresence, motion } from 'framer-motion';
+import { AuthProvider } from '@/context/AuthContext';
+import SignInModal from './auth/SignInModal';
 
 const InstallPrompt = dynamic(() => import('../components/InstallPrompt'), {
   ssr: false
@@ -13,15 +15,22 @@ const Toaster = dynamic(() => import('react-hot-toast').then(mod => mod.Toaster)
 });
 
 function SpotlightOverlay() {
-  const { spotlightStep, setSpotlightStep } = useSpotlightContext();
+  const spotlightContext = useSpotlightContext();
 
   const handleOverlayClick = () => {
-    setSpotlightStep('inactive');
+    if (spotlightContext.isTipsSpotlightActive) {
+      spotlightContext.setIsTipsSpotlightActive(false);
+    }
+    if (spotlightContext.spotlightStep !== 'inactive') {
+      spotlightContext.setSpotlightStep('inactive');
+    }
   };
+
+  const isActive = spotlightContext.isTipsSpotlightActive || spotlightContext.spotlightStep !== 'inactive';
 
   return (
     <AnimatePresence>
-      {spotlightStep !== 'inactive' && (
+      {isActive && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -37,21 +46,24 @@ function SpotlightOverlay() {
 
 export default function ClientProviders({ children }: { children: React.ReactNode }) {
   return (
-    <SpotlightProvider>
-      {children}
-      <InstallPrompt />
-      <Toaster 
-        position="bottom-center"
-        toastOptions={{
-          className: 'toast',
-          style: {
-            background: 'var(--card-background)',
-            color: 'var(--text-primary)',
-            border: '1px solid var(--border-color)',
-          },
-        }}
-      />
-      <SpotlightOverlay />
-    </SpotlightProvider>
+    <AuthProvider>
+      <SpotlightProvider>
+        {children}
+        <InstallPrompt />
+        <Toaster 
+          position="bottom-center"
+          toastOptions={{
+            className: 'toast',
+            style: {
+              background: 'var(--card-background)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-color)',
+            },
+          }}
+        />
+        <SignInModal />
+        <SpotlightOverlay />
+      </SpotlightProvider>
+    </AuthProvider>
   );
 }

@@ -1,7 +1,41 @@
+
 'use server';
 
 import { db } from '@/lib/db';
-import { WriteBatch, collection, getDocs, writeBatch, doc, updateDoc } from 'firebase/firestore';
+import { WriteBatch, collection, getDocs, writeBatch, doc, updateDoc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { generateUniqueReferralCode } from '@/utils/referrals';
+
+interface UserData {
+    uid: string;
+    displayName: string | null;
+    email: string | null;
+    photoURL: string | null;
+}
+
+export async function upsertUser(userData: UserData) {
+    const userRef = doc(db, 'users', userData.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+        // User is new, create a new document
+        const referralCode = await generateUniqueReferralCode();
+        await setDoc(userRef, {
+            ...userData,
+            referralCode,
+            createdAt: serverTimestamp(),
+            lastLoginAt: serverTimestamp(),
+        });
+    } else {
+        // User exists, update last login time
+        await updateDoc(userRef, {
+            lastLoginAt: serverTimestamp(),
+        });
+    }
+
+    const updatedUserSnap = await getDoc(userRef);
+    return updatedUserSnap.data();
+}
+
 
 export async function resetAllOnboardingStatuses() {
   try {

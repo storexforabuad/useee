@@ -1,1 +1,4 @@
-export const useUser = () => ({ userId: 'user_123_abc' });
+
+import { useAuth } from "@/context/AuthContext";
+
+export const useUser = useAuth;
