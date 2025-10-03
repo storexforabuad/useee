@@ -163,15 +163,11 @@ export default function BizconPage() {
               {isConnectionError && (
                 <ConnectionErrorToast onRetry={() => fetchProducts(activeCategory, null)} />
               )}
-              {products.length === 0 && !loading ? (
-                 <div className="text-center py-10 px-4">No products found in this category.</div>
-              ) : (
-                <ProductGrid 
-                  products={products}
-                  containerRef={productGridRef}
-                  storeId={null}
-                />
-              )}
+              <ProductGrid 
+                products={products}
+                containerRef={productGridRef}
+                storeId={null}
+              />
               {hasMore && (
                 <div ref={observerRef} className="h-8 flex items-center justify-center">
                    {loading && <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>}
