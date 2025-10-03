@@ -59,49 +59,67 @@ export default function CategoryBar({ onCategorySelect, activeCategory, categori
     return iconMap[categoryName] || '🛍️';
   };
 
-  const getCategoryColor = (categoryName: string): string => {
+  // This function now only returns styles for *special* system categories.
+  const getCategoryColor = (categoryName: string): string | null => {
     const colorMap: { [key: string]: string } = {
       'Promo': 'bg-[var(--badge-red-bg)] text-[var(--badge-red-text)]',
       'Popular': 'bg-[var(--badge-pink-bg)] text-[var(--badge-pink-text)]',
       'New Arrivals': 'bg-[var(--badge-blue-bg)] text-[var(--badge-blue-text)]',
     };
-    return colorMap[categoryName] || 'bg-card-hover text-text-primary';
+    return colorMap[categoryName] || null;
   };
 
   const CategoryButton = ({ name, onClick, isActive }: { 
     name: string; 
     onClick: (e: React.MouseEvent<HTMLButtonElement>) => void; 
     isActive: boolean;
-  }) => (
-    <motion.button
-      onClick={onClick}
-      className="flex flex-col items-center w-[72px] sm:w-[80px] flex-shrink-0"
-      whileTap={{ scale: 0.95 }}
-      transition={{ type: "spring", stiffness: 400, damping: 17 }}
-    >
-      <motion.div 
-        className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-1 sm:mb-2
-          ${getCategoryColor(name)}
-          ${isActive 
-            ? 'ring-[4px] ring-[var(--button-primary)] ring-offset-2 ring-offset-[var(--background)] shadow-[var(--shadow-lg)]' 
-            : 'hover:ring-3 hover:ring-[var(--button-primary)] hover:ring-offset-1 hover:ring-offset-[var(--background)]'
-          }
-          transform transition-all duration-200 ease-out`}
-        animate={isActive ? { scale: [1, 1.1, 1.05] } : { scale: 1 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
+  }) => {
+    const specialColorStyle = getCategoryColor(name);
+
+    // If active, use the special color. If not, use the theme's secondary button style.
+    // If inactive, also use the theme's secondary button style for a consistent, high-contrast look.
+    const iconContainerStyle = isActive && specialColorStyle
+      ? specialColorStyle
+      : 'bg-[var(--button-secondary)]';
+      
+    // The text on the icon needs to be readable. Special styles have their own text color.
+    // For our default style, we need to ensure the text is bright.
+    const iconTextStyle = isActive && specialColorStyle ? '' : 'text-text-primary';
+
+    // The label below the icon is bright when active, and dimmer when inactive.
+    const labelTextStyle = isActive ? 'text-text-primary' : 'text-text-secondary';
+
+    return (
+      <motion.button
+        onClick={onClick}
+        className="flex flex-col items-center w-[72px] sm:w-[80px] flex-shrink-0"
+        whileTap={{ scale: 0.95 }}
+        transition={{ type: "spring", stiffness: 400, damping: 17 }}
       >
-        <span className="text-2xl sm:text-2xl">{getIconForCategory(name)}</span>
-      </motion.div>
-      <motion.span 
-        className="text-xs font-medium truncate max-w-[80px] text-center"
-        animate={isActive ? { scale: [1, 1.05, 1] } : { scale: 1 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-      >
-        {name}
-      </motion.span>
-    </motion.button>
-  );
+        <motion.div 
+          className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-1 sm:mb-2
+            ${iconContainerStyle}
+            ${isActive 
+              ? 'ring-[4px] ring-[var(--button-primary)] ring-offset-2 ring-offset-[var(--background)] shadow-[var(--shadow-lg)]' 
+              : 'hover:ring-3 hover:ring-[var(--button-primary)] hover:ring-offset-1 hover:ring-offset-[var(--background)]'
+            }
+            transform transition-all duration-200 ease-out`}
+          animate={isActive ? { scale: [1, 1.1, 1.05] } : { scale: 1 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
+        >
+          <span className={`text-2xl sm:text-2xl ${iconTextStyle}`}>{getIconForCategory(name)}</span>
+        </motion.div>
+        <motion.span 
+          className={`text-xs font-medium truncate max-w-[80px] text-center ${labelTextStyle}`}
+          animate={isActive ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          {name}
+        </motion.span>
+      </motion.button>
+    );
+  }
 
   // Define system categories that appear first
   const systemCategories = [
