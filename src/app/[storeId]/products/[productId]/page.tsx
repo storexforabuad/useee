@@ -269,13 +269,13 @@ return (
           ) : (
             <>
               {/* Product Title */}
-              <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] mb-4">
+              <h1 className="text-2xl sm:text-3xl font-bold card-text-gradient mb-4">
                 {product?.name}
               </h1>
 
               {/* Price Section */}
               <div className="flex items-center gap-3 mb-6">
-                <p className="text-2xl font-semibold text-[var(--text-primary)]">
+                <p className="text-2xl font-semibold card-text-gradient">
                   {product && formatPrice(product.price)}
                 </p>
                 {product?.originalPrice && product.originalPrice > product.price && (

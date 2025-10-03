@@ -57,7 +57,7 @@ export default function Navbar({ storeName }: NavbarProps) {
                 >
                   <ArrowLeft className="h-6 w-6 text-text-primary" />
                 </button>
-                <span className="text-xl font-semibold text-text-primary flex items-center gap-2">
+                <span className="text-xl font-semibold card-text-gradient flex items-center gap-2">
                   {storeName || 'Store'}
                 </span>
               </>
