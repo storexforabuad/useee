@@ -57,7 +57,7 @@ function GlassButton({ onClick, children, 'aria-label': ariaLabel, text }: { onC
       aria-label={ariaLabel}
     >
       {children}
-      {text && <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{text}</span>}
+      {text && <span className="text-sm font-medium text-[var(--text-primary)]">{text}</span>}
     </motion.button>
   );
 }
@@ -282,13 +282,13 @@ const ProductGrid = memo(function ProductGrid({ products, containerRef, storeId 
             onClick={handleDashboardClick}
             aria-label="Customer activity"
           >
-            <User className="w-5 h-5 text-slate-700 dark:text-slate-200" />
+            <User className="w-5 h-5 text-[var(--text-primary)]" />
           </GlassButton>
           <GlassButton
             onClick={() => setAboutOpen(true)}
             aria-label="About this business"
           >
-            <Info className="w-5 h-5 text-slate-700 dark:text-slate-200" />
+            <Info className="w-5 h-5 text-[var(--text-primary)]" />
           </GlassButton>
         </div>
       </div>
