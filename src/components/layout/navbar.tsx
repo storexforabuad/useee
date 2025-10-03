@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ClipboardListIcon, Moon, Sun, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Moon, Sun, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { useCart } from '../../lib/cartContext';
 import { useTheme } from '../../lib/themeContext';
 import { usePathname, useRouter } from 'next/navigation';
@@ -97,7 +97,7 @@ export default function Navbar({ storeName }: NavbarProps) {
                 className="relative group p-2"
               >
                 <div className="relative">
-                  <ClipboardListIcon 
+                  <ShoppingCart 
                     className="h-6 w-6 text-text-primary transition-colors"
                   />
                   <span 

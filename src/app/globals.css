@@ -625,8 +625,8 @@ h1, h2, h3 {
 }
 
 [data-theme='dark'] .card-glass {
-  background: rgba(17, 24, 39, 0.8);
-  border: 1px solid rgba(75, 85, 99, 0.3);
+  background: var(--blur-background);
+  border: 1px solid var(--border-color);
 }
 
 .premium-title-gradient {

@@ -334,14 +334,14 @@ return (
                   style={{ minHeight: '48px', fontSize: '1rem' }}
                   aria-disabled={isAdding || isInCart}
                   tabIndex={0}
-                  aria-label={isAdding || isInCart ? 'Added To List' : 'Add To List'}
+                  aria-label={isAdding || isInCart ? 'Added To Cart' : 'Add To Cart'}
                 >
                   {isInCart
                     ? <Check className="w-5 h-5 transition-transform opacity-80" />
                     : <CirclePlus className={`w-5 h-5 transition-transform ${isAdding ? 'opacity-60' : 'group-hover:-translate-y-0.5'}`} />
                   }
                   <span>
-                    {isInCart ? 'Added To List' : 'Add To List'}
+                    {isInCart ? 'Added To Cart' : 'Add To Cart'}
                   </span>
                 </button>
               </div>

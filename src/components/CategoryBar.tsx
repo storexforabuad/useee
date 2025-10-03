@@ -51,7 +51,7 @@ export default function CategoryBar({ storeId, selectedCategory, onSelectCategor
   const allCategories = [...SYSTEM_CATEGORIES, ...vendorCategories.map(c => c.name)];
 
   return (
-    <div className="sticky top-[calc(var(--navbar-height,64px))] z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-sm">
+    <div className="sticky top-[calc(var(--navbar-height,64px))] z-30 bg-white/80 dark:bg-black/80 backdrop-blur-sm shadow-sm">
       <div className="overflow-x-auto whitespace-nowrap px-2 sm:px-4">
         <div className="flex items-center justify-center space-x-2 py-3">
           {isLoading ? (
