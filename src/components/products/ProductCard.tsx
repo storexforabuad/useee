@@ -126,7 +126,7 @@ export default function ProductCard({ product, storeId }: ProductCardProps) {
 
         <div className="mt-3 space-y-1 px-1 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
           group-hover:translate-y-[-2px]">
-          <h3 className="text-sm font-medium text-text-primary line-clamp-2">
+          <h3 className="text-sm font-medium text-text-primary line-clamp-2 card-text-gradient">
             {product.name}
           </h3>
           <div className="flex flex-col items-start gap-1">
@@ -135,7 +135,7 @@ export default function ProductCard({ product, storeId }: ProductCardProps) {
                 {formatPrice(product.originalPrice)}
               </p>
             )}
-            <p className="text-lg font-bold text-text-primary">
+            <p className="text-lg font-bold text-text-primary card-text-gradient">
               {formatPrice(product.price)}
             </p>
           </div>
