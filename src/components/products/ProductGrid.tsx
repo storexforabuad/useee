@@ -217,7 +217,7 @@ const EmptyCategory = () => (
         🛒
       </span>
     </motion.div>
-    <h2 className="text-xl sm:text-2xl font-bold text-slate-700 dark:text-slate-100 mb-2">
+    <h2 className="text-xl sm:text-2xl font-bold mb-2 card-text-gradient">
       All items sold out!
     </h2>
     <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
