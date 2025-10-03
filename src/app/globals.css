@@ -12,7 +12,7 @@
 :root {
   /* ... existing variables ... */
   --navbar-bg-rgb: 255, 255, 255; /* for light mode */
-  --blur-background: rgba(255, 255, 255, 0.8);
+  --blur-background: rgba(255, 255, 255, 0.6);
 }
 
 :root {
@@ -27,7 +27,7 @@
   /* Component backgrounds */
   --card-background: #ffffff;
   --card-hover: #f5f5f7;
-  --navbar-bg: rgba(255, 255, 255, 0.8);
+  --navbar-bg: rgba(255, 255, 255, 0.6);
   --input-background: #f5f5f7;
   --modal-background: #ffffff;
   
@@ -102,7 +102,7 @@
   --background: #000000;
   --foreground: #f5f5f7;
   --navbar-bg-rgb: 0, 0, 0;
-  --blur-background: rgba(0, 0, 0, 0.8);
+  --blur-background: rgba(0, 0, 0, 0.6);
 
   --skeleton-background: rgba(255, 255, 255, 0.05);
 
@@ -116,7 +116,7 @@
   /* Component backgrounds */
   --card-background: rgba(29, 29, 31, 0.8);
   --card-hover: rgba(44, 44, 46, 0.8);
-  --navbar-bg: rgba(0, 0, 0, 0.8);
+  --navbar-bg: rgba(0, 0, 0, 0.6);
   --input-background: rgba(44, 44, 46, 0.8);
   --modal-background: rgba(29, 29, 31, 0.9);
   
@@ -180,7 +180,7 @@ button {
     --border-color: rgba(255, 255, 255, 0.1);
     --text-primary: #f5f5f7;
     --text-secondary: #a1a1a6;
-    --navbar-bg: rgba(0, 0, 0, 0.8);
+    --navbar-bg: rgba(0, 0, 0, 0.6);
     --input-background: rgba(44, 44, 46, 0.8);
     --input-border: rgba(255, 255, 255, 0.15);
     --button-secondary: rgba(255, 255, 255, 0.1);
