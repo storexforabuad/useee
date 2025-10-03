@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { SpotlightProvider, useSpotlightContext } from '@/context/SpotlightContext';
+import { CustomerSessionProvider } from '@/context/CustomerSessionProvider';
 import { AnimatePresence, motion } from 'framer-motion';
 
 const InstallPrompt = dynamic(() => import('../components/InstallPrompt'), {
@@ -37,21 +38,23 @@ function SpotlightOverlay() {
 
 export default function ClientProviders({ children }: { children: React.ReactNode }) {
   return (
-    <SpotlightProvider>
-      {children}
-      <InstallPrompt />
-      <Toaster 
-        position="bottom-center"
-        toastOptions={{
-          className: 'toast',
-          style: {
-            background: 'var(--card-background)',
-            color: 'var(--text-primary)',
-            border: '1px solid var(--border-color)',
-          },
-        }}
-      />
-      <SpotlightOverlay />
-    </SpotlightProvider>
+    <CustomerSessionProvider>
+      <SpotlightProvider>
+        {children}
+        <InstallPrompt />
+        <Toaster 
+          position="bottom-center"
+          toastOptions={{
+            className: 'toast',
+            style: {
+              background: 'var(--card-background)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-color)',
+            },
+          }}
+        />
+        <SpotlightOverlay />
+      </SpotlightProvider>
+    </CustomerSessionProvider>
   );
 }

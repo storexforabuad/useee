@@ -13,6 +13,7 @@ import NavigationStore from '@/lib/navigationStore';
 import ConnectionErrorToast from '../components/ConnectionErrorToast';
 import { CategoryCache } from '../lib/categoryCache';
 import { ProductListCache } from '../lib/productCache';
+import { CustomerSessionProvider } from '@/context/CustomerSessionProvider';
 
 const ProductGrid = dynamic(
   () => import('../components/products/ProductGrid'),
@@ -267,43 +268,45 @@ export default function Home() {
   }, [activeCategory, page]);
 
   return (
-    <div className="min-h-screen bg-background overscroll-none">
-      <Navbar />
-      <div className="pt-16 pb-safe-area-inset-bottom">
-        <CategoryBar 
-          onCategorySelect={handleCategorySelect}
-          activeCategory={activeCategory}
-          categories={categories}
-          onActiveCategoryClick={scrollProductGridToTop}
-        />
-        <div {...swipeHandlers} className="mt-3 sm:mt-4">
-          {initialLoading ? (
-            <LoadingGrid />
-          ) : (
-            <>
-              {isConnectionError && (
-                <ConnectionErrorToast onRetry={() => window.location.reload()} />
-              )}
-              {/* Show skeleton loader while loading, else ProductGrid or empty state */}
-              {loading ? (
-                <LoadingGrid />
-              ) : products.length === 0 ? (
-                <ProductGrid storeId={STORE_ID} products={[]} containerRef={productGridRef} />
-              ) : (
-                <ProductGrid 
-                  storeId={STORE_ID}
-                  products={products}
-                  containerRef={productGridRef}
-                />
-              )}
-              {/* Infinite scroll sentinel */}
-              {hasMore && !loading && (
-                <div ref={observerRef} className="h-8" />
-              )}
-            </>
-          )}
+    <CustomerSessionProvider>
+      <div className="min-h-screen bg-background overscroll-none">
+        <Navbar />
+        <div className="pt-16 pb-safe-area-inset-bottom">
+          <CategoryBar 
+            onCategorySelect={handleCategorySelect}
+            activeCategory={activeCategory}
+            categories={categories}
+            onActiveCategoryClick={scrollProductGridToTop}
+          />
+          <div {...swipeHandlers} className="mt-3 sm:mt-4">
+            {initialLoading ? (
+              <LoadingGrid />
+            ) : (
+              <>
+                {isConnectionError && (
+                  <ConnectionErrorToast onRetry={() => window.location.reload()} />
+                )}
+                {/* Show skeleton loader while loading, else ProductGrid or empty state */}
+                {loading ? (
+                  <LoadingGrid />
+                ) : products.length === 0 ? (
+                  <ProductGrid storeId={STORE_ID} products={[]} containerRef={productGridRef} />
+                ) : (
+                  <ProductGrid 
+                    storeId={STORE_ID}
+                    products={products}
+                    containerRef={productGridRef}
+                  />
+                )}
+                {/* Infinite scroll sentinel */}
+                {hasMore && !loading && (
+                  <div ref={observerRef} className="h-8" />
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </CustomerSessionProvider>
   );
 }

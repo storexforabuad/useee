@@ -1,48 +1,81 @@
-import { Dialog, Transition } from '@headlessui/react';
-import { Fragment, ReactNode } from 'react';
+'use client';
+
+import { X } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
-  children: ReactNode;
-  className?: string;
+  children: React.ReactNode;
+  title?: string;
 }
 
-export default function Modal({ open, onClose, children, className }: ModalProps) {
-  return (
-    <Transition.Root show={open} as={Fragment}>
-      <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={onClose}>
-        <div className="flex min-h-screen items-center justify-center p-1 sm:p-2 text-center">
-          {/* Overlay */}
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-200"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-150"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
+export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center transition-opacity duration-300 ease-in-out"
+      onClick={onClose} // Close on overlay click
+    >
+      <div
+        ref={modalRef}
+        className="relative bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-md m-4 transform transition-all duration-300 ease-in-out scale-95 opacity-0 animate-fade-in-scale"
+        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+      >
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
+          {title && <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{title}</h3>}
+          <button 
+            onClick={onClose} 
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1 rounded-full"
+            aria-label="Close modal"
           >
-            <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm transition-opacity" />
-          </Transition.Child>
-          
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-250"
-            enterFrom="opacity-0 translate-y-8"
-            enterTo="opacity-100 translate-y-0"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100 translate-y-0"
-            leaveTo="opacity-0 translate-y-8"
-          >
-            <Dialog.Panel
-              className={`w-full max-w-[calc(100vw-16px)] sm:max-w-xl md:max-w-3xl transform overflow-hidden rounded-xl sm:rounded-2xl bg-white dark:bg-slate-800 px-2 py-3 sm:px-4 sm:py-5 text-left align-middle shadow-xl transition-all ${className || ''}`}
-            >
-              {children}
-            </Dialog.Panel>
-          </Transition.Child>
+            <X className="w-5 h-5" />
+          </button>
         </div>
-      </Dialog>
-    </Transition.Root>
+        <div className="p-2.5">
+            {children}
+        </div>
+      </div>
+       <style jsx global>{`
+        @keyframes fade-in-scale {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        .animate-fade-in-scale {
+          animation: fade-in-scale 0.2s forwards ease-out;
+        }
+      `}</style>
+    </div>,
+    document.body
   );
-}
+};

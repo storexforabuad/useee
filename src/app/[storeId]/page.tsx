@@ -18,6 +18,7 @@ import type { Product } from '../../types/product';
 import ConnectionErrorToast from '../../components/ConnectionErrorToast';
 import { CategoryCache } from '../../lib/categoryCache';
 import { ProductListCache } from '../../lib/productCache';
+import { CustomerSessionProvider } from '@/context/CustomerSessionProvider';
 
 const ProductGrid = dynamic(
   () => import('../../components/products/ProductGrid'),
@@ -40,7 +41,7 @@ const LoadingGrid = () => (
 
 const PRODUCTS_PAGE_SIZE = 24;
 
-export default function StorefrontPage() {
+function StorefrontPageContent() {
   const params = useParams();
   const storeId = typeof params?.storeId === 'string' ? params.storeId : Array.isArray(params?.storeId) ? params.storeId[0] : '';
   
@@ -202,4 +203,12 @@ export default function StorefrontPage() {
       </div>
     </div>
   );
+}
+
+export default function StorefrontPage() {
+  return (
+    <CustomerSessionProvider>
+      <StorefrontPageContent />
+    </CustomerSessionProvider>
+  )
 }

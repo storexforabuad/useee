@@ -17,6 +17,7 @@ import SkeletonLoader from '../../components/SkeletonLoader';
 import type { Product } from '../../types/product';
 import ConnectionErrorToast from '../../components/ConnectionErrorToast';
 import { CategoryCache } from '../../lib/categoryCache';
+import { CustomerSessionProvider } from '@/context/CustomerSessionProvider';
 
 const ProductGrid = dynamic(
   () => import('../../components/products/ProductGrid'),
@@ -39,7 +40,7 @@ const LoadingGrid = () => (
 
 const PRODUCTS_PAGE_SIZE = 24;
 
-export default function BizconPage() {
+function BizconPageContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const storeName = "Bizcon Marketplace";
@@ -183,4 +184,12 @@ export default function BizconPage() {
       </div>
     </div>
   );
+}
+
+export default function BizconPage() {
+  return (
+    <CustomerSessionProvider>
+      <BizconPageContent />
+    </CustomerSessionProvider>
+  )
 }
