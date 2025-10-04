@@ -5,7 +5,6 @@ import {
   TagIcon as TagIconOutline, 
   EyeIcon as EyeIconOutline, 
   PlusIcon
-
 } from '@heroicons/react/24/outline';
 import { 
   HomeIcon as HomeIconSolid, 
@@ -18,6 +17,7 @@ import { useSpotlightContext } from '@/context/SpotlightContext';
 interface MobileNavProps {
   activeSection: string;
   setActiveSection: (section: string) => void;
+  onAddProductClick: () => void; // New prop
   isModalOpen?: boolean;
 }
 
@@ -29,7 +29,7 @@ const navItems = [
   { id: 'categories', iconOutline: TagIconOutline, iconSolid: TagIconSolid, label: 'Categories' },
 ];
 
-const MobileNav = ({ activeSection, setActiveSection, isModalOpen }: MobileNavProps) => {
+const MobileNav = ({ activeSection, setActiveSection, onAddProductClick, isModalOpen }: MobileNavProps) => {
   const { spotlightStep, setSpotlightStep } = useSpotlightContext();
 
   const handleNavClick = (sectionId: string) => {
@@ -43,7 +43,6 @@ const MobileNav = ({ activeSection, setActiveSection, isModalOpen }: MobileNavPr
       style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0))' }}
     >
       <div className="relative w-full max-w-md mx-auto h-16">
-        {/* Main Nav Bar with Arc */}
         <div className="absolute bottom-0 left-0 right-0 h-16 bg-white/70 dark:bg-zinc-800/70 backdrop-blur-xl border border-gray-200 dark:border-zinc-700 rounded-2xl shadow-md" />
 
         <div className="absolute bottom-0 left-0 right-0 h-16 flex items-center justify-around">
@@ -54,11 +53,10 @@ const MobileNav = ({ activeSection, setActiveSection, isModalOpen }: MobileNavPr
               const IconComponent = item.iconOutline;
               return (
                 <div key={item.id} className="relative w-16 h-16">
-                  {/* Arc background */}
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-24 h-24 bg-white/70 dark:bg-zinc-800/70 rounded-full border-t border-t-gray-200 dark:border-t-zinc-700" style={{ clipPath: 'polygon(0 50%, 100% 50%, 100% 100%, 0 100%)' }} />
                   
                   <button
-                    onClick={() => handleNavClick(item.id)}
+                    onClick={onAddProductClick} // Use the new prop here
                     className="absolute -top-7 left-1/2 -translate-x-1/2 w-16 h-16 bg-neutral-800 dark:bg-neutral-100 rounded-full shadow-lg flex items-center justify-center text-white dark:text-black focus:outline-none focus:ring-2 focus:ring-offset-4 focus:ring-offset-background dark:focus:ring-offset-zinc-800 focus:ring-neutral-500 transition-transform duration-200 ease-in-out hover:scale-105 active:scale-95"
                     aria-label={item.label}
                   >

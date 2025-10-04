@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useCallback } from 'react';
 import { getProducts, getCategories, updateProduct, deleteProduct, getContacts, WholesaleData, getStoreMeta } from '../../../lib/db';
 import { Product } from '../../../types/product';
 import { StoreMeta } from '../../../types/store';
@@ -10,7 +10,7 @@ import AdminSkeleton from '../../../components/admin/AdminSkeleton';
 import MobileNav from '../../../components/admin/MobileNav';
 import FloatingActionButton from '../../../components/admin/FloatingActionButton';
 import AdminHomeCards from '../../../components/admin/AdminHomeCards';
-import AddProductSection from '../../../components/AddProductSection';
+import AddProductComposer from '../../../components/admin/AddProductComposer'; // New Import
 import dynamic from 'next/dynamic';
 import PreviewSkeleton from '../../../components/admin/PreviewSkeleton';
 import { markOnboardingAsCompleted } from '../../../app/actions/onboardingActions';
@@ -53,7 +53,7 @@ export default function AdminStorePage() {
   const [activeSection, setActiveSection] = useState('home');
   const [isManageProductsOpen, setIsManageProductsOpen] = useState(false);
   const [isCategoryManagementOpen, setIsCategoryManagementOpen] = useState(false);
-  const [isAddProductOpen, setIsAddProductOpen] = useState(true);
+  const [isComposerOpen, setIsComposerOpen] = useState(false); // New State
   const [viewMode, setViewMode] = useState<'all' | 'popular' | 'limited' | 'soldout'>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPreviewLoading, setIsPreviewLoading] = useState(true);
@@ -63,19 +63,7 @@ export default function AdminStorePage() {
   const { spotlightStep, setSpotlightStep } = useSpotlightContext();
   const [shouldShowSpotlight, setShouldShowSpotlight] = useState(false);
 
-  useEffect(() => {
-    if (!storeId) return;
-    fetchData();
-    // eslint-disable-next-line
-  }, [storeId]);
-
-  useEffect(() => {
-    if (activeSection === 'preview') {
-      setIsPreviewLoading(true);
-    }
-  }, [activeSection]);
-
-  async function fetchData(showRefresh = false) {
+  const fetchData = useCallback(async (showRefresh = false) => {
     if (showRefresh) setIsRefreshing(true);
     try {
       const [fetchedProducts, fetchedCategories, fetchedContacts, fetchedStoreMeta, fetchedReferrals] = await Promise.all([
@@ -105,12 +93,23 @@ export default function AdminStorePage() {
       if (showRefresh) setIsRefreshing(false);
       setLoading(false);
     }
-  }
+  }, [storeId]);
+
+  useEffect(() => {
+    if (!storeId) return;
+    fetchData();
+  }, [storeId, fetchData]);
+
+  useEffect(() => {
+    if (activeSection === 'preview') {
+      setIsPreviewLoading(true);
+    }
+  }, [activeSection]);
 
   function handleOnboardingComplete() {
     setShowOnboarding(false);
     setIsTransitioning(true);
-    setShouldShowSpotlight(true); // Signal intent to show spotlight
+    setShouldShowSpotlight(true);
     markOnboardingAsCompleted(storeId);
 
     setTimeout(() => {
@@ -123,8 +122,8 @@ export default function AdminStorePage() {
     if (shouldShowSpotlight) {
       setTimeout(() => {
         setSpotlightStep('tips');
-      }, 500); // Delay for smoother feel
-      setShouldShowSpotlight(false); // Reset signal to prevent re-triggering
+      }, 500);
+      setShouldShowSpotlight(false);
     }
   };
 
@@ -167,7 +166,7 @@ export default function AdminStorePage() {
                   storeLink={`/${storeId}`}
                   setManageTab={setViewMode}
                   setIsManageProductsOpen={setIsManageProductsOpen}
-                  onRefresh={fetchData}
+                  onRefresh={() => fetchData(true)}
                   isRefreshing={isRefreshing}
                   totalProducts={products.length}
                   totalCategories={categories.length}
@@ -177,7 +176,7 @@ export default function AdminStorePage() {
                   debtors={0}
                   subscriptionStatus={"Active"}
                   referrals={referrals.length}
-                  onReferralAdded={() => fetchData()}
+                  onReferralAdded={() => fetchData(true)}
                   soldOut={products.filter(p => (typeof p.inStock === 'number' && p.inStock === 0) || p.soldOut === true).length}
                   totalContacts={contacts.reduce((sum, region) => sum + (region.contacts?.length || 0), 0)}
                   storeId={storeId}
@@ -187,6 +186,7 @@ export default function AdminStorePage() {
                   storeName={storeMeta?.name}
                   totalRevenue={totalRevenue}
                   onAnimationComplete={handleAnimationComplete}
+                  onAddProductClick={() => setIsComposerOpen(true)} // Rewired
                 />
               </div>
             )}
@@ -216,18 +216,6 @@ export default function AdminStorePage() {
                 />
               </div>
             )}
-            {activeSection === 'add' && (
-              <div className="mb-8">
-                <AddProductSection
-                  batchTemplate={null}
-                  isAddProductOpen={isAddProductOpen}
-                  setIsAddProductOpen={setIsAddProductOpen}
-                  categories={categories}
-                  onProductAdded={() => {}}
-                  storeId={storeId}
-                />
-              </div>
-            )}
           </Suspense>
         </main>
       ) : (
@@ -242,9 +230,17 @@ export default function AdminStorePage() {
         </div>
       )}
 
+      <AddProductComposer 
+        isOpen={isComposerOpen} 
+        onClose={() => setIsComposerOpen(false)} 
+        storeId={storeId} 
+        categories={categories} 
+        onProductAdded={() => fetchData()} 
+      />
+
       <div className={`transition-opacity duration-500 ${uiVisible ? 'opacity-100' : 'opacity-0'}`}>
-        {activeSection !== 'preview' && <FloatingActionButton />}
-        { spotlightStep !== 'tips' && <MobileNav activeSection={activeSection} setActiveSection={setActiveSection} /> }
+        {activeSection !== 'preview' && <FloatingActionButton onAddProductClick={() => setIsComposerOpen(true)} />}
+        { spotlightStep !== 'tips' && <MobileNav activeSection={activeSection} setActiveSection={setActiveSection} onAddProductClick={() => setIsComposerOpen(true)} /> }
       </div>
     </div>
   );
