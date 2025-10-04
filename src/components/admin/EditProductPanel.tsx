@@ -1,27 +1,61 @@
 'use client';
 import React, { useState, useEffect, Fragment, useMemo } from 'react';
-import { Dialog, Transition, Switch, Listbox } from '@headlessui/react';
-import { XMarkIcon, CheckIcon, ChevronUpDownIcon } from '@heroicons/react/24/solid';
+import { Dialog, Transition, Switch } from '@headlessui/react';
+import { XMarkIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 import { Product } from '../../types/product';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice } from '../../utils/price';
+import CategorySelectorModal from './modals/CategorySelectorModal';
 
 interface EditProductPanelProps {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
-  // We'll need categories for the dropdown
-  // categories: { id: string; name: string }[]; 
-  // onSave: (updatedProduct: Product) => void;
+  onSave: (updatedProduct: Product) => void;
+  categories: { id: string; name: string }[];
 }
 
-const EditProductPanel: React.FC<EditProductPanelProps> = ({ product, isOpen, onClose }) => {
+// A simple styled input
+const StyledInput = ({ id, label, value, onChange, type = 'text', placeholder = '' }) => (
+    <div>
+        <label htmlFor={id} className="block text-sm font-medium text-text-secondary">{label}</label>
+        <input 
+            type={type} 
+            id={id} 
+            value={value} 
+            onChange={onChange} 
+            placeholder={placeholder} 
+            className="mt-1 block w-full bg-input-background p-3 rounded-lg border-none text-text-primary placeholder:text-text-secondary focus:ring-2 focus:ring-blue-500" 
+        />
+    </div>
+);
+
+// A simple styled switch
+const StyledSwitch = ({ label, description, checked, onChange }) => (
+     <Switch.Group as="div" className="flex items-center justify-between py-2">
+        <Switch.Label as="span" className="flex-grow flex flex-col pr-4">
+            <span className="text-sm font-medium text-text-primary">{label}</span>
+            {description && <span className="text-xs text-text-secondary">{description}</span>}
+        </Switch.Label>
+        <Switch checked={checked} onChange={onChange} className={`${ checked ? 'bg-blue-600' : 'bg-gray-300'} relative inline-flex h-7 w-12 items-center rounded-full transition-colors`}>
+            <span className={`${ checked ? 'translate-x-6' : 'translate-x-1'} inline-block h-5 w-5 transform rounded-full bg-white transition-transform`} />
+        </Switch>
+    </Switch.Group>
+)
+
+
+const EditProductPanel: React.FC<EditProductPanelProps> = ({ product, isOpen, onClose, onSave, categories }) => {
   const [editedProduct, setEditedProduct] = useState<Product | null>(product);
+  const [isCategorySelectorOpen, setCategorySelectorOpen] = useState(false);
 
   useEffect(() => {
-    // When the product prop changes, update the state
-    setEditedProduct(product);
-  }, [product]);
+    if (isOpen && product) {
+      setEditedProduct({ ...product });
+    } else {
+        // Reset state when closing
+        setTimeout(() => setEditedProduct(null), 300);
+    }
+  }, [isOpen, product]);
 
   const handleInputChange = (field: keyof Product, value: any) => {
     if (editedProduct) {
@@ -31,84 +65,101 @@ const EditProductPanel: React.FC<EditProductPanelProps> = ({ product, isOpen, on
 
   const handleSave = () => {
     if (editedProduct) {
-      // onSave(editedProduct);
-      console.log('Saving:', editedProduct);
+      onSave(editedProduct);
       onClose();
     }
   };
   
-  // Calculate commission amount for display
   const commissionAmount = useMemo(() => {
       if (!editedProduct) return 0;
-      const price = editedProduct.promoPrice || editedProduct.price;
-      return (price * (editedProduct.commission || 0)) / 100;
+      const price = editedProduct.onPromo ? editedProduct.promoPrice : editedProduct.price;
+      return ((price || 0) * (editedProduct.commission || 0)) / 100;
   }, [editedProduct]);
 
+  const currentCategoryName = useMemo(() => {
+      return categories.find(c => c.id === editedProduct?.categoryId)?.name || 'Uncategorized';
+  }, [editedProduct, categories]);
+
+
+  if (!editedProduct) return null; // Don't render anything if there's no product
 
   return (
+    <>
     <Transition.Root show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child as={Fragment} enter="ease-in-out duration-500" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in-out duration-500" leaveFrom="opacity-100" leaveTo="opacity-0">
+        <Transition.Child as={Fragment} enter="ease-in-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in-out duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
           <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
             <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
-              <Transition.Child as={Fragment} enter="transform transition ease-in-out duration-500 sm:duration-700" enterFrom="translate-x-full" enterTo="translate-x-0" leave="transform transition ease-in-out duration-500 sm:duration-700" leaveFrom="translate-x-0" leaveTo="translate-x-full">
+              <Transition.Child as={Fragment} enter="transform transition ease-in-out duration-300" enterFrom="translate-x-full" enterTo="translate-x-0" leave="transform transition ease-in-out duration-200" leaveFrom="translate-x-0" leaveTo="translate-x-full">
                 <Dialog.Panel className="pointer-events-auto w-screen max-w-md">
-                  <div className="flex h-full flex-col overflow-y-scroll bg-card-background shadow-xl">
+                  <div className="flex h-full flex-col overflow-y-scroll bg-background shadow-xl">
                     
                     {/* Header */}
-                    <div className="p-4 sm:p-6 bg-card-background border-b border-border-color sticky top-0 z-10">
-                      <div className="flex items-start justify-between">
+                    <div className="p-4 bg-background sticky top-0 z-10 border-b border-border-color">
+                      <div className="flex items-center justify-between">
                         <Dialog.Title className="text-lg font-bold text-text-primary">Edit Product</Dialog.Title>
-                        <div className="ml-3 flex h-7 items-center">
-                          <button type="button" className="rounded-md bg-card-background text-text-secondary hover:text-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500" onClick={onClose}><span className="sr-only">Close panel</span><XMarkIcon className="h-6 w-6" aria-hidden="true" /></button>
-                        </div>
+                        <button type="button" className="rounded-full p-1 text-text-secondary hover:bg-button-secondary-hover" onClick={onClose}><span className="sr-only">Close panel</span><XMarkIcon className="h-6 w-6" aria-hidden="true" /></button>
                       </div>
                     </div>
 
                     {/* Form Content */}
-                    {editedProduct ? (
-                      <div className="relative flex-1 p-4 sm:p-6 space-y-6">
+                    <div className="relative flex-1 p-4 space-y-6">
                         
-                        {/* Product Name */}
-                        <div>
-                          <label htmlFor="product-name" className="block text-sm font-medium text-text-secondary">Product Name</label>
-                          <input type="text" id="product-name" value={editedProduct.name} onChange={(e) => handleInputChange('name', e.target.value)} className="mt-1 block w-full rounded-md border-input-border bg-input-background shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" />
+                        <StyledInput 
+                            id="product-name" 
+                            label="Product Name" 
+                            value={editedProduct.name}
+                            onChange={(e) => handleInputChange('name', e.target.value)} 
+                        />
+                        
+                        {/* Category Section */}
+                         <div>
+                            <h3 className="block text-sm font-medium text-text-secondary">Category</h3>
+                            <button onClick={() => setCategorySelectorOpen(true)} className="mt-1 flex justify-between items-center w-full bg-input-background p-3 rounded-lg text-left">
+                                <span className="text-text-primary">{currentCategoryName}</span>
+                                <ChevronRightIcon className="h-5 w-5 text-text-secondary" />
+                            </button>
                         </div>
 
-                        {/* Price & Promo */}
-                        <div className="space-y-4">
+                        {/* Pricing Section */}
+                        <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-sm font-medium text-text-secondary">Pricing</h3>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium text-text-secondary">Promo</span>
-                                    <Switch checked={editedProduct.onPromo || false} onChange={(checked) => handleInputChange('onPromo', checked)} className={`${ (editedProduct.onPromo) ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full`}>
-                                        <span className={`${ (editedProduct.onPromo) ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition`} />
-                                    </Switch>
-                                </div>
+                                <StyledSwitch 
+                                    label="Promo" 
+                                    checked={editedProduct.onPromo || false} 
+                                    onChange={(checked) => handleInputChange('onPromo', checked)} 
+                                />
                             </div>
                             
                             <AnimatePresence mode="wait">
                                 <motion.div key={editedProduct.onPromo ? 'promo' : 'normal'} initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}>
                                     {editedProduct.onPromo ? (
                                         <div className="grid grid-cols-2 gap-4">
-                                             <div>
-                                                <label className="block text-xs font-medium text-text-secondary">Original Price</label>
-                                                <p className="mt-1 text-lg font-semibold text-text-secondary line-through">{formatPrice(editedProduct.price)}</p>
+                                             <div className="relative">
+                                                <p className="mt-1 text-lg font-semibold text-text-secondary line-through p-3">{formatPrice(editedProduct.price)}</p>
+                                                <label className="absolute top-0 left-3 text-xs font-medium text-text-secondary">Original Price</label>
                                              </div>
-                                             <div>
-                                                <label htmlFor="promo-price" className="block text-xs font-medium text-text-primary">Promo Price</label>
-                                                 <input type="number" id="promo-price" value={editedProduct.promoPrice || ''} onChange={(e) => handleInputChange('promoPrice', parseFloat(e.target.value))} className="mt-1 block w-full rounded-md border-input-border bg-input-background shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" />
-                                             </div>
+                                            <StyledInput 
+                                                id="promo-price" 
+                                                label="Promo Price" 
+                                                value={editedProduct.promoPrice || ''} 
+                                                onChange={(e) => handleInputChange('promoPrice', parseFloat(e.target.value))} 
+                                                type="number"
+                                            />
                                         </div>
                                     ) : (
-                                        <div>
-                                            <label htmlFor="price" className="block text-sm font-medium text-text-primary">Price</label>
-                                            <input type="number" id="price" value={editedProduct.price} onChange={(e) => handleInputChange('price', parseFloat(e.target.value))} className="mt-1 block w-full rounded-md border-input-border bg-input-background shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" />
-                                        </div>
+                                        <StyledInput 
+                                            id="price" 
+                                            label="Price" 
+                                            value={editedProduct.price} 
+                                            onChange={(e) => handleInputChange('price', parseFloat(e.target.value))} 
+                                            type="number"
+                                        />
                                     )}
                                 </motion.div>
                             </AnimatePresence>
@@ -127,35 +178,30 @@ const EditProductPanel: React.FC<EditProductPanelProps> = ({ product, isOpen, on
                             </div>
                         </div>
 
-                         {/* Stock Management */}
-                        <div className="space-y-4">
-                            <h3 className="text-sm font-medium text-text-secondary">Inventory</h3>
-                             <Switch.Group as="div" className="flex items-center justify-between">
-                                <Switch.Label as="span" className="flex-grow flex flex-col">
-                                    <span className="text-sm font-medium text-text-primary">Limited Stock</span>
-                                    <span className="text-xs text-text-secondary">Mark item as having limited availability.</span>
-                                </Switch.Label>
-                                <Switch checked={editedProduct.limitedStock || false} onChange={(checked) => handleInputChange('limitedStock', checked)} className={`${ (editedProduct.limitedStock) ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full`}><span className={`${ (editedProduct.limitedStock) ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition`} /></Switch>
-                            </Switch.Group>
-                             <Switch.Group as="div" className="flex items-center justify-between">
-                                <Switch.Label as="span" className="flex-grow flex flex-col">
-                                    <span className="text-sm font-medium text-text-primary">Sold Out</span>
-                                     <span className="text-xs text-text-secondary">Mark item as completely unavailable.</span>
-                                </Switch.Label>
-                                <Switch checked={editedProduct.soldOut || false} onChange={(checked) => handleInputChange('soldOut', checked)} className={`${ (editedProduct.soldOut) ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full`}><span className={`${ (editedProduct.soldOut) ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition`} /></Switch>
-                            </Switch.Group>
+                         {/* Inventory Section */}
+                        <div className="space-y-1">
+                            <h3 className="text-sm font-medium text-text-secondary mb-2">Inventory</h3>
+                            <StyledSwitch 
+                                label="Limited Stock" 
+                                description="Mark item as having limited availability."
+                                checked={editedProduct.limitedStock || false} 
+                                onChange={(checked) => handleInputChange('limitedStock', checked)} 
+                            />
+                             <StyledSwitch 
+                                label="Sold Out" 
+                                description="Mark item as completely unavailable."
+                                checked={editedProduct.soldOut || false} 
+                                onChange={(checked) => handleInputChange('soldOut', checked)} 
+                            />
                         </div>
 
-                      </div>
-                    ) : (
-                      <div className="text-center p-8"> <p>No product selected</p> </div>
-                    )}
+                    </div>
 
                     {/* Footer with Actions */}
-                    <div className="flex-shrink-0 border-t border-border-color px-4 py-4 sm:px-6">
+                    <div className="flex-shrink-0 border-t border-border-color px-4 py-3 bg-background sticky bottom-0">
                       <div className="flex justify-end space-x-3">
-                        <button type="button" className="rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" onClick={onClose}>Cancel</button>
-                        <button type="button" className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" onClick={handleSave}>Save Changes</button>
+                        <button type="button" className="rounded-lg border border-border-color bg-button-secondary py-2 px-4 text-sm font-semibold text-text-primary shadow-sm hover:bg-button-secondary-hover focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" onClick={onClose}>Cancel</button>
+                        <button type="button" className="inline-flex justify-center rounded-lg border border-transparent bg-blue-600 py-2 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" onClick={handleSave}>Save Changes</button>
                       </div>
                     </div>
                   </div>
@@ -166,6 +212,18 @@ const EditProductPanel: React.FC<EditProductPanelProps> = ({ product, isOpen, on
         </div>
       </Dialog>
     </Transition.Root>
+
+    <CategorySelectorModal
+        isOpen={isCategorySelectorOpen}
+        onClose={() => setCategorySelectorOpen(false)}
+        categories={categories}
+        selectedCategoryId={editedProduct.categoryId}
+        onSelect={(categoryId) => {
+            handleInputChange('categoryId', categoryId);
+            setCategorySelectorOpen(false);
+        }}
+    />
+    </>
   );
 };
 

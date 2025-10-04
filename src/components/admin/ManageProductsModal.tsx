@@ -13,6 +13,7 @@ interface ManageProductsModalProps {
   isOpen: boolean;
   onClose: () => void;
   products: Product[];
+  setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   categories: { id: string; name: string }[];
   storeId: string;
 }
@@ -23,8 +24,8 @@ type FilterType = 'all' | 'popular' | 'limited' | 'soldout';
 const ProductRow = ({ product, isSelectMode, isSelected, onToggleSelect, onEdit }: { product: Product, isSelectMode: boolean, isSelected: boolean, onToggleSelect: (id: string) => void, onEdit: (product: Product) => void }) => (
     <div className={`flex items-center gap-4 p-2 rounded-lg transition-colors ${isSelectMode ? 'cursor-pointer' : ''} ${isSelected ? 'bg-blue-100' : 'hover:bg-input-background'}`}>
         {isSelectMode && (
-            <input 
-                type="checkbox" 
+            <input
+                type="checkbox"
                 checked={isSelected}
                 onChange={() => onToggleSelect(product.id)}
                 className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -65,7 +66,7 @@ const FilterChip = ({ label, value, activeFilter, onClick }: { label: string, va
 
 // --- MAIN COMPONENT ---
 
-const ManageProductsModal: React.FC<ManageProductsModalProps> = ({ isOpen, onClose, products, categories, storeId }) => {
+const ManageProductsModal: React.FC<ManageProductsModalProps> = ({ isOpen, onClose, products, setProducts, categories, storeId }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [isSelectMode, setIsSelectMode] = useState(false);
@@ -85,13 +86,19 @@ const ManageProductsModal: React.FC<ManageProductsModalProps> = ({ isOpen, onClo
 
   const handleClose = () => {
     onClose();
-    setTimeout(() => { 
+    setTimeout(() => {
         setSearchQuery('');
         setActiveFilter('all');
         setIsSelectMode(false);
         setSelectedProductIds([]);
         setEditingProduct(null);
     }, 300);
+  }
+
+  const handleProductSave = (updatedProduct: Product) => {
+      setProducts(prevProducts => prevProducts.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+      // In a real app, you'd also make an API call here to save to the backend
+      console.log("Saved product:", updatedProduct);
   }
 
   const toggleSelectMode = () => {
@@ -102,7 +109,7 @@ const ManageProductsModal: React.FC<ManageProductsModalProps> = ({ isOpen, onClo
   }
 
   const handleToggleSelect = (id: string) => {
-      setSelectedProductIds(prev => 
+      setSelectedProductIds(prev =>
           prev.includes(id) ? prev.filter(pid => pid !== id) : [...prev, id]
       );
   }
@@ -186,7 +193,13 @@ const ManageProductsModal: React.FC<ManageProductsModalProps> = ({ isOpen, onClo
         </div>
       </Dialog>
     </Transition.Root>
-    <EditProductPanel product={editingProduct} isOpen={!!editingProduct} onClose={() => setEditingProduct(null)} />
+    <EditProductPanel
+        product={editingProduct}
+        isOpen={!!editingProduct}
+        onClose={() => setEditingProduct(null)}
+        onSave={handleProductSave}
+        categories={categories}
+    />
     </>
   );
 };

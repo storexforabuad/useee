@@ -11,6 +11,7 @@ import { addProduct } from '../../lib/db';
 import { uploadImageToCloudinary } from '../../lib/cloudinaryClient';
 import { compressImage } from '../../utils/imageCompression';
 import { formatPrice } from '../../utils/price';
+import CategorySelectorModal from './modals/CategorySelectorModal';
 
 
 // --- TYPES ---
@@ -31,7 +32,7 @@ interface BatchProduct {
   isPromo: boolean;
   promoPrice?: number;
   commission: number;
-  category: string;
+  categoryId: string;
   limitedStock: boolean;
   soldOut: boolean;
   useAsTemplate: boolean;
@@ -72,33 +73,6 @@ const FloatingLabelInput = ({ label, value, onChange, type = 'text', placeholder
   </div>
 );
 
-const CategorySelector = ({ isOpen, onClose, categories, onSelect }: any) => (
-    <Transition.Root show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
-          <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
-        </Transition.Child>
-        <div className="fixed inset-x-0 bottom-0 z-10">
-            <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="translate-y-full" enterTo="translate-y-0" leave="ease-in duration-200" leaveFrom="translate-y-0" leaveTo="translate-y-full">
-              <Dialog.Panel className="bg-card-background rounded-t-2xl shadow-xl">
-                  <div className="p-4 border-b border-border-color">
-                      <Dialog.Title className="text-lg font-semibold text-center text-text-primary">Select a Category</Dialog.Title>
-                  </div>
-                  <div className="p-4 max-h-60 overflow-y-auto">
-                      {categories.map((cat: any) => (
-                          <button key={cat.id} onClick={() => { onSelect(cat.name); onClose(); }} className="w-full text-left p-4 text-lg font-medium text-text-primary rounded-lg hover:bg-button-secondary-hover transition-colors">
-                              {cat.name}
-                          </button>
-                      ))}
-                  </div>
-              </Dialog.Panel>
-            </Transition.Child>
-        </div>
-      </Dialog>
-    </Transition.Root>
-);
-
-
 // --- MAIN COMPOSER COMPONENT ---
 
 const AddProductComposer: React.FC<AddProductComposerProps> = ({ isOpen, onClose, storeId, categories, onProductAdded }) => {
@@ -138,7 +112,7 @@ const AddProductComposer: React.FC<AddProductComposerProps> = ({ isOpen, onClose
           isPromo: template?.isPromo || false,
           promoPrice: template?.promoPrice,
           commission: template?.commission || 10,
-          category: template?.category || '',
+          categoryId: template?.categoryId || '',
           limitedStock: template?.limitedStock || false,
           soldOut: template?.soldOut || false,
           useAsTemplate: false,
@@ -190,7 +164,7 @@ const AddProductComposer: React.FC<AddProductComposerProps> = ({ isOpen, onClose
       // Validation
       for (let i = 0; i < batchProducts.length; i++) {
         const p = batchProducts[i];
-        if (!p.name || !p.price || !p.category) {
+        if (!p.name || !p.price || !p.categoryId) {
           toast.error(`Please fill all required fields for "${p.name}".`);
           setActiveProductIndex(i);
           setCurrentStep(1); // Go back to details
@@ -216,7 +190,7 @@ const AddProductComposer: React.FC<AddProductComposerProps> = ({ isOpen, onClose
               const productToAdd: Partial<Product> = {
                   name: productData.name,
                   price: productData.isPromo ? productData.promoPrice! : productData.price,
-                  category: productData.category,
+                  categoryId: productData.categoryId,
                   images: [imageUrl],
                   description: '', // Add description field later if needed
                   soldOut: productData.soldOut,
@@ -271,6 +245,7 @@ const AddProductComposer: React.FC<AddProductComposerProps> = ({ isOpen, onClose
       case 3: // Inventory Step
         if (!activeProduct) return null;
         const commissionAmount = (activeProduct.isPromo ? activeProduct.promoPrice || 0 : activeProduct.price || 0) * (activeProduct.commission / 100);
+        const categoryName = categories.find(c => c.id === activeProduct.categoryId)?.name || 'Select a category';
 
         return (
           <MotionDiv key={1} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -299,7 +274,7 @@ const AddProductComposer: React.FC<AddProductComposerProps> = ({ isOpen, onClose
                     <motion.div key="details" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                         <FloatingLabelInput label="Product Name" value={activeProduct.name} onChange={(e: any) => handleProductChange(activeProductIndex, 'name', e.target.value)} />
                         <button onClick={() => setCategorySelectorOpen(true)} className="w-full text-left p-4 bg-input-background rounded-lg border-2 border-input-border">
-                            <span className={activeProduct.category ? 'text-text-primary' : 'text-text-secondary'}>{activeProduct.category || 'Select a category'}</span>
+                            <span className={activeProduct.categoryId ? 'text-text-primary' : 'text-text-secondary'}>{categoryName}</span>
                         </button>
                     </motion.div>
                 )}
@@ -445,7 +420,16 @@ const AddProductComposer: React.FC<AddProductComposerProps> = ({ isOpen, onClose
             </Transition.Child>
           </div>
         </div>
-        <CategorySelector isOpen={isCategorySelectorOpen} onClose={() => setCategorySelectorOpen(false)} categories={categories} onSelect={(cat: string) => handleProductChange(activeProductIndex, 'category', cat)} />
+         <CategorySelectorModal
+            isOpen={isCategorySelectorOpen}
+            onClose={() => setCategorySelectorOpen(false)}
+            categories={categories}
+            selectedCategoryId={batchProducts[activeProductIndex]?.categoryId}
+            onSelect={(categoryId) => {
+                handleProductChange(activeProductIndex, 'categoryId', categoryId);
+                setCategorySelectorOpen(false);
+            }}
+        />
       </Dialog>
     </Transition.Root>
   );
