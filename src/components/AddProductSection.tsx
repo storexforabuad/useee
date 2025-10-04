@@ -19,6 +19,9 @@ interface UploadProgress {
 interface BatchProduct extends Partial<Product> {
   file: File;
   useAsTemplate?: boolean;
+  isPromo?: boolean;
+  promoPrice?: number;
+  commission?: number;
 }
 
 interface AddProductSectionProps {
@@ -27,7 +30,7 @@ interface AddProductSectionProps {
   setIsAddProductOpen: React.Dispatch<React.SetStateAction<boolean>>;
   categories: { id: string; name: string }[];
   onProductAdded: () => void;
-  storeId?: string; // Add storeId prop for multi-tenancy
+  storeId?: string;
 }
 
 const ModernToggle: React.FC<{ checked: boolean; onChange: (checked: boolean) => void; label: string; }> = ({ checked, onChange, label }) => (
@@ -47,7 +50,7 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
   setIsAddProductOpen,
   categories,
   onProductAdded,
-  storeId, // Accept storeId
+  storeId,
 }) => {
   const [batchProducts, setBatchProducts] = useState<BatchProduct[]>([]);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
@@ -56,7 +59,7 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeBatchIndex, setActiveBatchIndex] = useState(0);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [templateProductDetails, setTemplateProductDetails] = useState<Partial<Product> | null>(null);
+  const [templateProductDetails, setTemplateProductDetails] = useState<Partial<BatchProduct> | null>(null);
   const [showUploadSummary, setShowUploadSummary] = useState(false);
 
   
@@ -85,14 +88,15 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
       const newBatchProducts: BatchProduct[] = newFiles.map((file, index) => {
         const baseName = batchTemplate?.name || file.name.replace(/\.[^/.]+$/, "");
         
-        // Use template details if available and not the first product
         const shouldUseTemplate = templateProductDetails && batchProducts.length + index > 0;
         
         return {
           file,
           name: shouldUseTemplate ? templateProductDetails.name : baseName,
           price: shouldUseTemplate ? templateProductDetails.price : (batchTemplate?.price || undefined),
-          originalPrice: shouldUseTemplate ? templateProductDetails.originalPrice : (batchTemplate?.originalPrice || undefined),
+          isPromo: shouldUseTemplate ? templateProductDetails.isPromo : false,
+          promoPrice: shouldUseTemplate ? templateProductDetails.promoPrice : undefined,
+          commission: shouldUseTemplate ? templateProductDetails.commission : 10,
           category: shouldUseTemplate ? templateProductDetails.category : (batchTemplate?.category || ''),
           description: shouldUseTemplate ? templateProductDetails.description : (batchTemplate?.description || ''),
           limitedStock: shouldUseTemplate ? templateProductDetails.limitedStock : (batchTemplate?.limitedStock || false),
@@ -111,25 +115,20 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
     }
   };
   
-  // Helper function to format numbers with commas
   const formatNumberWithCommas = (value: string | number): string => {
     if (!value && value !== 0) return '';
     
-    // Convert to string and remove all non-digit and non-decimal characters
     const stringValue = value.toString();
     const cleanValue = stringValue.replace(/[^\d.]/g, '');
     
-    // Handle empty or invalid input
     if (!cleanValue) return '';
     
-    // Handle decimal places (only allow one decimal point)
     const parts = cleanValue.split('.');
     if (parts.length > 2) {
       parts[1] = parts.slice(1).join('');
       parts.length = 2;
     }
     
-    // Format the integer part with commas
     if (parts[0]) {
       parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
@@ -137,7 +136,6 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
     return parts.join('.');
   };
 
-  // Helper function to parse formatted number back to number
   const parseFormattedNumber = (value: string): number => {
     const cleanValue = value.replace(/,/g, '');
     const parsed = parseFloat(cleanValue);
@@ -147,13 +145,14 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
   const handleBatchProductChange = (index: number, field: string, value: string | number | boolean) => {
     setBatchProducts(prev => prev.map((p, i) => i === index ? { ...p, [field]: value } : p));
     
-    // If this is the "useAsTemplate" field and it's being enabled
     if (field === 'useAsTemplate' && value === true) {
       const currentProduct = batchProducts[index];
-      const newTemplateDetails = {
+      const newTemplateDetails: Partial<BatchProduct> = {
         name: currentProduct.name,
         price: currentProduct.price,
-        originalPrice: currentProduct.originalPrice,
+        isPromo: currentProduct.isPromo,
+        promoPrice: currentProduct.promoPrice,
+        commission: currentProduct.commission,
         category: currentProduct.category,
         description: currentProduct.description,
         limitedStock: currentProduct.limitedStock,
@@ -161,14 +160,15 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
       };
       setTemplateProductDetails(newTemplateDetails);
       
-      // Apply template to all subsequent products
       setBatchProducts(prev => prev.map((p, i) => {
         if (i > index) {
           return {
             ...p,
             name: newTemplateDetails.name,
             price: newTemplateDetails.price,
-            originalPrice: newTemplateDetails.originalPrice,
+            isPromo: newTemplateDetails.isPromo,
+            promoPrice: newTemplateDetails.promoPrice,
+            commission: newTemplateDetails.commission,
             category: newTemplateDetails.category,
             description: newTemplateDetails.description,
             limitedStock: newTemplateDetails.limitedStock,
@@ -178,21 +178,17 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
         return p;
       }));
       
-      // Disable template toggle on all other products
       setBatchProducts(prev => prev.map((p, i) => i !== index ? { ...p, useAsTemplate: false } : p));
     }
     
-    // If this is the "useAsTemplate" field and it's being disabled
     if (field === 'useAsTemplate' && value === false) {
       setTemplateProductDetails(null);
     }
     
-    // If template is active and this product has it enabled, update template and propagate changes
     if (batchProducts[index]?.useAsTemplate && field !== 'useAsTemplate') {
       const updatedTemplate = { ...templateProductDetails, [field]: value };
       setTemplateProductDetails(updatedTemplate);
       
-      // Apply updated template to all subsequent products
       setBatchProducts(prev => prev.map((p, i) => {
         if (i > index) {
           return { ...p, [field]: value };
@@ -217,6 +213,16 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
         setActiveBatchIndex(i);
         return;
       }
+      if (p.isPromo && (!p.promoPrice || p.promoPrice <= 0)) {
+        toast.error(`Please enter a valid promo price for "${p.file.name}".`);
+        setActiveBatchIndex(i);
+        return;
+      }
+      if (p.isPromo && p.promoPrice && p.price && p.promoPrice >= p.price) {
+        toast.error(`Promo price must be less than the original price for "${p.file.name}".`);
+        setActiveBatchIndex(i);
+        return;
+      }
     }
 
     setLoading(true);
@@ -237,9 +243,10 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
             if (!storeId) throw new Error('Missing storeId for image upload');
             const imageUrl = await uploadImageToCloudinary(compressedFile, storeId);
 
-            const productToAdd: Omit<Product, 'id' | 'createdAt'> & { originalPrice?: number } = {
+            const productToAdd: Omit<Product, 'id' | 'createdAt'> = {
                 name: productData.name!,
-                price: Number(productData.price!),
+                price: productData.isPromo ? Number(productData.promoPrice!) : Number(productData.price!),
+                originalPrice: productData.isPromo ? Number(productData.price!) : undefined,
                 category: productData.category!,
                 images: [imageUrl],
                 description: productData.description || '',
@@ -249,13 +256,9 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
                 features: [],
                 views: 0,
                 quantity: 1,
+                commission: productData.commission || 10,
             };
-
-            if (productData.originalPrice && Number(productData.originalPrice) > 0) {
-              productToAdd.originalPrice = Number(productData.originalPrice);
-            }
             
-            // Always require storeId for multi-tenancy
             if (storeId) {
               await addProduct(storeId, productToAdd as Product);
             } else {
@@ -284,7 +287,7 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
     onProductAdded();
     setLoading(false);
     setIsUploading(false);
-    setShowUploadSummary(true); // Show summary after upload
+    setShowUploadSummary(true);
   };
   
   const renderProgressIcon = (status: UploadStatus) => {
@@ -349,7 +352,6 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
     );
   }
 
-  // Only show vendor-generated categories in the product upload form
   const vendorCategories = categories.filter(c => c.name !== 'Promo' && c.name !== '' && c.name !== 'New Arrivals' && c.name !== 'Back in Stock');
 
   return (
@@ -397,7 +399,11 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
               )}
 
               <div className="space-y-6 sm:space-y-0 sm:grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 sm:gap-6">
-                {batchProducts.map((product, index) => (
+                {batchProducts.map((product, index) => {
+                  const displayPrice = product.isPromo ? product.promoPrice : product.price;
+                  const commissionAmount = (displayPrice || 0) * ((product.commission || 10) / 100);
+
+                  return (
                   <div ref={el => { itemRefs.current[index] = el; }} key={index} className={`p-4 border rounded-lg ${activeBatchIndex === index ? 'border-blue-500 shadow-lg' : 'border-border-color'} ${activeBatchIndex !== index ? 'hidden sm:block' : ''}`}>
                     <div className="space-y-4">
                         <div className="relative w-full h-48">
@@ -419,28 +425,56 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
                                   onChange={e => {
                                     const numericValue = parseFormattedNumber(e.target.value);
                                     handleBatchProductChange(index, 'price', numericValue);
-                                    
-                                    // Auto-fill original price if it's empty
-                                    if (!product.originalPrice || product.originalPrice === 0) {
-                                      handleBatchProductChange(index, 'originalPrice', numericValue);
-                                    }
                                   }} 
                                   placeholder="0.00"
                                   className="w-full p-2 border border-input-border rounded-md bg-input-background focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-text-secondary mb-1">Original Price</label>
-                                <input 
-                                  type="text" 
-                                  value={formatNumberWithCommas(product.originalPrice || '')} 
-                                  onChange={e => {
-                                    const numericValue = parseFormattedNumber(e.target.value);
-                                    handleBatchProductChange(index, 'originalPrice', numericValue);
-                                  }} 
-                                  placeholder="0.00"
-                                  className="w-full p-2 border border-input-border rounded-md bg-input-background focus:ring-2 focus:ring-blue-500"
+                            <div className="space-y-3 pt-2">
+                               <ModernToggle
+                                  label="Promo?"
+                                  checked={!!product.isPromo}
+                                  onChange={(checked) => handleBatchProductChange(index, 'isPromo', checked)}
                                 />
+                            </div>
+                           {product.isPromo && (
+                              <div className="animate-fadeIn">
+                                  <label className="block text-sm font-medium text-text-secondary mb-1">Promo Price*</label>
+                                  <input 
+                                    type="text" 
+                                    value={formatNumberWithCommas(product.promoPrice || '')} 
+                                    onChange={e => {
+                                      const numericValue = parseFormattedNumber(e.target.value);
+                                      handleBatchProductChange(index, 'promoPrice', numericValue);
+                                    }} 
+                                    placeholder="0.00"
+                                    className="w-full p-2 border border-input-border rounded-md bg-input-background focus:ring-2 focus:ring-blue-500"
+                                  />
+                                  {product.promoPrice && product.price && product.promoPrice >= product.price && (
+                                      <p className="text-xs text-red-500 mt-1">Promo price should be lower than the original price.</p>
+                                  )}
+                              </div>
+                            )}
+                            <div>
+                                <label className="block text-sm font-medium text-text-secondary mb-1">Commission</label>
+                                <div className="relative pt-2">
+                                    <div className="absolute top-0 left-0 right-0 flex justify-between text-xs text-text-secondary">
+                                      <span>1%</span>
+                                      <span>10%</span>
+                                    </div>
+                                    <input 
+                                      type="range" 
+                                      min="1" 
+                                      max="10" 
+                                      step="1"
+                                      value={product.commission || 10}
+                                      onChange={e => handleBatchProductChange(index, 'commission', parseInt(e.target.value))}
+                                      className="w-full h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider-thumb"
+                                    />
+                                    <div className="text-center text-sm font-medium text-text-primary mt-2">
+                                      {product.commission || 10}% Commission (₦{formatNumberWithCommas(commissionAmount.toFixed(2))})
+                                    </div>
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-text-secondary mb-1">Category*</label>
@@ -469,7 +503,7 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
                         </div>
                     </div>
                   </div>
-                ))}
+                  )})}
               </div>
             </div>
           )}
@@ -485,11 +519,10 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
         </form>
       )}
 
-      {/* Informational Section */}
       <div className="mt-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-gradient-to-br from-orange-500/10 via-pink-500/10 to-transparent p-4 rounded-xl border border-border-color">
-            <h3 className="font-semibold text-orange-400 text-base mb-2 flex items-center gap-2"><span>📸</span> Quick Listing Tips</h3>
+            <h3 className="font-semibold text-orange-400 text-base mb-2 flex items-center gap-2"><span>📸</span> Quick Upload Tips</h3>
             <ul className="space-y-1 text-xs sm:text-sm text-text-secondary list-disc list-inside">
               <li>Use clear, descriptive product names.</li>
               <li>Upload bright, high-quality images.</li>
@@ -506,6 +539,36 @@ const AddProductSection: React.FC<AddProductSectionProps> = ({
           </div>
         </div>
       </div>
+      <style jsx>{`
+        .slider-thumb::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 24px;
+          height: 24px;
+          background: rgba(255, 255, 255, 0.6);
+          border-radius: 50%;
+          cursor: pointer;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(10px);
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .slider-thumb::-moz-range-thumb {
+          width: 24px;
+          height: 24px;
+          background: rgba(255, 255, 255, 0.6);
+          border-radius: 50%;
+          cursor: pointer;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(10px);
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </section>
   );
 };

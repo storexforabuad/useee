@@ -4,7 +4,6 @@ import { ShoppingCart, Star, AlertTriangle, XCircle, TagIcon, PackageCheckIcon, 
 import Image from 'next/image';
 import { Product } from '../types/product';
 import { getPopularProducts } from '../lib/db';
-
 import { formatPrice } from '../utils/price';
 
 interface ManageProductsSectionProps {
@@ -18,8 +17,42 @@ interface ManageProductsSectionProps {
   viewMode: 'all' | 'popular' | 'limited' | 'soldout';
   setViewMode: (mode: 'all' | 'popular' | 'limited' | 'soldout') => void;
   categories: { id: string; name: string }[];
-  storeId: string; // Add storeId prop
+  storeId: string;
 }
+
+const ModernToggle: React.FC<{ checked: boolean; onChange: (checked: boolean) => void; label: string; }> = ({ checked, onChange, label }) => (
+  <label className="flex items-center cursor-pointer justify-between w-full">
+      <span className="text-sm font-medium text-text-secondary">{label}</span>
+      <div className="relative">
+          <input type="checkbox" className="sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+          <div className={`block w-12 h-7 rounded-full transition-colors ${checked ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'}`}></div>
+          <div className={`dot absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition-transform ${checked ? 'translate-x-5' : ''}`}></div>
+      </div>
+  </label>
+);
+
+const formatNumberWithCommas = (value: string | number): string => {
+  if (!value && value !== 0) return '';
+  const stringValue = value.toString();
+  const cleanValue = stringValue.replace(/[^\d.]/g, '');
+  if (!cleanValue) return '';
+  const parts = cleanValue.split('.');
+  if (parts.length > 2) {
+    parts[1] = parts.slice(1).join('');
+    parts.length = 2;
+  }
+  if (parts[0]) {
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+  return parts.join('.');
+};
+
+const parseFormattedNumber = (value: string): number => {
+  const cleanValue = value.replace(/,/g, '');
+  const parsed = parseFloat(cleanValue);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
 
 const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({ 
   products, 
@@ -32,19 +65,21 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({
   viewMode,
   setViewMode,
   categories,
-  storeId, // Accept storeId
+  storeId,
 }) => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [updatedFields, setUpdatedFields] = useState<Partial<Product>>({});
+  const [updatedFields, setUpdatedFields] = useState<Partial<Product> & { isPromo?: boolean, promoPrice?: number }>({});
   const [popularProducts, setPopularProducts] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     async function fetchPopularProducts() {
       try {
-        const popular = await getPopularProducts(storeId, 6);
-        setPopularProducts(popular.map(p => p.id));
+        if(storeId) {
+            const popular = await getPopularProducts(storeId, 6);
+            setPopularProducts(popular.map(p => p.id));
+        }
       } catch (error) {
         console.error('Error fetching popular products:', error);
       }
@@ -67,13 +102,16 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
+    const isPromo = !!(product.originalPrice && product.originalPrice > product.price);
     setUpdatedFields({
       name: product.name,
       description: product.description,
-      price: product.price,
+      price: isPromo ? product.originalPrice : product.price,
+      isPromo: isPromo,
+      promoPrice: isPromo ? product.price : undefined,
+      commission: product.commission ?? 10, // Default to 10 if not set
       category: product.category,
       limitedStock: product.limitedStock,
-      inStock: product.inStock,
       soldOut: product.soldOut || false,
     });
   };
@@ -82,38 +120,32 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({
     setEditingProduct(null);
     setUpdatedFields({});
   };
+
   const handleSave = async () => {
-    if (editingProduct && Object.keys(updatedFields).length > 0) {
+    if (editingProduct) {
       setIsSaving(true);
-      const id = editingProduct.id;
-      const originalProduct = products.find(p => p.id === id);
       const changes: Partial<Product> = {};
       
-      if (updatedFields.name !== undefined && updatedFields.name !== originalProduct?.name) {
-        changes.name = updatedFields.name;
+      // Logic for price and originalPrice based on promo
+      if (updatedFields.isPromo) {
+          changes.price = updatedFields.promoPrice!;
+          changes.originalPrice = updatedFields.price!;
+      } else {
+          changes.price = updatedFields.price!;
+          changes.originalPrice = updatedFields.price!;
       }
-      if (updatedFields.description !== undefined && updatedFields.description !== originalProduct?.description) {
-        changes.description = updatedFields.description;
-      }
-      if (updatedFields.price !== undefined && updatedFields.price !== originalProduct?.price) {
-        changes.price = updatedFields.price;
-      }
-      if (updatedFields.category !== undefined && updatedFields.category !== originalProduct?.category) {
-        changes.category = updatedFields.category;
-      }
-      if (updatedFields.limitedStock !== undefined && updatedFields.limitedStock !== originalProduct?.limitedStock) {
-        changes.limitedStock = updatedFields.limitedStock;
-      }
-      if (updatedFields.inStock !== undefined && updatedFields.inStock !== originalProduct?.inStock) {
-        changes.inStock = updatedFields.inStock;
-      }
-      if (updatedFields.soldOut !== undefined && updatedFields.soldOut !== originalProduct?.soldOut) {
-        changes.soldOut = updatedFields.soldOut;
-      }
+
+      // Check other fields for changes
+      if (updatedFields.name !== editingProduct.name) changes.name = updatedFields.name;
+      if (updatedFields.category !== editingProduct.category) changes.category = updatedFields.category;
+      if (updatedFields.commission !== (editingProduct.commission ?? 10)) changes.commission = updatedFields.commission;
+      if (updatedFields.limitedStock !== editingProduct.limitedStock) changes.limitedStock = updatedFields.limitedStock;
+      if (updatedFields.soldOut !== editingProduct.soldOut) changes.soldOut = updatedFields.soldOut;
   
       if (Object.keys(changes).length > 0) {
-        await handleUpdateProduct(id, changes);
+        await handleUpdateProduct(editingProduct.id, changes);
       }
+
       setEditingProduct(null);
       setUpdatedFields({});
       setIsSaving(false);
@@ -189,34 +221,51 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({
                 {editingProduct?.id === product.id ? (
                   // Edit View
                   <div className="p-4 space-y-4">
-                    <input type="text" value={updatedFields.name} onChange={e => setUpdatedFields({...updatedFields, name: e.target.value})} className="w-full p-2 rounded-lg bg-[--input-background] border border-[--input-border] text-[--text-primary] placeholder:text-[--text-secondary]" />
-                    {/* <textarea value={updatedFields.description} onChange={e => setUpdatedFields({...updatedFields, description: e.target.value})} className="w-full p-2 rounded-lg bg-[--input-background] border border-[--input-border] text-[--text-primary] placeholder:text-[--text-secondary]" rows={3}></textarea> */}
-                    <input type="number" value={updatedFields.price} onChange={e => setUpdatedFields({...updatedFields, price: Number(e.target.value)})} className="w-full p-2 rounded-lg bg-[--input-background] border border-[--input-border] text-[--text-primary] placeholder:text-[--text-secondary]" />
-                    <label className="block text-xs font-semibold text-[--text-secondary] mb-1 mt-2">Category</label>
-                    <select value={updatedFields.category} onChange={e => setUpdatedFields({...updatedFields, category: e.target.value})} className="w-full p-2 rounded-lg bg-[--input-background] border border-[--input-border] text-[--text-primary]">
-                      {categories && categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                    </select>
-                    <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2 text-[--text-secondary]">
-                            <input type="checkbox" checked={!!updatedFields.limitedStock} onChange={e => setUpdatedFields({...updatedFields, limitedStock: e.target.checked})} />
-                            Limited
-                        </label>
-                        <label className="flex items-center gap-2 text-[--text-secondary]">
-                            <input type="checkbox" checked={!!updatedFields.soldOut} onChange={e => setUpdatedFields({...updatedFields, soldOut: e.target.checked})} />
-                            Sold Out
-                        </label>
+                    <div>
+                        <label className="block text-sm font-medium text-text-secondary mb-1">Name*</label>
+                        <input type="text" value={updatedFields.name} onChange={e => setUpdatedFields({...updatedFields, name: e.target.value})} className="w-full p-2 border rounded-md bg-input-background focus:ring-2 border-input-border focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-text-secondary mb-1">Price*</label>
+                        <input type="text" value={formatNumberWithCommas(updatedFields.price || '')} onChange={e => setUpdatedFields({...updatedFields, price: parseFormattedNumber(e.target.value)})} className="w-full p-2 border rounded-md bg-input-background focus:ring-2 border-input-border focus:ring-blue-500" />
+                    </div>
+                    <ModernToggle label="Promo?" checked={!!updatedFields.isPromo} onChange={checked => setUpdatedFields({...updatedFields, isPromo: checked})} />
+                    {updatedFields.isPromo && (
+                         <div className="animate-fadeIn">
+                            <label className="block text-sm font-medium text-text-secondary mb-1">Promo Price*</label>
+                            <input type="text" value={formatNumberWithCommas(updatedFields.promoPrice || '')} onChange={e => setUpdatedFields({...updatedFields, promoPrice: parseFormattedNumber(e.target.value)})} className="w-full p-2 border rounded-md bg-input-background focus:ring-2 border-input-border focus:ring-blue-500" />
+                            {updatedFields.promoPrice && updatedFields.price && updatedFields.promoPrice >= updatedFields.price && (
+                                <p className="text-xs text-red-500 mt-1">Promo price should be lower than the original price.</p>
+                            )}
+                        </div>
+                    )}
+                    <div>
+                        <label className="block text-sm font-medium text-text-secondary mb-1">Commission</label>
+                        <div className="relative pt-2">
+                            <div className="absolute top-0 left-0 right-0 flex justify-between text-xs text-text-secondary">
+                              <span>1%</span>
+                              <span>10%</span>
+                            </div>
+                            <input type="range" min="1" max="10" step="1" value={updatedFields.commission || 10} onChange={e => setUpdatedFields({...updatedFields, commission: parseInt(e.target.value)})} className="w-full h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider-thumb"/>
+                            <div className="text-center text-sm font-medium text-text-primary mt-2">
+                              {updatedFields.commission || 10}% Commission (₦{formatNumberWithCommas(((updatedFields.isPromo ? updatedFields.promoPrice : updatedFields.price) || 0) * ((updatedFields.commission || 10) / 100))})
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-text-secondary mb-1">Category*</label>
+                        <select value={updatedFields.category} onChange={e => setUpdatedFields({...updatedFields, category: e.target.value})} className="w-full p-2 border border-input-border rounded-md bg-input-background focus:ring-2 focus:ring-blue-500">
+                            {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                        </select>
+                    </div>
+                     <div className="space-y-3 pt-2">
+                        <ModernToggle label="Limited Stock" checked={!!updatedFields.limitedStock} onChange={checked => setUpdatedFields({...updatedFields, limitedStock: checked})} />
+                        <ModernToggle label="Sold Out" checked={!!updatedFields.soldOut} onChange={checked => setUpdatedFields({...updatedFields, soldOut: checked})} />
                     </div>
                     <div className="flex justify-end gap-2">
                         <button onClick={handleCancelEdit} className="px-4 py-2 rounded-lg bg-[--button-secondary] text-[--text-primary] font-semibold flex items-center gap-2" disabled={isSaving}><XMarkIcon className="w-5 h-5" /> Cancel</button>
                         <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold flex items-center gap-2 border border-green-700 disabled:opacity-60 disabled:cursor-not-allowed" disabled={isSaving}>
-                          {isSaving ? (
-                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                            </svg>
-                          ) : (
-                            <CheckIcon className="w-5 h-5" />
-                          )}
+                          {isSaving ? <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> : <CheckIcon className="w-5 h-5" />}
                           {isSaving ? 'Saving...' : 'Save'}
                         </button>
                     </div>
@@ -227,13 +276,7 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({
                     <div className="p-4 flex gap-4">
                         {product.images[0] && (
                         <div className="w-24 h-24 flex-shrink-0 relative">
-                            <Image
-                                src={product.images[0]}
-                                alt={product.name}
-                                fill
-                                className="object-cover rounded-lg"
-                                sizes="96px"
-                            />
+                            <Image src={product.images[0]} alt={product.name} fill className="object-cover rounded-lg" sizes="96px"/>
                         </div>
                         )}
                         <div className="flex-1">
@@ -312,6 +355,34 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({
         .action-button:hover {
             background-color: var(--button-secondary-hover);
             color: var(--text-primary);
+        }
+        .slider-thumb::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 24px;
+          height: 24px;
+          background: rgba(255, 255, 255, 0.6);
+          border-radius: 50%;
+          cursor: pointer;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(10px);
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .slider-thumb::-moz-range-thumb {
+          width: 24px;
+          height: 24px;
+          background: rgba(255, 255, 255, 0.6);
+          border-radius: 50%;
+          cursor: pointer;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(10px);
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </section>

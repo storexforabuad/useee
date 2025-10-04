@@ -19,4 +19,5 @@ export interface Product {
   };
   soldOut?: boolean;
   storeId: string; // Added storeId
+  commission?: number;
 }
