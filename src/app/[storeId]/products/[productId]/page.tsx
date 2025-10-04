@@ -160,7 +160,7 @@ return (
       <div className="flex flex-col lg:flex lg:flex-row gap-6 lg:gap-x-8">
         {/* Image Section */}
         <div className="flex-1 flex flex-col">
-          <div className="relative overflow-hidden rounded-2xl bg-gray-50">
+          <div className="relative overflow-hidden rounded-2xl bg-gray-50 shadow-lg">
           {imageLoading && (
     <div className="absolute inset-0 bg-[var(--skeleton-background)] animate-pulse">
       <div className="aspect-square" />
