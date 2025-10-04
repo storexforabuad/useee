@@ -10,12 +10,12 @@ import CategoriesModal from './modals/CategoriesModal';
 import PopularProductsModal from './modals/PopularProductsModal';
 import LimitedStockModal from './modals/LimitedStockModal';
 import TotalViewsModal from './modals/TotalViewsModal';
-import DebtorsModal from './modals/DebtorsModal';
+
 import StoreLinkModal from './modals/StoreLinkModal';
 import SubscriptionModal from './modals/SubscriptionModal';
 import ReferralsModal from './modals/ReferralsModal';
 import SoldOutModal from './modals/SoldOutModal';
-import ContactsModal from './modals/ContactsModal'; // Updated import
+
 import OrdersModal from './modals/OrdersModal';
 import RevenueModal from './modals/RevenueModal';
 import TipsModal from './modals/TipsModal';
@@ -144,16 +144,6 @@ const cardData = [
       gradient: 'from-green-500 to-emerald-600',
       text: 'text-white',
       component: RevenueModal,
-      glowClass: 'shadow-[0_0_25px_-5px_rgba(22,163,74,0.5)]',
-    },
-    {
-      label: 'Subscription',
-      subtitle: 'Subscription',
-      valueKey: 'subscriptionStatus',
-      icon: CheckCircle,
-      gradient: 'from-cyan-100 to-cyan-300',
-      text: 'text-gray-800',
-      component: SubscriptionModal,
       glowClass: 'shadow-[0_0_25px_-5px_rgba(22,163,74,0.5)]',
     },
     {
@@ -294,7 +284,7 @@ export default function AdminHomeCards(props: AdminHomeCardsProps) {
             `}</style>
             {cardData.map((card, idx) => {
               const Icon = card.icon;
-              const isHorizontal = card.label === 'Share' || card.label === 'Subscription' || card.label === 'Tips';
+              const isHorizontal = card.label === 'Share' || card.label === 'Tips';
               const isTipsCard = card.label === 'Tips';
               const spotlightClasses = spotlightStep === 'tips' && isTipsCard ? 'relative z-50 pointer-events-auto' : '';
 

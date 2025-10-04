@@ -13,7 +13,6 @@ import AdminHomeCards from '../../../components/admin/AdminHomeCards';
 import AddProductSection from '../../../components/AddProductSection';
 import dynamic from 'next/dynamic';
 import PreviewSkeleton from '../../../components/admin/PreviewSkeleton';
-import SubscriptionBanner from '../../../components/admin/SubscriptionBanner';
 import { markOnboardingAsCompleted } from '../../../app/actions/onboardingActions';
 import { useSpotlightContext } from '@/context/SpotlightContext';
 
@@ -160,7 +159,6 @@ export default function AdminStorePage() {
           <Suspense fallback={<AdminSkeleton isNavigation={true} />}>
             {activeSection === 'home' && (
               <div className={`mb-8 transition-opacity duration-500 ${uiVisible ? 'opacity-100' : 'opacity-0'}`}>
-                <SubscriptionBanner />
                 <AdminHomeCards
                   products={products}
                   categories={categories}
