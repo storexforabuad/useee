@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { Product } from '../../types/product';
 import { formatPrice } from '../../utils/price';
-import EditProductPanel from './EditProductPanel'; // New Import
+import EditProductPanel from './EditProductPanel';
 
 // --- TYPES ---
 interface ManageProductsModalProps {
@@ -117,7 +117,8 @@ const ManageProductsModal: React.FC<ManageProductsModalProps> = ({ isOpen, onClo
           <div className="flex min-h-full items-stretch justify-center text-center md:items-center md:px-2 lg:px-4">
             <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 translate-y-full md:translate-y-0 md:scale-95" enterTo="opacity-100 translate-y-0 md:scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 translate-y-0 md:scale-100" leaveTo="opacity-0 translate-y-full md:translate-y-0 md:scale-95">
               <Dialog.Panel className="relative flex w-full max-w-2xl transform text-left text-base transition md:my-8">
-                <div className="relative flex w-full flex-col overflow-hidden rounded-t-2xl md:rounded-2xl bg-card-background shadow-2xl h-[90vh]">
+                 <div className="relative flex w-full flex-col overflow-hidden bg-card-background shadow-2xl h-screen md:h-[90vh] md:rounded-2xl">
+
                   {/* Header */}
                   <div className="p-4 flex justify-between items-center border-b border-border-color">
                     <Dialog.Title as="h3" className="text-xl font-bold text-text-primary">Manage Products</Dialog.Title>
@@ -144,7 +145,7 @@ const ManageProductsModal: React.FC<ManageProductsModalProps> = ({ isOpen, onClo
                   </div>
 
                   {/* Product List */}
-                  <div className="flex-1 overflow-y-auto p-2">
+                   <div className="flex-1 overflow-y-auto p-2 pb-24"> {/* Added pb-24 for footer clearance */}
                     <div className="grid grid-cols-1 gap-1">
                         {filteredProducts.length > 0 ? (
                             filteredProducts.map(p => <ProductRow key={p.id} product={p} isSelectMode={isSelectMode} isSelected={selectedProductIds.includes(p.id)} onToggleSelect={handleToggleSelect} onEdit={setEditingProduct} />)
@@ -154,20 +155,30 @@ const ManageProductsModal: React.FC<ManageProductsModalProps> = ({ isOpen, onClo
                     </div>
                   </div>
 
-                   {/* Bulk Actions Footer */}
-                   <AnimatePresence>
-                    {isSelectMode && selectedProductIds.length > 0 && (
-                        <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="absolute bottom-0 left-0 right-0 bg-card-background border-t border-border-color p-4 shadow-lg">
-                           <div className="flex justify-between items-center">
-                                <p className="font-semibold text-text-primary">{selectedProductIds.length} selected</p>
-                                <div className="flex gap-2">
-                                    <button className="px-4 py-2 rounded-lg bg-button-secondary text-text-primary font-semibold hover:bg-button-secondary-hover transition">Mark as Sold Out</button>
-                                    <button className="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition">Delete</button>
-                                </div>
-                           </div>
-                        </motion.div>
-                    )}
-                   </AnimatePresence>
+                  {/* --- FOOTERS --- */}
+                  <div className="absolute bottom-0 left-0 right-0 z-20">
+                    {/* Bulk Actions Footer */}
+                    <AnimatePresence>
+                      {isSelectMode && selectedProductIds.length > 0 && (
+                          <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="bg-card-background border-t border-border-color p-4 shadow-lg">
+                            <div className="flex justify-between items-center">
+                                  <p className="font-semibold text-text-primary">{selectedProductIds.length} selected</p>
+                                  <div className="flex gap-2">
+                                      <button className="px-4 py-2 rounded-lg bg-button-secondary text-text-primary font-semibold hover:bg-button-secondary-hover transition">Mark as Sold Out</button>
+                                      <button className="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition">Delete</button>
+                                  </div>
+                            </div>
+                          </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Done Button Footer */}
+                    <div className="bg-card-background p-4 border-t border-border-color">
+                      <button onClick={handleClose} className="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition">
+                        Done
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </Dialog.Panel>
             </Transition.Child>
