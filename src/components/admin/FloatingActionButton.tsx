@@ -4,12 +4,15 @@ import { useState, useEffect } from 'react';
 import { HelpCircle, MessageSquare, Phone, X } from 'lucide-react';
 import { businessConfig } from '@/config/business';
 
-const FloatingActionButton = () => {
+interface FloatingActionButtonProps {
+  isModalOpen?: boolean;
+}
+
+const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({ isModalOpen }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // Mount the component after a short delay to prevent it from being distracting on load
     const timer = setTimeout(() => {
       setIsMounted(true);
     }, 500);
@@ -18,7 +21,6 @@ const FloatingActionButton = () => {
   }, []);
 
   const toggleMenu = () => {
-    // Provide haptic feedback on mobile devices
     if (typeof window.navigator.vibrate === 'function') {
       window.navigator.vibrate(10);
     }
@@ -52,13 +54,10 @@ const FloatingActionButton = () => {
 
   return (
     <div 
-      className={`fixed bottom-24 right-6  transition-transform duration-500 ease-in-out z-50 ${
-        isMounted ? 'scale-100' : 'scale-0'
-      }`}
+      className={`fixed bottom-24 right-6 transition-transform duration-500 ease-in-out z-50 ${isMounted ? 'scale-100' : 'scale-0'} ${isModalOpen ? 'translate-x-[150%]' : 'translate-x-0'}`}
       aria-live="polite"
     >
       <div className="relative flex flex-col items-center gap-3">
-        {/* Sub-buttons revealed when menu is open */}
         {isOpen &&
           menuItems.map((item, index) => (
             <div
@@ -79,7 +78,6 @@ const FloatingActionButton = () => {
             </div>
           ))}
 
-        {/* Main Floating Action Button */}
         <button
           onClick={toggleMenu}
           aria-haspopup="true"

@@ -211,10 +211,9 @@ const AddProductComposer: React.FC<AddProductComposerProps> = ({ isOpen, onClose
               setUploadProgress(prev => prev.map(p => p.id === productData.id ? { ...p, status: 'uploading', statusText: 'Uploading...' } : p));
               const imageUrl = await uploadImageToCloudinary(compressedFile, storeId);
 
-              const productToAdd: Omit<Product, 'id' | 'createdAt'> = {
+              const productToAdd: Partial<Product> = {
                   name: productData.name,
                   price: productData.isPromo ? productData.promoPrice! : productData.price,
-                  originalPrice: productData.isPromo ? productData.price : undefined,
                   category: productData.category,
                   images: [imageUrl],
                   description: '', // Add description field later if needed
@@ -226,6 +225,10 @@ const AddProductComposer: React.FC<AddProductComposerProps> = ({ isOpen, onClose
                   views: 0,
                   quantity: 1,
               };
+
+              if (productData.isPromo) {
+                productToAdd.originalPrice = productData.price;
+              }
 
               await addProduct(storeId, productToAdd as Product);
               

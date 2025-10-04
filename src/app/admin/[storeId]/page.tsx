@@ -186,7 +186,7 @@ export default function AdminStorePage() {
                   storeName={storeMeta?.name}
                   totalRevenue={totalRevenue}
                   onAnimationComplete={handleAnimationComplete}
-                  onAddProductClick={() => setIsComposerOpen(true)} // Rewired
+                  onAddProductClick={() => setIsComposerOpen(true)}
                 />
               </div>
             )}
@@ -239,7 +239,7 @@ export default function AdminStorePage() {
       />
 
       <div className={`transition-opacity duration-500 ${uiVisible ? 'opacity-100' : 'opacity-0'}`}>
-        {activeSection !== 'preview' && <FloatingActionButton onAddProductClick={() => setIsComposerOpen(true)} />}
+        {activeSection !== 'preview' && <FloatingActionButton isModalOpen={isComposerOpen} />}
         { spotlightStep !== 'tips' && <MobileNav activeSection={activeSection} setActiveSection={setActiveSection} onAddProductClick={() => setIsComposerOpen(true)} /> }
       </div>
     </div>
