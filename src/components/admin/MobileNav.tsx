@@ -17,7 +17,8 @@ import { useSpotlightContext } from '@/context/SpotlightContext';
 interface MobileNavProps {
   activeSection: string;
   setActiveSection: (section: string) => void;
-  onAddProductClick: () => void; // New prop
+  onAddProductClick: () => void;
+  onManageProductsClick: () => void; // New prop
   isModalOpen?: boolean;
 }
 
@@ -29,12 +30,22 @@ const navItems = [
   { id: 'categories', iconOutline: TagIconOutline, iconSolid: TagIconSolid, label: 'Categories' },
 ];
 
-const MobileNav = ({ activeSection, setActiveSection, onAddProductClick, isModalOpen }: MobileNavProps) => {
+const MobileNav = ({ activeSection, setActiveSection, onAddProductClick, onManageProductsClick, isModalOpen }: MobileNavProps) => {
   const { spotlightStep, setSpotlightStep } = useSpotlightContext();
 
   const handleNavClick = (sectionId: string) => {
     setActiveSection(sectionId);
     setSpotlightStep('inactive');
+  };
+
+  const handleClick = (item: typeof navItems[0]) => {
+    if (item.id === 'add') {
+      onAddProductClick();
+    } else if (item.id === 'manage') {
+      onManageProductsClick(); // Use the new prop here
+    } else {
+      handleNavClick(item.id);
+    }
   };
 
   return (
@@ -47,8 +58,6 @@ const MobileNav = ({ activeSection, setActiveSection, onAddProductClick, isModal
 
         <div className="absolute bottom-0 left-0 right-0 h-16 flex items-center justify-around">
           {navItems.map((item) => {
-            const isActive = activeSection === item.id;
-            
             if (item.id === 'add') {
               const IconComponent = item.iconOutline;
               return (
@@ -56,7 +65,7 @@ const MobileNav = ({ activeSection, setActiveSection, onAddProductClick, isModal
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-24 h-24 bg-white/70 dark:bg-zinc-800/70 rounded-full border-t border-t-gray-200 dark:border-t-zinc-700" style={{ clipPath: 'polygon(0 50%, 100% 50%, 100% 100%, 0 100%)' }} />
                   
                   <button
-                    onClick={onAddProductClick} // Use the new prop here
+                    onClick={() => handleClick(item)}
                     className="absolute -top-7 left-1/2 -translate-x-1/2 w-16 h-16 bg-neutral-800 dark:bg-neutral-100 rounded-full shadow-lg flex items-center justify-center text-white dark:text-black focus:outline-none focus:ring-2 focus:ring-offset-4 focus:ring-offset-background dark:focus:ring-offset-zinc-800 focus:ring-neutral-500 transition-transform duration-200 ease-in-out hover:scale-105 active:scale-95"
                     aria-label={item.label}
                   >
@@ -66,11 +75,12 @@ const MobileNav = ({ activeSection, setActiveSection, onAddProductClick, isModal
               );
             }
             
+            const isActive = activeSection === item.id;
             const IconComponent = isActive ? item.iconOutline : item.iconSolid;
             return (
               <button
                 key={item.id}
-                onClick={() => handleNavClick(item.id)}
+                onClick={() => handleClick(item)}
                 className={`flex flex-col items-center justify-center h-14 w-16 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-offset-0 focus:ring-blue-400/50 ${
                   isActive ? 'text-neutral-800 dark:text-gray-500' : 'text-gray-600 dark:text-neutral-100'
                 }`}

@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState, Suspense, useCallback } from 'react';
-import { getProducts, getCategories, updateProduct, deleteProduct, getContacts, WholesaleData, getStoreMeta } from '../../../lib/db';
+import { getProducts, getCategories, getContacts, WholesaleData, getStoreMeta } from '../../../lib/db';
 import { Product } from '../../../types/product';
 import { StoreMeta } from '../../../types/store';
 import AdminHeader from '../../../components/admin/AdminHeader';
@@ -10,13 +10,13 @@ import AdminSkeleton from '../../../components/admin/AdminSkeleton';
 import MobileNav from '../../../components/admin/MobileNav';
 import FloatingActionButton from '../../../components/admin/FloatingActionButton';
 import AdminHomeCards from '../../../components/admin/AdminHomeCards';
-import AddProductComposer from '../../../components/admin/AddProductComposer'; // New Import
+import AddProductComposer from '../../../components/admin/AddProductComposer';
+import ManageProductsModal from '../../../components/admin/ManageProductsModal';
 import dynamic from 'next/dynamic';
 import PreviewSkeleton from '../../../components/admin/PreviewSkeleton';
 import { markOnboardingAsCompleted } from '../../../app/actions/onboardingActions';
 import { useSpotlightContext } from '@/context/SpotlightContext';
 
-const ManageProductsSection = dynamic(() => import('../../../components/ManageProductsSection'));
 const CategoryManagementSection = dynamic(() => import('../../../components/CategoryManagementSection'));
 const OnboardingFlow = dynamic(() => import('../../../components/admin/onboarding/OnboardingFlow'));
 
@@ -51,10 +51,9 @@ export default function AdminStorePage() {
   const [storeMeta, setStoreMeta] = useState<StoreMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('home');
-  const [isManageProductsOpen, setIsManageProductsOpen] = useState(false);
   const [isCategoryManagementOpen, setIsCategoryManagementOpen] = useState(false);
-  const [isComposerOpen, setIsComposerOpen] = useState(false); // New State
-  const [viewMode, setViewMode] = useState<'all' | 'popular' | 'limited' | 'soldout'>('all');
+  const [isComposerOpen, setIsComposerOpen] = useState(false);
+  const [isManageModalOpen, setIsManageModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPreviewLoading, setIsPreviewLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
@@ -127,16 +126,6 @@ export default function AdminStorePage() {
     }
   };
 
-  async function handleUpdateProduct(id: string, updatedProduct: Partial<Product>) {
-    await updateProduct(storeId, id, updatedProduct);
-    fetchData();
-  }
-
-  async function handleDeleteProduct(id: string) {
-    await deleteProduct(storeId, id);
-    fetchData();
-  }
-
   const totalRevenue = products.reduce((sum, p) => sum + (Number(p.price) || 0), 0);
 
   if (loading || showOnboarding === null) return <AdminSkeleton screen="home" />;
@@ -148,6 +137,8 @@ export default function AdminStorePage() {
   if (showOnboarding) {
     return <OnboardingFlow onComplete={handleOnboardingComplete} storeName={storeMeta?.name || ''} />;
   }
+
+  const isModalOpen = isComposerOpen || isManageModalOpen;
 
   return (
     <div className="min-h-screen bg-background pb-16 md:pb-0 transition-colors">
@@ -164,8 +155,6 @@ export default function AdminStorePage() {
                   contacts={contacts}
                   setActiveSection={setActiveSection}
                   storeLink={`/${storeId}`}
-                  setManageTab={setViewMode}
-                  setIsManageProductsOpen={setIsManageProductsOpen}
                   onRefresh={() => fetchData(true)}
                   isRefreshing={isRefreshing}
                   totalProducts={products.length}
@@ -187,23 +176,7 @@ export default function AdminStorePage() {
                   totalRevenue={totalRevenue}
                   onAnimationComplete={handleAnimationComplete}
                   onAddProductClick={() => setIsComposerOpen(true)}
-                />
-              </div>
-            )}
-            {activeSection === 'manage' && (
-              <div className="mb-8">
-                <ManageProductsSection
-                  products={products}
-                  handleUpdateProduct={handleUpdateProduct}
-                  handleDeleteProduct={handleDeleteProduct}
-                  handleDuplicateProduct={() => {}}
-                  handleCopyToBatch={() => {}}
-                  isManageProductsOpen={isManageProductsOpen}
-                  setIsManageProductsOpen={setIsManageProductsOpen}
-                  viewMode={viewMode}
-                  setViewMode={setViewMode}
-                  categories={categories}
-                  storeId={storeId}
+                  onManageProductsClick={() => setIsManageModalOpen(true)}
                 />
               </div>
             )}
@@ -238,9 +211,24 @@ export default function AdminStorePage() {
         onProductAdded={() => fetchData()} 
       />
 
+      <ManageProductsModal
+        isOpen={isManageModalOpen}
+        onClose={() => setIsManageModalOpen(false)}
+        products={products}
+        categories={categories}
+        storeId={storeId}
+      />
+
       <div className={`transition-opacity duration-500 ${uiVisible ? 'opacity-100' : 'opacity-0'}`}>
-        {activeSection !== 'preview' && <FloatingActionButton isModalOpen={isComposerOpen} />}
-        { spotlightStep !== 'tips' && <MobileNav activeSection={activeSection} setActiveSection={setActiveSection} onAddProductClick={() => setIsComposerOpen(true)} /> }
+        {activeSection !== 'preview' && <FloatingActionButton isModalOpen={isModalOpen} />}
+        { spotlightStep !== 'tips' && !isModalOpen && 
+          <MobileNav 
+            activeSection={activeSection} 
+            setActiveSection={setActiveSection} 
+            onAddProductClick={() => setIsComposerOpen(true)} 
+            onManageProductsClick={() => setIsManageModalOpen(true)} // This is the fix
+          /> 
+        }
       </div>
     </div>
   );
