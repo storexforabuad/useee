@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { StoreMeta } from '../../types/store';
 import { Product } from '../../types/product';
 import { incrementOrderCount } from '../../app/actions/orderActions';
+import Navbar from '../../components/layout/navbar';
 
 const CartItem = dynamic(
   () => import('../../components/cart/CartItem'),
@@ -109,53 +110,57 @@ export default function CartPage() {
 
   if (state.items.length === 0) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 py-8 sm:py-16">
-        <h2 className="text-xl sm:text-2xl font-bold text-text-primary">Your list is empty</h2>
-        <p className="mt-2 text-sm sm:text-base text-text-secondary">
-          Start shopping by adding items to your list.
-        </p>
-      </div>
+        <>
+            <Navbar storeName="Cart" />
+            <div className="min-h-[calc(100vh-var(--navbar-height))] pt-[calc(var(--navbar-height))] flex flex-col items-center justify-center px-4">
+                <h2 className="text-xl sm:text-2xl font-bold text-text-primary">Your list is empty</h2>
+                <p className="mt-2 text-sm sm:text-base text-text-secondary">
+                  Start shopping by adding items to your list.
+                </p>
+            </div>
+        </>
     );
   }
 
   return (
-    <div className="min-h-[60vh] mx-auto max-w-2xl px-3 sm:px-4 py-6 sm:py-8">
-      <h1 className="text-xl sm:text-2xl font-bold text-text-primary mb-6">Your List</h1>
-      
-      {Object.entries(groupedCart).map(([storeId, items]) => {
-        const storeMeta = storeMetas[storeId];
-        const totalAmount = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    <>
+        <Navbar storeName="Cart" />
+        <div className="min-h-screen mx-auto max-w-2xl px-3 sm:px-4 pb-8 pt-[calc(var(--navbar-height)+1.5rem)] sm:pt-[calc(var(--navbar-height)+2rem)]">
+          {Object.entries(groupedCart).map(([storeId, items]) => {
+            const storeMeta = storeMetas[storeId];
+            const totalAmount = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-        return (
-          <div key={storeId} className="mb-8 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-            <h2 className="text-lg font-bold text-text-primary mb-4">{storeMeta?.name || 'Unknown Store'}</h2>
-            <div className="space-y-3">
-              {items.map(item => (
-                <CartItem 
-                  key={item.id} 
-                  item={item}
-                  onUpdateQuantity={handleUpdateQuantity}
-                  onRemove={handleRemoveItem}
-                />
-              ))}
-            </div>
-            <div className="mt-6 border-t border-[var(--border-color)] pt-6">
-              <div className="flex justify-between text-base font-medium text-text-primary">
-                <span>Subtotal</span>
-                <span>{formatPrice(totalAmount)}</span>
+            return (
+              <div key={storeId} className="mb-8 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-6 bg-white dark:bg-gray-800/20 shadow-sm">
+                <h2 className="text-lg font-bold text-text-primary mb-4">{storeMeta?.name || 'Unknown Store'}</h2>
+                <div className="space-y-4">
+                  {items.map(item => (
+                    <CartItem 
+                      key={item.id} 
+                      item={item}
+                      onUpdateQuantity={handleUpdateQuantity}
+                      onRemove={handleRemoveItem}
+                    />
+                  ))}
+                </div>
+                <div className="mt-6 border-t border-[var(--border-color)] pt-6">
+                  <div className="flex justify-between text-base font-medium text-text-primary">
+                    <span>Subtotal</span>
+                    <span>{formatPrice(totalAmount)}</span>
+                  </div>
+                  <button
+                    onClick={() => createWhatsAppMessage(storeId, items)}
+                    disabled={!storeMeta || !storeMeta.whatsapp}
+                    className="mt-6 group relative w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-[var(--button-success)] text-white font-medium shadow-sm hover:shadow-md transition-all duration-300 hover:bg-[var(--button-success-hover)] transform-gpu active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                    <span className="relative tracking-[-0.01em]">Order from {storeMeta?.name || '...'}</span>
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => createWhatsAppMessage(storeId, items)}
-                disabled={!storeMeta || !storeMeta.whatsapp}
-                className="mt-6 group relative w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-[980px] bg-[var(--button-success)] text-white font-medium shadow-sm hover:shadow-md transition-all duration-300 hover:bg-[var(--button-success-hover)] transform-gpu active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ShoppingCart className="w-5 h-5" />
-                <span className="relative tracking-[-0.01em]">Order from {storeMeta?.name || '...'}</span>
-              </button>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+            );
+          })}
+        </div>
+    </>
   );
 }
