@@ -113,7 +113,7 @@ export default function CartPage() {
         <>
             <Navbar storeName="Cart" />
             <div className="min-h-[calc(100vh-var(--navbar-height))] pt-[calc(var(--navbar-height))] flex flex-col items-center justify-center px-4">
-                <h2 className="text-xl sm:text-2xl font-bold text-text-primary">Your list is empty</h2>
+                <h2 className="text-xl sm:text-2xl font-bold card-text-gradient">Your list is empty</h2>
                 <p className="mt-2 text-sm sm:text-base text-text-secondary">
                   Start shopping by adding items to your list.
                 </p>
@@ -132,7 +132,7 @@ export default function CartPage() {
 
             return (
               <div key={storeId} className="mb-8 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-6 bg-white dark:bg-gray-800/20 shadow-sm">
-                <h2 className="text-lg font-bold text-text-primary mb-4">{storeMeta?.name || 'Unknown Store'}</h2>
+                <h2 className="text-lg font-bold card-text-gradient mb-4">{storeMeta?.name || 'Unknown Store'}</h2>
                 <div className="space-y-4">
                   {items.map(item => (
                     <CartItem 
@@ -144,7 +144,7 @@ export default function CartPage() {
                   ))}
                 </div>
                 <div className="mt-6 border-t border-[var(--border-color)] pt-6">
-                  <div className="flex justify-between text-base font-medium text-text-primary">
+                  <div className="flex justify-between text-base font-medium card-text-gradient">
                     <span>Subtotal</span>
                     <span>{formatPrice(totalAmount)}</span>
                   </div>
