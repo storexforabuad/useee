@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React, { useState, useEffect, useRef, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon, PhotoIcon, ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
@@ -10,6 +10,8 @@ import { Product } from '../../types/product';
 import { addProduct } from '../../lib/db';
 import { uploadImageToCloudinary } from '../../lib/cloudinaryClient';
 import { compressImage } from '../../utils/imageCompression';
+import { formatPrice } from '../../utils/price';
+
 
 // --- TYPES ---
 type UploadStatus = 'idle' | 'compressing' | 'uploading' | 'success' | 'error';
@@ -268,6 +270,8 @@ const AddProductComposer: React.FC<AddProductComposerProps> = ({ isOpen, onClose
       case 2: // Pricing Step
       case 3: // Inventory Step
         if (!activeProduct) return null;
+        const commissionAmount = (activeProduct.isPromo ? activeProduct.promoPrice || 0 : activeProduct.price || 0) * (activeProduct.commission / 100);
+
         return (
           <MotionDiv key={1} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div className="relative w-full h-64 sm:h-80">
@@ -301,19 +305,23 @@ const AddProductComposer: React.FC<AddProductComposerProps> = ({ isOpen, onClose
                 )}
                 {currentStep === 2 && (
                     <motion.div key="pricing" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                        <FloatingLabelInput label="Price" type="number" value={activeProduct.price} onChange={(e: any) => handleProductChange(activeProductIndex, 'price', e.target.value)} />
+                        <FloatingLabelInput label="Price" type="number" value={activeProduct.price} onChange={(e: any) => handleProductChange(activeProductIndex, 'price', parseFloat(e.target.value) || 0)} />
                         <ModernToggle label="Add Promo Price" checked={activeProduct.isPromo} onChange={checked => handleProductChange(activeProductIndex, 'isPromo', checked)} />
                         <AnimatePresence>
                             {activeProduct.isPromo && (
                                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-                                    <FloatingLabelInput label="Promo Price" type="number" value={activeProduct.promoPrice || ''} onChange={(e: any) => handleProductChange(activeProductIndex, 'promoPrice', e.target.value)} />
+                                    <FloatingLabelInput label="Promo Price" type="number" value={activeProduct.promoPrice || ''} onChange={(e: any) => handleProductChange(activeProductIndex, 'promoPrice', parseFloat(e.target.value) || 0)} />
                                 </motion.div>
                             )}
                         </AnimatePresence>
                         <div>
                            <label className="block text-sm font-medium text-text-secondary mb-2">Commission</label>
                            <input type="range" min="1" max="10" value={activeProduct.commission} onChange={e => handleProductChange(activeProductIndex, 'commission', parseInt(e.target.value))} className="w-full h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider-thumb"/>
-                           <div className="text-center text-sm font-medium text-text-primary mt-2">{activeProduct.commission}%</div>
+                           <div className="flex justify-center items-center text-sm font-medium text-text-primary mt-2">
+                               <span>{activeProduct.commission}%</span>
+                               <span className="text-text-secondary mx-2">-</span>
+                               <span className="font-bold">{formatPrice(commissionAmount)}</span>
+                           </div>
                         </div>
                     </motion.div>
                 )}
